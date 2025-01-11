@@ -1,0 +1,5 @@
+gitverse
+pre-commit
+recommonmark
+requests
+sphinx==5.1.1

@@ -1,9 +1,13 @@
+import json
+import logging
+import os
 import pathlib
 import re
 import socket
 import sqlite3
 from typing import Any, Dict, List, Set
 
+import yaml
 from cryptography.fernet import Fernet
 from pydantic import (
     BaseModel,
@@ -15,6 +19,9 @@ from pydantic import (
     field_validator,
 )
 from pydantic_settings import BaseSettings
+
+LOGGER = logging.getLogger("uvicorn.default")
+DEFAULT_ALLOWED = ("0.0.0.0", "127.0.0.1", "localhost")
 
 
 def complexity_checker(secret: str) -> None:
@@ -73,9 +80,6 @@ class Database:
         self.connection = sqlite3.connect(
             database=filepath, check_same_thread=False, timeout=timeout
         )
-
-
-database: Database = Database  # noqa: PyTypeChecker
 
 
 class RateLimit(BaseModel):
@@ -208,6 +212,71 @@ class EnvConfig(BaseSettings):
         arbitrary_types_allowed = True
 
 
-# noinspection PyTypeChecker
-env: EnvConfig = EnvConfig
+def envfile_loader(filename: str | os.PathLike) -> EnvConfig:
+    """Loads environment variables based on filetypes.
+
+    Args:
+        filename: Filename from where env vars have to be loaded.
+
+    Returns:
+        EnvConfig:
+        Returns a reference to the ``EnvConfig`` object.
+    """
+    env_file = pathlib.Path(filename)
+    if env_file.suffix.lower() == ".json":
+        with open(env_file) as stream:
+            env_data = json.load(stream)
+        return EnvConfig(**{k.lower(): v for k, v in env_data.items()})
+    elif env_file.suffix.lower() in (".yaml", ".yml"):
+        with open(env_file) as stream:
+            env_data = yaml.load(stream, yaml.FullLoader)
+        return EnvConfig(**{k.lower(): v for k, v in env_data.items()})
+    elif not env_file.suffix or env_file.suffix.lower() in (
+        ".text",
+        ".txt",
+        "",
+    ):
+        return EnvConfig.from_env_file(env_file)
+    else:
+        raise ValueError(
+            "\n\tUnsupported format for 'env_file', can be one of (.json, .yaml, .yml, .txt, .text, or null)"
+        )
+
+
+def load_env() -> EnvConfig:
+    """Loads te env vars based on the env_file provided.
+
+    See Also:
+        This function allows env vars to be loaded partially from .env files and partially through kwargs.
+
+    Returns:
+        EnvConfig:
+        Returns a reference to the ``EnvConfig`` object.
+    """
+    env_file = os.getenv("env_file") or os.getenv("ENV_FILE") or ".env"
+    if os.path.isfile(env_file):
+        return envfile_loader(env_file)
+    return EnvConfig()
+
+
+def __init__() -> None:
+    """Instantiates the env, session and database connections."""
+    session.fernet = Fernet(env.secret)
+    if env.host in DEFAULT_ALLOWED:
+        session.allowed_origins.update(DEFAULT_ALLOWED)
+    else:
+        session.allowed_origins.add(env.host)
+    for allowed in env.allowed_origins:
+        session.allowed_origins.add(allowed.host)
+    for cidr_range in env.allowed_ip_range:
+        ip_notion = ".".join(cidr_range.split(".")[0:-1])
+        start_ip, end_ip = cidr_range.split(".")[-1].split("-")
+        start_ip, end_ip = int(start_ip), int(end_ip) + 1
+        for i in range(start_ip, end_ip):
+            session.allowed_origins.add(f"{ip_notion}.{i}")
+
+
+env: EnvConfig = load_env()
+database: Database = Database(env.database)
 session = Session()
+__init__()

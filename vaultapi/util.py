@@ -10,7 +10,7 @@ from typing import Any, ByteString, Dict
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from dotenv import dotenv_values
 
-from . import database, main, models
+from . import database, models
 
 importlib.reload(logging)
 LOGGER = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ LOGGER.addHandler(HANDLER)
 
 
 def dotenv_to_table(
-    table_name: str, dotenv_file: str, drop_existing: bool = False, **kwargs
+    table_name: str, dotenv_file: str, drop_existing: bool = False
 ) -> None:
     """Store all the env vars from a .env file into the database.
 
@@ -34,22 +34,24 @@ def dotenv_to_table(
         dotenv_file: Dot env filename.
         drop_existing: Boolean flag to drop existing table.
     """
-    main.__init__(**kwargs)
-    if drop_existing:
-        LOGGER.info("Dropping table '%s' if available", table_name)
+    if drop_existing and database.table_exists(table_name):
+        LOGGER.info("Dropping table '%s' from '%s'", table_name, models.env.database)
         database.drop_table(table_name)
         database.create_table(table_name, ["key", "value"])
     else:
         try:
             if existing := database.get_table(table_name):
                 LOGGER.warning(
-                    "Table '%s' exists already. %d secrets will be overwritten",
+                    "Table '%s' exists already in %s. %d secrets will be overwritten",
                     table_name,
+                    models.env.database,
                     len(existing),
                 )
         except sqlite3.OperationalError as error:
             if str(error) == f"no such table: {table_name}":
-                LOGGER.info("Creating a new table %s", table_name)
+                LOGGER.info(
+                    "Creating a new table '%s' in '%s'", table_name, models.env.database
+                )
                 database.create_table(table_name, ["key", "value"])
             else:
                 raise
@@ -57,7 +59,12 @@ def dotenv_to_table(
     for key, value in env_vars.items():
         encrypted = models.session.fernet.encrypt(value.encode(encoding="UTF-8"))
         database.put_secret(key, encrypted, table_name)
-    LOGGER.info("%d secrets have been stored to the database.", len(env_vars))
+    LOGGER.info(
+        "%d secrets stored in the table %s, in the database %s.",
+        len(env_vars),
+        table_name,
+        models.env.database,
+    )
 
 
 def transit_decrypt(ciphertext: str | ByteString) -> Dict[str, Any]:

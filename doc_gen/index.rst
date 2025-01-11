@@ -12,10 +12,14 @@ Welcome to VaultAPI's documentation!
 
    README
 
-VaultAPI - Main
-===============
+VaultAPI - Server
+=================
 
-.. automodule:: vaultapi.main
+.. automodule:: vaultapi.server
+
+====
+
+.. automodule:: vaultapi.api
 
 Authenticator
 =============
@@ -70,11 +74,6 @@ API Routes
 ==========
 
 .. automodule:: vaultapi.routes
-
-Squire
-======
-
-.. automodule:: vaultapi.squire
 
 Transit
 =======

@@ -63,33 +63,19 @@
 </ul>
 </div>
 </section>
-<section id="module-vaultapi.main">
-<span id="vaultapi-main"></span><h1>VaultAPI - Main<a class="headerlink" href="#module-vaultapi.main" title="Permalink to this heading">¶</a></h1>
+<section id="module-vaultapi.server">
+<span id="vaultapi-server"></span><h1>VaultAPI - Server<a class="headerlink" href="#module-vaultapi.server" title="Permalink to this heading">¶</a></h1>
 <dl class="py function">
-<dt class="sig sig-object py" id="vaultapi.main.enable_cors">
-<span class="sig-prename descclassname"><span class="pre">vaultapi.main.</span></span><span class="sig-name descname"><span class="pre">enable_cors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#vaultapi.main.enable_cors" title="Permalink to this definition">¶</a></dt>
-<dd><p>Enables CORS policy.</p>
+<dt class="sig sig-object py" id="vaultapi.server.start">
+<span class="sig-prename descclassname"><span class="pre">vaultapi.server.</span></span><span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#vaultapi.server.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Starter function for the API, which uses uvicorn server as trigger.</p>
 </dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="vaultapi.main.start">
-<span class="sig-prename descclassname"><span class="pre">vaultapi.main.</span></span><span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#vaultapi.main.start" title="Permalink to this definition">¶</a></dt>
-<dd><p>Starter function for the API, which uses uvicorn server as trigger.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Keyword Arguments<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>env_file</strong> – Env filepath to load the environment variables.</p></li>
-<li><p><strong>apikey</strong> – API Key to authenticate the server.</p></li>
-<li><p><strong>secret</strong> – Secret access key to access the secret content.</p></li>
-<li><p><strong>host</strong> – Hostname for the API server.</p></li>
-<li><p><strong>port</strong> – Port number for the API server.</p></li>
-<li><p><strong>workers</strong> – Number of workers for the uvicorn server.</p></li>
-<li><p><strong>database</strong> – FilePath to store the auth database that handles the authentication errors.</p></li>
-<li><p><strong>rate_limit</strong> – List of dictionaries with <code class="docutils literal notranslate"><span class="pre">max_requests</span></code> and <code class="docutils literal notranslate"><span class="pre">seconds</span></code> to apply as rate limit.</p></li>
-<li><p><strong>log_config</strong> – Logging configuration as a dict or a FilePath. Supports .yaml/.yml, .json or .ini formats.</p></li>
-</ul>
-</dd>
-</dl>
+<hr class="docutils" />
+<span class="target" id="module-vaultapi.api"></span><dl class="py function">
+<dt class="sig sig-object py" id="vaultapi.api.enable_cors">
+<span class="sig-prename descclassname"><span class="pre">vaultapi.api.</span></span><span class="sig-name descname"><span class="pre">enable_cors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#vaultapi.api.enable_cors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enables CORS policy.</p>
 </dd></dl>
 
 </section>
@@ -474,16 +460,39 @@
 </dl>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="vaultapi.models.database">
-<span class="sig-prename descclassname"><span class="pre">vaultapi.models.</span></span><span class="sig-name descname"><span class="pre">database</span></span><a class="headerlink" href="#vaultapi.models.database" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="#vaultapi.models.Database" title="vaultapi.models.Database"><code class="xref py py-class docutils literal notranslate"><span class="pre">Database</span></code></a></p>
+<dl class="py function">
+<dt class="sig sig-object py" id="vaultapi.models.envfile_loader">
+<span class="sig-prename descclassname"><span class="pre">vaultapi.models.</span></span><span class="sig-name descname"><span class="pre">envfile_loader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">os.PathLike</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#vaultapi.models.EnvConfig" title="vaultapi.models.EnvConfig"><span class="pre">EnvConfig</span></a></span></span><a class="headerlink" href="#vaultapi.models.envfile_loader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads environment variables based on filetypes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filename</strong> – Filename from where env vars have to be loaded.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Returns a reference to the <code class="docutils literal notranslate"><span class="pre">EnvConfig</span></code> object.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#vaultapi.models.EnvConfig" title="vaultapi.models.EnvConfig">EnvConfig</a></p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="vaultapi.models.env">
-<span class="sig-prename descclassname"><span class="pre">vaultapi.models.</span></span><span class="sig-name descname"><span class="pre">env</span></span><a class="headerlink" href="#vaultapi.models.env" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="#vaultapi.models.EnvConfig" title="vaultapi.models.EnvConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">EnvConfig</span></code></a></p>
+<dl class="py function">
+<dt class="sig sig-object py" id="vaultapi.models.load_env">
+<span class="sig-prename descclassname"><span class="pre">vaultapi.models.</span></span><span class="sig-name descname"><span class="pre">load_env</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#vaultapi.models.EnvConfig" title="vaultapi.models.EnvConfig"><span class="pre">EnvConfig</span></a></span></span><a class="headerlink" href="#vaultapi.models.load_env" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads te env vars based on the env_file provided.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>This function allows env vars to be loaded partially from .env files and partially through kwargs.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Returns a reference to the <code class="docutils literal notranslate"><span class="pre">EnvConfig</span></code> object.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#vaultapi.models.EnvConfig" title="vaultapi.models.EnvConfig">EnvConfig</a></p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -788,44 +797,6 @@ Raises the HTTPStatus object with a status code and detail as response.</p>
 </dd></dl>
 
 </section>
-<section id="module-vaultapi.squire">
-<span id="squire"></span><h1>Squire<a class="headerlink" href="#module-vaultapi.squire" title="Permalink to this heading">¶</a></h1>
-<dl class="py function">
-<dt class="sig sig-object py" id="vaultapi.squire.envfile_loader">
-<span class="sig-prename descclassname"><span class="pre">vaultapi.squire.</span></span><span class="sig-name descname"><span class="pre">envfile_loader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">os.PathLike</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#vaultapi.models.EnvConfig" title="vaultapi.models.EnvConfig"><span class="pre">EnvConfig</span></a></span></span><a class="headerlink" href="#vaultapi.squire.envfile_loader" title="Permalink to this definition">¶</a></dt>
-<dd><p>Loads environment variables based on filetypes.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>filename</strong> – Filename from where env vars have to be loaded.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Returns a reference to the <code class="docutils literal notranslate"><span class="pre">EnvConfig</span></code> object.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#vaultapi.models.EnvConfig" title="vaultapi.models.EnvConfig">EnvConfig</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="vaultapi.squire.load_env">
-<span class="sig-prename descclassname"><span class="pre">vaultapi.squire.</span></span><span class="sig-name descname"><span class="pre">load_env</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#vaultapi.models.EnvConfig" title="vaultapi.models.EnvConfig"><span class="pre">EnvConfig</span></a></span></span><a class="headerlink" href="#vaultapi.squire.load_env" title="Permalink to this definition">¶</a></dt>
-<dd><p>Merge env vars from env_file with kwargs, giving priority to kwargs.</p>
-<div class="admonition seealso">
-<p class="admonition-title">See also</p>
-<p>This function allows env vars to be loaded partially from .env files and partially through kwargs.</p>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Returns a reference to the <code class="docutils literal notranslate"><span class="pre">EnvConfig</span></code> object.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#vaultapi.models.EnvConfig" title="vaultapi.models.EnvConfig">EnvConfig</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
 <section id="module-vaultapi.transit">
 <span id="transit"></span><h1>Transit<a class="headerlink" href="#module-vaultapi.transit" title="Permalink to this heading">¶</a></h1>
 <p>Module that performs transit encryption/decryption.</p>
@@ -905,7 +876,7 @@ Raises the HTTPStatus object with a status code and detail as response.</p>
 <span id="util"></span><h1>Util<a class="headerlink" href="#module-vaultapi.util" title="Permalink to this heading">¶</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="vaultapi.util.dotenv_to_table">
-<span class="sig-prename descclassname"><span class="pre">vaultapi.util.</span></span><span class="sig-name descname"><span class="pre">dotenv_to_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dotenv_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_existing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#vaultapi.util.dotenv_to_table" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">vaultapi.util.</span></span><span class="sig-name descname"><span class="pre">dotenv_to_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dotenv_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_existing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#vaultapi.util.dotenv_to_table" title="Permalink to this definition">¶</a></dt>
 <dd><p>Store all the env vars from a .env file into the database.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -956,7 +927,7 @@ Raises the HTTPStatus object with a status code and detail as response.</p>
     <h3><a href="#">Table of Contents</a></h3>
     <ul>
 <li><a class="reference internal" href="#">Welcome to VaultAPI’s documentation!</a></li>
-<li><a class="reference internal" href="#module-vaultapi.main">VaultAPI - Main</a></li>
+<li><a class="reference internal" href="#module-vaultapi.server">VaultAPI - Server</a></li>
 <li><a class="reference internal" href="#module-vaultapi.auth">Authenticator</a></li>
 <li><a class="reference internal" href="#module-vaultapi.database">Database</a></li>
 <li><a class="reference internal" href="#module-vaultapi.exceptions">Exceptions</a></li>
@@ -964,7 +935,6 @@ Raises the HTTPStatus object with a status code and detail as response.</p>
 <li><a class="reference internal" href="#payload">Payload</a></li>
 <li><a class="reference internal" href="#module-vaultapi.rate_limit">RateLimit</a></li>
 <li><a class="reference internal" href="#module-vaultapi.routes">API Routes</a></li>
-<li><a class="reference internal" href="#module-vaultapi.squire">Squire</a></li>
 <li><a class="reference internal" href="#module-vaultapi.transit">Transit</a></li>
 <li><a class="reference internal" href="#module-vaultapi.util">Util</a></li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>

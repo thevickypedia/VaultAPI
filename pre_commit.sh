@@ -21,6 +21,10 @@ update_release_notes() {
 
 gen_docs() {
   # Generate sphinx docs
+  # Generated from: `openssl rand -base64 32`
+  export secret="lUGou1zjhMA89qxRYPuawD5juHdVRreU3mEhSwFaDso="
+  # Generated from: https://www.lastpass.com/features/password-generator
+  export apikey="AENmsKfo5YXP5w_FmVKwCkNCqt92YGAU"
   mkdir -p doc_gen/_static  # Create a _static directory if unavailable
   cp README.md doc_gen  # Copy readme file to doc_gen
   cd doc_gen && make clean html  # cd into doc_gen and create the runbook

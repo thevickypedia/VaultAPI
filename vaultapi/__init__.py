@@ -1,9 +1,10 @@
+import os
 import sys
 
 import click
 from cryptography.fernet import Fernet
 
-from .main import start, version
+from . import version
 
 
 @click.command()
@@ -40,25 +41,33 @@ def commandline(*args, **kwargs) -> None:
         f"{k} {'·' * (_longest_key - len(k) + 8)}→ {v}".expandtabs()
         for k, v in options.items()
     )
-    if kwargs.get("version"):
-        click.echo(f"VaultAPI {version.__version__}")
-        sys.exit(0)
     if kwargs.get("help"):
         click.echo(
             f"\nUsage: vaultapi [arbitrary-command]\nOptions (and corresponding behavior):{choices}"
         )
         sys.exit(0)
+    if kwargs.get("version"):
+        click.secho(f"VaultAPI v{version.__version__}", fg="green")
+        sys.exit(0)
+
+    # Store 'env' key's value as the env var 'env_file' - with default to '.env'
+    os.environ["env_file"] = kwargs.get("env") or ".env"
+    from .server import start
+
     trigger = (
         kwargs.get("start") or kwargs.get("run") or kwargs.get("keygen") or ""
     ).lower()
     if trigger in ("start", "run"):
-        start(env_file=kwargs.get("env"))
+        start()
         sys.exit(0)
     elif trigger == "keygen":
         key = Fernet.generate_key()
         click.secho(
-            f"\nStore this as an env var named 'secret' or pass it as kwargs\n\n{key.decode()}\n"
+            "\nStore this as an env var named 'secret' or the choice of env_file\n"
+            "This secret will be required to decrypt the secrets retrieved from the API\n",
+            fg="green",
         )
+        click.secho(key.decode() + "\n", bold=True)
         sys.exit(0)
     else:
         click.secho(f"\n{kwargs}\nNo command provided", fg="red")
