@@ -20,6 +20,15 @@ def table_exists(table_name: str) -> bool:
         return True
 
 
+def list_tables() -> List[str]:
+    """Function to list all available tables in the database."""
+    with models.database.connection:
+        cursor = models.database.connection.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        tables = cursor.fetchall()
+    return [table[0] for table in tables]
+
+
 def create_table(table_name: str, columns: List[str] | Tuple[str]) -> None:
     """Creates the table with the required columns.
 

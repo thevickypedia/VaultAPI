@@ -1,9 +1,10 @@
 services:
   app:
-    image: thevickypedia/VaultAPI
+    # image: thevickypedia/vaultapi
     container_name: vaultapi
     build:
       context: .
+      dockerfile: Dockerfile
     volumes:
       - ./logs:/app/logs
       - ./data:/app/data
@@ -11,4 +12,10 @@ services:
       - .env
     ports:
       # host_port:container_port
-      - "8080:9010"
+      - "9010:8080"
+    deploy:
+      # 'reservations' key is supported only in swarm mode
+      resources:
+        limits:
+          cpus: '1'
+          memory: 200M

@@ -156,6 +156,28 @@ async def get_secrets(
     )
 
 
+async def list_tables(
+    request: Request,
+    apikey: HTTPAuthorizationCredentials = Depends(security),
+):
+    """**API function to retrieve ALL available tables.**
+
+    **Args:**
+
+        request: Reference to the FastAPI request object.
+        apikey: API Key to authenticate the request.
+
+    **Raises:**
+
+        APIResponse:
+        Raises the HTTPStatus object with a status code and detail as response.
+    """
+    await auth.validate(request, apikey)
+    raise exceptions.APIResponse(
+        status_code=HTTPStatus.OK.real, detail=database.list_tables()
+    )
+
+
 async def get_table(
     request: Request,
     table_name: str = "default",
@@ -360,6 +382,12 @@ def get_all_routes() -> List[APIRoute]:
         APIRoute(
             path="/get-table",
             endpoint=get_table,
+            methods=["GET"],
+            dependencies=dependencies,
+        ),
+        APIRoute(
+            path="/list-tables",
+            endpoint=list_tables,
             methods=["GET"],
             dependencies=dependencies,
         ),

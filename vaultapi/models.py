@@ -97,9 +97,9 @@ class Session(BaseModel):
     """
 
     fernet: Fernet | None = None
-    info: Dict[str, str] = {}
-    rps: Dict[str, int] = {}
-    allowed_origins: Set[str] = set()
+    info: Dict[str, str] = Field(default_factory=dict)
+    rps: Dict[str, int] = Field(default_factory=dict)
+    allowed_origins: Set[str] = Field(default_factory=set)
 
     class Config:
         """Config to allow arbitrary types."""
@@ -123,21 +123,23 @@ class EnvConfig(BaseSettings):
     port: PositiveInt = 9010
     workers: PositiveInt = 1
     log_config: FilePath | Dict[str, Any] | None = None
-    allowed_origins: HttpUrl | List[HttpUrl] = []
-    allowed_ip_range: List[str] = []
+    allowed_origins: HttpUrl | List[HttpUrl] = Field(default_factory=list)
+    allowed_ip_range: List[str] = Field(default_factory=list)
     # This is a base rate limit configuration
-    rate_limit: RateLimit | List[RateLimit] = [
-        # Burst limit: Prevents excessive load on the server
-        {
-            "max_requests": 5,
-            "seconds": 2,
-        },
-        # Sustained limit: Prevents too many trial and errors
-        {
-            "max_requests": 10,
-            "seconds": 30,
-        },
-    ]
+    rate_limit: RateLimit | List[RateLimit] = Field(
+        default=[
+            # Burst limit: Prevents excessive load on the server
+            {
+                "max_requests": 5,
+                "seconds": 2,
+            },
+            # Sustained limit: Prevents too many trial and errors
+            {
+                "max_requests": 10,
+                "seconds": 30,
+            },
+        ]
+    )
 
     @field_validator("allowed_origins", mode="after", check_fields=True)
     def validate_allowed_origins(
