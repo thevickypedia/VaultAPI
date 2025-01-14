@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const axios = require('axios');
 
 const APIKEY = process.env.APIKEY;
+const SECRET = process.env.SECRET;
 
 const getEnvAsInt = (key, defaultValue) => {
     const value = process.env[key];
@@ -17,7 +18,7 @@ const PORT = getEnvAsInt("PORT", 8080);
 async function transitDecrypt(ciphertext) {
     const epoch = Math.floor(Date.now() / (1000 * TRANSIT_TIME_BUCKET));
     const hash = crypto.createHash('sha256');
-    hash.update(`${epoch}.${APIKEY}`);
+    hash.update(`${epoch}.${APIKEY}.${SECRET}`);
     const aesKey = hash.digest().slice(0, TRANSIT_KEY_LENGTH);
 
     const bufferCiphertext = Buffer.from(ciphertext, 'base64');

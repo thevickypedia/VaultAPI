@@ -51,7 +51,8 @@ def encrypt(payload: Dict[str, Any], url_safe: bool = True) -> ByteString | str:
     encoded = json.dumps(payload).encode()
     epoch = int(time.time()) // models.env.transit_time_bucket
     aes_key = string_to_aes_key(
-        f"{epoch}.{models.env.apikey}", models.env.transit_key_length
+        f"{epoch}.{models.env.apikey}.{models.env.secret}",
+        models.env.transit_key_length,
     )
     ciphertext = nonce + AESGCM(aes_key).encrypt(nonce, encoded, b"")
     if url_safe:
@@ -73,7 +74,8 @@ def decrypt(ciphertext: ByteString | str) -> Dict[str, Any]:
         ciphertext = base64.b64decode(ciphertext)
     epoch = int(time.time()) // models.env.transit_time_bucket
     aes_key = string_to_aes_key(
-        f"{epoch}.{models.env.apikey}", models.env.transit_key_length
+        f"{epoch}.{models.env.apikey}.{models.env.secret}",
+        models.env.transit_key_length,
     )
     decrypted = AESGCM(aes_key).decrypt(ciphertext[:12], ciphertext[12:], b"")
     return json.loads(decrypted)

@@ -119,7 +119,7 @@ async def get_secrets(
     keys = list(filter(None, map(str.strip, keys.split(","))))
     keys_ct = len(keys)
     try:
-        assert keys_ct >= 1, f"Expected at least one key, received {keys_ct}"
+        assert keys_ct, "Expected at least one key, received 0"
     except AssertionError as error:
         LOGGER.error(error)
         raise exceptions.APIResponse(
@@ -394,6 +394,12 @@ def get_all_routes() -> List[APIRoute]:
         APIRoute(
             path="/put-secret",
             endpoint=put_secret,
+            methods=["PUT"],
+            dependencies=dependencies,
+        ),
+        APIRoute(
+            path="/put-secrets",
+            endpoint=put_secrets,
             methods=["PUT"],
             dependencies=dependencies,
         ),

@@ -4,7 +4,7 @@ VaultAPI includes an added security feature that protects retrieved secrets duri
 
 1. Decrypts the requested secret values from the database (uses Fernet algorithm)
 2. Constructs a payload with the requested key-value pairs.
-3. Encrypts the payload with the API key and a timestamp that's valid for 60s
+3. Encrypts the payload with the API key, secret and a timestamp that's valid for 60s
 
 ### Other security recommendations
 

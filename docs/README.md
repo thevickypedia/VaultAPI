@@ -35,11 +35,11 @@ python -m pip install vaultapi
 
 **Initiate - IDE**
 ```python
-import vaultapi
+import vaultapi.server
 
 
 if __name__ == '__main__':
-    vaultapi.start()
+    vaultapi.server.start()
 ```
 
 **Initiate - CLI**

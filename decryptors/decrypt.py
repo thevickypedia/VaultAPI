@@ -9,6 +9,7 @@ import requests
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 APIKEY = os.environ["APIKEY"]
+SECRET = os.environ["SECRET"]
 
 TRANSIT_TIME_BUCKET = os.environ.get("TRANSIT_TIME_BUCKET", 60)
 TRANSIT_KEY_LENGTH = os.environ.get("TRANSIT_KEY_LENGTH", 60)
@@ -19,7 +20,7 @@ PORT = os.environ.get("PORT", 8080)
 def transit_decrypt(ciphertext: str | ByteString) -> Dict[str, Any]:
     """Decrypt transit encrypted payload."""
     epoch = int(time.time()) // TRANSIT_TIME_BUCKET
-    hash_object = hashlib.sha256(f"{epoch}.{APIKEY}".encode())
+    hash_object = hashlib.sha256(f"{epoch}.{APIKEY}.{SECRET}".encode())
     aes_key = hash_object.digest()[:TRANSIT_KEY_LENGTH]
     if isinstance(ciphertext, str):
         ciphertext = base64.b64decode(ciphertext)

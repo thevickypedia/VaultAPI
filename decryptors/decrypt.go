@@ -14,6 +14,7 @@ import (
 )
 
 var apiKey = os.Getenv("APIKEY")
+var secret = os.Getenv("SECRET")
 
 func getEnvInt(key string, defaultValue int64) int64 {
     if value, exists := os.LookupEnv(key); exists {
@@ -41,7 +42,7 @@ var (
 func transitDecrypt(ciphertext string) (map[string]interface{}, error) {
 	epoch := time.Now().Unix() / TRANSIT_TIME_BUCKET
 	hash := sha256.New()
-	hash.Write([]byte(fmt.Sprintf("%d.%s", epoch, apiKey)))
+	hash.Write([]byte(fmt.Sprintf("%d.%s.%s", epoch, apiKey, secret)))
 	aesKey := hash.Sum(nil)[:TRANSIT_KEY_LENGTH]
 
 	cipherBytes, err := base64.StdEncoding.DecodeString(ciphertext)
