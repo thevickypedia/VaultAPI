@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v0.1.1 (01/13/2025)
+-------------------
+- Includes a new API endpoint to list all secrets
+- Fix a bug that prevented routes from loading when more than 1 worker was specified
+- **Full Changelog**: https://github.com/thevickypedia/VaultAPI/compare/v0.1.0...v0.1.1
+
 v0.1.0 (09/19/2024)
 -------------------
 - Includes a new feature to enable transit encryption
