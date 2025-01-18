@@ -1,10 +1,9 @@
 """This is an entrypoint specific for docker containers."""
 
+import json
 import os
 import pathlib
 from datetime import datetime
-
-import vaultapi
 
 logs_dir = os.path.join(pathlib.Path(__file__).parent, "logs")
 db_file = os.environ.get("database") or os.environ.get("DATABASE") or "secrets.db"
@@ -60,5 +59,10 @@ log_config = {
     },
 }
 
+os.environ["log_config"] = json.dumps(log_config)
+os.environ["database"] = db_path
+
+import vaultapi.server  # noqa: E402
+
 if __name__ == "__main__":
-    vaultapi.start(log_config=log_config, database=db_path)
+    vaultapi.server.start()
