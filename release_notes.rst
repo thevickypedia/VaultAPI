@@ -1,6 +1,11 @@
 Release Notes
 =============
 
+v0.2.0 (01/18/2025)
+-------------------
+- Improves transit security, **requiring** both APIKey and Secret to decrypt
+- **Full Changelog**: https://github.com/thevickypedia/VaultAPI/compare/v0.1.1...v0.2.0
+
 v0.1.1 (01/13/2025)
 -------------------
 - Includes a new API endpoint to list all secrets
