@@ -107,6 +107,9 @@
 <li><p><strong>WORKERS</strong> - Number of workers for the uvicorn server. Defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
 <li><p><strong>RATE_LIMIT</strong> - List of dictionaries with <code class="docutils literal notranslate"><span class="pre">max_requests</span></code> and <code class="docutils literal notranslate"><span class="pre">seconds</span></code> to apply as rate limit.
 Defaults to 5req/2s [AND] 10req/30s</p></li>
+<li><p><strong>ALLOW_PUBLIC_IP</strong> - Boolean flag to allow connections via public IP. Defaults to <code class="docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><strong>ALLOW_PRIVATE_IP</strong> - Boolean flag to allow connections via private IP. Defaults to <code class="docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><strong>ALLOW_PRIVATE_IP_RANGE</strong> - Boolean flag to allow connections via any private IP address <em>(<code class="docutils literal notranslate"><span class="pre">1-256</span></code>)</em> within range. Defaults to <code class="docutils literal notranslate"><span class="pre">false</span></code></p></li>
 </ul>
 <p><strong>Optional (without defaults)</strong></p>
 <ul class="simple">

@@ -1,18 +1,22 @@
+########################################################################################################################
+#                                  Use this docker-compose file as a sample.                                           #
+########################################################################################################################
 services:
   app:
-    # image: thevickypedia/vaultapi
+    image: thevickypedia/vaultapi
     container_name: vaultapi
-    build:
-      context: .
-      dockerfile: Dockerfile
+    #build:
+    #  context: .
+    #  dockerfile: Dockerfile
     volumes:
+      # Run 'chmod -R 755 ./data' before initiating the container
       - ./logs:/app/logs
       - ./data:/app/data
     env_file:
       - .env
     ports:
       # host_port:container_port
-      - "9010:8080"
+      - "9010:9010"
     deploy:
       # 'reservations' key is supported only in swarm mode
       resources:

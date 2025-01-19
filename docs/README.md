@@ -70,6 +70,9 @@ vaultapi start
 - **WORKERS** - Number of workers for the uvicorn server. Defaults to `1`
 - **RATE_LIMIT** - List of dictionaries with `max_requests` and `seconds` to apply as rate limit.
 Defaults to 5req/2s [AND] 10req/30s
+- **ALLOW_PUBLIC_IP** - Boolean flag to allow connections via public IP. Defaults to `false`
+- **ALLOW_PRIVATE_IP** - Boolean flag to allow connections via private IP. Defaults to `false`
+- **ALLOW_PRIVATE_IP_RANGE** - Boolean flag to allow connections via any private IP address _(`1-256`)_ within range. Defaults to `false`
 
 **Optional (without defaults)**
 - **LOG_CONFIG** - FilePath or dictionary of key-value pairs for log config.

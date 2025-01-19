@@ -20,8 +20,10 @@ from pydantic import (
 )
 from pydantic_settings import BaseSettings
 
+from . import ipaddress
+
 LOGGER = logging.getLogger("uvicorn.default")
-DEFAULT_ALLOWED = ("0.0.0.0", "127.0.0.1", "localhost")
+DEFAULT_ALLOWED = ["0.0.0.0", "127.0.0.1", "localhost"]
 
 
 def complexity_checker(secret: str) -> None:
@@ -129,6 +131,9 @@ class EnvConfig(BaseSettings):
     port: PositiveInt = 9010
     workers: PositiveInt = 1
     log_config: FilePath | Dict[str, Any] | None = None
+    allow_public_ip: bool = False
+    allow_private_ip: bool = False
+    allow_private_ip_range: bool = False
     allowed_origins: HttpUrl | List[HttpUrl] = Field(default_factory=list)
     allowed_ip_range: List[str] = Field(default_factory=list)
     # This is a base rate limit configuration
@@ -275,6 +280,27 @@ def __init__() -> None:
         session.allowed_origins.add(env.host)
     for allowed in env.allowed_origins:
         session.allowed_origins.add(allowed.host)
+
+    # Include private IP or private IP range to the allowed list
+    if env.allow_private_ip or env.allow_private_ip_range:
+        if private_ip := ipaddress.private():
+            if env.allow_private_ip_range:
+                network_id = ".".join(private_ip.split(".")[:3])
+                dockerized_ip_range = f"{network_id}.1-256"
+                LOGGER.warning("Allowing dockerized IP range: %s", dockerized_ip_range)
+                env.allowed_ip_range.append(dockerized_ip_range)
+            else:
+                session.allowed_origins.add(private_ip)
+        else:
+            LOGGER.error("Failed to retrieve private IP address of the host machine")
+
+    # Include public IP to the allowed list
+    if env.allow_public_ip:
+        if public_ip := ipaddress.public():
+            session.allowed_origins.add(public_ip)
+        else:
+            LOGGER.error("Failed to retrieve public IP address of the host machine")
+
     for cidr_range in env.allowed_ip_range:
         ip_notion = ".".join(cidr_range.split(".")[0:-1])
         start_ip, end_ip = cidr_range.split(".")[-1].split("-")

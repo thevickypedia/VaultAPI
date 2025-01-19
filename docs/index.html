@@ -226,6 +226,47 @@
 </dd></dl>
 
 </section>
+<section id="module-vaultapi.ipaddress">
+<span id="ip-address"></span><h1>IP Address<a class="headerlink" href="#module-vaultapi.ipaddress" title="Permalink to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="vaultapi.ipaddress.private">
+<span class="sig-prename descclassname"><span class="pre">vaultapi.ipaddress.</span></span><span class="sig-name descname"><span class="pre">private</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#vaultapi.ipaddress.private" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get private IP address of the host using socket connection.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>Uses Google’s DNS endpoint to resolve the private IP address.</p>
+</div>
+<p class="rubric">References</p>
+<p><a class="reference external" href="https://dns.google/query?name=8.8.8.8">https://dns.google/query?name=8.8.8.8</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Private IP address.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="vaultapi.ipaddress.public">
+<span class="sig-prename descclassname"><span class="pre">vaultapi.ipaddress.</span></span><span class="sig-name descname"><span class="pre">public</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#vaultapi.ipaddress.public" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets public IP address of the host using different endpoints.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>Uses 6 public IP retriever endpoints to get the public IP address.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Public IP address.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 <section id="models">
 <h1>Models<a class="headerlink" href="#models" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
@@ -339,6 +380,21 @@
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vaultapi.models.EnvConfig.log_config">
 <span class="sig-name descname"><span class="pre">log_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#vaultapi.models.EnvConfig.log_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="vaultapi.models.EnvConfig.allow_public_ip">
+<span class="sig-name descname"><span class="pre">allow_public_ip</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#vaultapi.models.EnvConfig.allow_public_ip" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="vaultapi.models.EnvConfig.allow_private_ip">
+<span class="sig-name descname"><span class="pre">allow_private_ip</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#vaultapi.models.EnvConfig.allow_private_ip" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="vaultapi.models.EnvConfig.allow_private_ip_range">
+<span class="sig-name descname"><span class="pre">allow_private_ip_range</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#vaultapi.models.EnvConfig.allow_private_ip_range" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -937,6 +993,7 @@ Raises the HTTPStatus object with a status code and detail as response.</p>
 <li><a class="reference internal" href="#module-vaultapi.auth">Authenticator</a></li>
 <li><a class="reference internal" href="#module-vaultapi.database">Database</a></li>
 <li><a class="reference internal" href="#module-vaultapi.exceptions">Exceptions</a></li>
+<li><a class="reference internal" href="#module-vaultapi.ipaddress">IP Address</a></li>
 <li><a class="reference internal" href="#models">Models</a></li>
 <li><a class="reference internal" href="#payload">Payload</a></li>
 <li><a class="reference internal" href="#module-vaultapi.rate_limit">RateLimit</a></li>

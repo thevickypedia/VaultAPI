@@ -1,8 +1,9 @@
-click==8.1.8
-cryptography==44.0.0
-fastapi==0.115.6
-pydantic==2.10.5
-pydantic-settings==2.7.1
-python-dotenv==1.0.1
-PyYAML==6.0.2
-uvicorn==0.34.0
+click==8.1.*
+cryptography==44.0.*
+fastapi==0.115.*
+pydantic==2.10.*
+pydantic-settings==2.7.*
+python-dotenv==1.0.*
+PyYAML==6.0.*
+requests==2.32.*
+uvicorn==0.34.*

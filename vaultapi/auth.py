@@ -28,7 +28,7 @@ async def validate(request: Request, apikey: HTTPAuthorizationCredentials) -> No
             "Host: %s has been blocked since it is not added to allowed list",
             request.client.host,
         )
-        LOGGER.info(models.session.allowed_origins)
+        LOGGER.debug(models.session.allowed_origins)
         raise exceptions.APIResponse(
             status_code=HTTPStatus.FORBIDDEN.real, detail=HTTPStatus.FORBIDDEN.phrase
         )
