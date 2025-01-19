@@ -1,6 +1,11 @@
 Release Notes
 =============
 
+v0.3.0 (01/19/2025)
+-------------------
+- Includes a feature to allow private IP, private IP range, and public IP address
+- **Full Changelog**: https://github.com/thevickypedia/VaultAPI/compare/v0.2.1...v0.3.0
+
 v0.2.1 (01/18/2025)
 -------------------
 - Includes startup validations for ``transit_key_length`` and ``transit_time_bucket``
