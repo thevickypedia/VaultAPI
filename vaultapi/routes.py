@@ -67,45 +67,12 @@ async def get_secret(
     table_name: str = "default",
     apikey: HTTPAuthorizationCredentials = Depends(security),
 ):
-    """**API function to retrieve a secret.**
-
-    **Args:**
-
-        request: Reference to the FastAPI request object.
-        key: Name of the secret to be retrieved.
-        table_name: Name of the table where the secret is stored.
-        apikey: API Key to authenticate the request.
-
-    **Raises:**
-
-        APIResponse:
-        Raises the HTTPStatus object with a status code and detail as response.
-    """
-    await auth.validate(request, apikey)
-    if value := await retrieve_secret(key, table_name):
-        LOGGER.info("Secret value for '%s' was retrieved", key)
-        decrypted = models.session.fernet.decrypt(value).decode(encoding="UTF-8")
-        raise exceptions.APIResponse(
-            status_code=HTTPStatus.OK.real, detail=transit.encrypt({key: decrypted})
-        )
-    LOGGER.info("Secret value for '%s' NOT found in the datastore", key)
-    raise exceptions.APIResponse(
-        status_code=HTTPStatus.NOT_FOUND.real, detail=HTTPStatus.NOT_FOUND.phrase
-    )
-
-
-async def get_secrets(
-    request: Request,
-    keys: str,
-    table_name: str = "default",
-    apikey: HTTPAuthorizationCredentials = Depends(security),
-):
     """**API function to retrieve multiple secrets at a time.**
 
     **Args:**
 
         request: Reference to the FastAPI request object.
-        key: Comma separated list of secret names to be retrieved.
+        keys: Comma separated list of secret names to be retrieved.
         table_name: Name of the table where the secrets are stored.
         apikey: API Key to authenticate the request.
 
@@ -116,7 +83,7 @@ async def get_secrets(
     """
     await auth.validate(request, apikey)
     # keys = [key.strip() for key in keys.split(",") if key.strip()]
-    keys = list(filter(None, map(str.strip, keys.split(","))))
+    keys = list(filter(None, map(str.strip, key.split(","))))
     keys_ct = len(keys)
     try:
         assert keys_ct, "Expected at least one key, received 0"
@@ -212,40 +179,6 @@ async def put_secret(
     data: payload.PutSecret,
     apikey: HTTPAuthorizationCredentials = Depends(security),
 ):
-    """**API function to add secrets to database.**
-
-    **Args:**
-
-        request: Reference to the FastAPI request object.
-        data: Payload with ``key``, ``value``, and ``table_name`` as body.
-        apikey: API Key to authenticate the request.
-
-    **Raises:**
-
-        APIResponse:
-        Raises the HTTPStatus object with a status code and detail as response.
-    """
-    await auth.validate(request, apikey)
-    if await retrieve_secret(data.key, data.table_name):
-        LOGGER.info("Secret value for '%s' will be overridden", data.key)
-    else:
-        LOGGER.info(
-            "Storing a secret value for '%s' to the table '%s' in the datastore",
-            data.key,
-            data.table_name,
-        )
-    encrypted = models.session.fernet.encrypt(data.value.encode(encoding="UTF-8"))
-    database.put_secret(key=data.key, value=encrypted, table_name=data.table_name)
-    raise exceptions.APIResponse(
-        status_code=HTTPStatus.OK.real, detail=HTTPStatus.OK.phrase
-    )
-
-
-async def put_secrets(
-    request: Request,
-    data: payload.PutSecrets,
-    apikey: HTTPAuthorizationCredentials = Depends(security),
-):
     """**API function to add multiple secrets to a table in the database.**
 
     **Args:**
@@ -260,6 +193,9 @@ async def put_secrets(
         Raises the HTTPStatus object with a status code and detail as response.
     """
     await auth.validate(request, apikey)
+    # Supports transit encrypted string
+    if isinstance(data.secrets, str):
+        data.secrets = transit.decrypt(data.secrets)
     for key, value in data.secrets.items():
         encrypted = models.session.fernet.encrypt(value.encode(encoding="UTF-8"))
         database.put_secret(key=key, value=encrypted, table_name=data.table_name)
@@ -374,12 +310,6 @@ def get_all_routes() -> List[APIRoute]:
             dependencies=dependencies,
         ),
         APIRoute(
-            path="/get-secrets",
-            endpoint=get_secrets,
-            methods=["GET"],
-            dependencies=dependencies,
-        ),
-        APIRoute(
             path="/get-table",
             endpoint=get_table,
             methods=["GET"],
@@ -394,12 +324,6 @@ def get_all_routes() -> List[APIRoute]:
         APIRoute(
             path="/put-secret",
             endpoint=put_secret,
-            methods=["PUT"],
-            dependencies=dependencies,
-        ),
-        APIRoute(
-            path="/put-secrets",
-            endpoint=put_secrets,
             methods=["PUT"],
             dependencies=dependencies,
         ),

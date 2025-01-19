@@ -51,6 +51,7 @@
 <li class="toctree-l1"><a class="reference internal" href="README.html">VaultAPI</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="README.html#kick-off">Kick off</a></li>
 <li class="toctree-l2"><a class="reference internal" href="README.html#environment-variables">Environment Variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="README.html#api-functionality">API Functionality</a></li>
 <li class="toctree-l2"><a class="reference internal" href="README.html#coding-standards">Coding Standards</a></li>
 <li class="toctree-l2"><a class="reference internal" href="README.html#release-notes">Release Notes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="README.html#linting">Linting</a></li>
@@ -583,18 +584,13 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="vaultapi.payload.PutSecret">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vaultapi.payload.</span></span><span class="sig-name descname"><span class="pre">PutSecret</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">BaseModel</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vaultapi.payload.PutSecret" title="Permalink to this definition">¶</a></dt>
-<dd><p>Payload for put-secret API call.</p>
+<dd><p>Payload for put-secrets API call.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">PutSecret</span>
 </pre></div>
 </div>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="vaultapi.payload.PutSecret.key">
-<span class="sig-name descname"><span class="pre">key</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#vaultapi.payload.PutSecret.key" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="vaultapi.payload.PutSecret.value">
-<span class="sig-name descname"><span class="pre">value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#vaultapi.payload.PutSecret.value" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="vaultapi.payload.PutSecret.secrets">
+<span class="sig-name descname"><span class="pre">secrets</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#vaultapi.payload.PutSecret.secrets" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -682,29 +678,11 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="vaultapi.routes.get_secret">
 <em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vaultapi.routes.</span></span><span class="sig-name descname"><span class="pre">get_secret</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apikey</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">HTTPAuthorizationCredentials</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(HTTPBearer)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vaultapi.routes.get_secret" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>API function to retrieve a secret.</strong></p>
-<p><strong>Args:</strong></p>
-<blockquote>
-<div><p>request: Reference to the FastAPI request object.
-key: Name of the secret to be retrieved.
-table_name: Name of the table where the secret is stored.
-apikey: API Key to authenticate the request.</p>
-</div></blockquote>
-<p><strong>Raises:</strong></p>
-<blockquote>
-<div><p>APIResponse:
-Raises the HTTPStatus object with a status code and detail as response.</p>
-</div></blockquote>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="vaultapi.routes.get_secrets">
-<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vaultapi.routes.</span></span><span class="sig-name descname"><span class="pre">get_secrets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apikey</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">HTTPAuthorizationCredentials</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(HTTPBearer)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vaultapi.routes.get_secrets" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>API function to retrieve multiple secrets at a time.</strong></p>
 <p><strong>Args:</strong></p>
 <blockquote>
 <div><p>request: Reference to the FastAPI request object.
-key: Comma separated list of secret names to be retrieved.
+keys: Comma separated list of secret names to be retrieved.
 table_name: Name of the table where the secrets are stored.
 apikey: API Key to authenticate the request.</p>
 </div></blockquote>
@@ -751,23 +729,6 @@ Raises the HTTPStatus object with a status code and detail as response.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="vaultapi.routes.put_secret">
 <em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vaultapi.routes.</span></span><span class="sig-name descname"><span class="pre">put_secret</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#vaultapi.payload.PutSecret" title="vaultapi.payload.PutSecret"><span class="pre">PutSecret</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">apikey</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">HTTPAuthorizationCredentials</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(HTTPBearer)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vaultapi.routes.put_secret" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>API function to add secrets to database.</strong></p>
-<p><strong>Args:</strong></p>
-<blockquote>
-<div><p>request: Reference to the FastAPI request object.
-data: Payload with <code class="docutils literal notranslate"><span class="pre">key</span></code>, <code class="docutils literal notranslate"><span class="pre">value</span></code>, and <code class="docutils literal notranslate"><span class="pre">table_name</span></code> as body.
-apikey: API Key to authenticate the request.</p>
-</div></blockquote>
-<p><strong>Raises:</strong></p>
-<blockquote>
-<div><p>APIResponse:
-Raises the HTTPStatus object with a status code and detail as response.</p>
-</div></blockquote>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="vaultapi.routes.put_secrets">
-<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vaultapi.routes.</span></span><span class="sig-name descname"><span class="pre">put_secrets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PutSecrets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apikey</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">HTTPAuthorizationCredentials</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(HTTPBearer)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vaultapi.routes.put_secrets" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>API function to add multiple secrets to a table in the database.</strong></p>
 <p><strong>Args:</strong></p>
 <blockquote>

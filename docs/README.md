@@ -98,6 +98,18 @@ print(Fernet.generate_key())
 ```
 </details>
 
+## API Functionality
+
+| Endpoint         | Description                                | API method |
+|------------------|--------------------------------------------|------------|
+| `/health`        | API health endpoint                        | GET        |
+| `/get-secret`    | Retrieve secrets (comma separated list)    | GET        |
+| `/get-table`     | Get ALL the secrets stored in a table      | GET        |
+| `/list-tables`   | List all available tables                  | GET        |
+| `/put-secret`    | Store or update a secret (key-value pairs) | PUT        |
+| `/delete-secret` | Delete a specific secret                   | DELETE     |
+| `/create-table`  | Create a new table                         | POST       |
+
 ## Coding Standards
 Docstring format: [`Google`][google-docs] <br>
 Styling conventions: [`PEP 8`][pep8] and [`isort`][isort]

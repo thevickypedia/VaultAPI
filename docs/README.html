@@ -132,6 +132,18 @@ Defaults to 5req/2s [AND] 10req/30s</p></li>
 </pre></div>
 </div>
 </details></section>
+<section id="api-functionality">
+<h2>API Functionality<a class="headerlink" href="#api-functionality" title="Permalink to this heading">¶</a></h2>
+<p>| Endpoint         | Description                                | API method |
+|——————|——————————————–|————|
+| <code class="docutils literal notranslate"><span class="pre">/health</span></code>        | API health endpoint                        | GET        |
+| <code class="docutils literal notranslate"><span class="pre">/get-secret</span></code>    | Retrieve secrets (comma separated list)    | GET        |
+| <code class="docutils literal notranslate"><span class="pre">/get-table</span></code>     | Get ALL the secrets stored in a table      | GET        |
+| <code class="docutils literal notranslate"><span class="pre">/list-tables</span></code>   | List all available tables                  | GET        |
+| <code class="docutils literal notranslate"><span class="pre">/put-secret</span></code>    | Store or update a secret (key-value pairs) | PUT        |
+| <code class="docutils literal notranslate"><span class="pre">/delete-secret</span></code> | Delete a specific secret                   | DELETE     |
+| <code class="docutils literal notranslate"><span class="pre">/create-table</span></code>  | Create a new table                         | POST       |</p>
+</section>
 <section id="coding-standards">
 <h2>Coding Standards<a class="headerlink" href="#coding-standards" title="Permalink to this heading">¶</a></h2>
 <p>Docstring format: <a class="reference external" href="https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings"><code class="docutils literal notranslate"><span class="pre">Google</span></code></a> <br>
@@ -196,6 +208,7 @@ markdown files (including Wiki pages)</p>
 <li><a class="reference internal" href="#">VaultAPI</a><ul>
 <li><a class="reference internal" href="#kick-off">Kick off</a></li>
 <li><a class="reference internal" href="#environment-variables">Environment Variables</a></li>
+<li><a class="reference internal" href="#api-functionality">API Functionality</a></li>
 <li><a class="reference internal" href="#coding-standards">Coding Standards</a></li>
 <li><a class="reference internal" href="#release-notes">Release Notes</a></li>
 <li><a class="reference internal" href="#linting">Linting</a></li>

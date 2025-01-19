@@ -15,23 +15,11 @@ class DeleteSecret(BaseModel):
 
 
 class PutSecret(BaseModel):
-    """Payload for put-secret API call.
-
-    >>> PutSecret
-
-    """
-
-    key: str
-    value: str
-    table_name: str = "default"
-
-
-class PutSecrets(BaseModel):
     """Payload for put-secrets API call.
 
     >>> PutSecret
 
     """
 
-    secrets: Dict[str, str]
+    secrets: Dict[str, str] | str
     table_name: str = "default"
