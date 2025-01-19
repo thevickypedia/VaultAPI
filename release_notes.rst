@@ -1,6 +1,11 @@
 Release Notes
 =============
 
+v0.3.2 (01/19/2025)
+-------------------
+- Includes exception handlers to avoid the possibility of an ``Internal Server Error``
+- **Full Changelog**: https://github.com/thevickypedia/VaultAPI/compare/v0.3.1...v0.3.2
+
 v0.3.1 (01/19/2025)
 -------------------
 - Removes redundant ``GET`` and ``PUT`` secret functions
