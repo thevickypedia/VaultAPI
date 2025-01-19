@@ -193,6 +193,11 @@ async def put_secret(
         Raises the HTTPStatus object with a status code and detail as response.
     """
     await auth.validate(request, apikey)
+    if not database.table_exists(data.table_name):
+        raise exceptions.APIResponse(
+            status_code=HTTPStatus.NOT_FOUND.real,
+            detail=f"Table not found: {data.table_name!r}",
+        )
     # Supports transit encrypted string
     if isinstance(data.secrets, str):
         data.secrets = transit.decrypt(data.secrets)
@@ -230,7 +235,13 @@ async def delete_secret(
         raise exceptions.APIResponse(
             status_code=HTTPStatus.NOT_FOUND.real, detail=HTTPStatus.NOT_FOUND.phrase
         )
-    database.remove_secret(key=data.key, table_name=data.table_name)
+    try:
+        database.remove_secret(key=data.key, table_name=data.table_name)
+    except sqlite3.OperationalError as error:
+        LOGGER.error(error)
+        raise exceptions.APIResponse(
+            status_code=HTTPStatus.EXPECTATION_FAILED.real, detail=error.args[0]
+        )
     raise exceptions.APIResponse(
         status_code=HTTPStatus.OK.real, detail=HTTPStatus.OK.phrase
     )
