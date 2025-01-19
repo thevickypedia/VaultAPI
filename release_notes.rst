@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v0.3.1 (01/19/2025)
+-------------------
+- Removes redundant ``GET`` and ``PUT`` secret functions
+- Includes an option to enable transit encryption for ingress request
+- **Full Changelog**: https://github.com/thevickypedia/VaultAPI/compare/v0.3.0...v0.3.1
+
 v0.3.0 (01/19/2025)
 -------------------
 - Includes a feature to allow private IP, private IP range, and public IP address
