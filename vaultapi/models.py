@@ -5,7 +5,7 @@ import pathlib
 import re
 import socket
 import sqlite3
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List, NoReturn, Set
 
 import yaml
 from cryptography.fernet import Fernet
@@ -93,6 +93,7 @@ class RateLimit(BaseModel):
     seconds: PositiveInt
 
 
+# noinspection PyDataclass
 class Session(BaseModel):
     """Object to store session information.
 
@@ -111,6 +112,7 @@ class Session(BaseModel):
         arbitrary_types_allowed = True
 
 
+# noinspection PyMethodParameters,PyDataclass
 class EnvConfig(BaseSettings):
     """Object to load environment variables.
 
@@ -121,7 +123,7 @@ class EnvConfig(BaseSettings):
     apikey: str
     secret: str
     transit_key_length: PositiveInt = 32
-    transit_time_bucket: PositiveInt = 60
+    transit_time_bucket: PositiveInt = Field(60, ge=30, le=300)  # 30s to 5m
     database: FilePath | NewPath | str = Field("secrets.db", pattern=".*.db$")
     host: str = socket.gethostbyname("localhost") or "0.0.0.0"
     port: PositiveInt = 9010
@@ -145,19 +147,22 @@ class EnvConfig(BaseSettings):
         ]
     )
 
+    @field_validator("transit_key_length", mode="after", check_fields=True)
+    def validate_transit_key_length(cls, value: PositiveInt) -> PositiveInt | NoReturn:
+        """Validate transit key length."""
+        if value in (16, 24, 32):
+            return value
+        raise ValueError("Transit key length (AES) must be one of 16, 24, or 32 bytes.")
+
     @field_validator("allowed_origins", mode="after", check_fields=True)
-    def validate_allowed_origins(
-        cls, value: HttpUrl | List[HttpUrl]  # noqa: PyMethodParameters
-    ) -> List[HttpUrl]:
+    def validate_allowed_origins(cls, value: HttpUrl | List[HttpUrl]) -> List[HttpUrl]:
         """Validate allowed origins to enable CORS policy."""
         if isinstance(value, list):
             return value
         return [value]
 
     @field_validator("allowed_ip_range", mode="after", check_fields=True)
-    def validate_allowed_ip_range(
-        cls, value: List[str]  # noqa: PyMethodParameters
-    ) -> List[str]:
+    def validate_allowed_ip_range(cls, value: List[str]) -> List[str]:
         """Validate allowed IP range to whitelist."""
         for ip_range in value:
             try:
@@ -173,7 +178,7 @@ class EnvConfig(BaseSettings):
         return value
 
     @field_validator("apikey", mode="after")
-    def validate_apikey(cls, value: str) -> str | None:  # noqa: PyMethodParameters
+    def validate_apikey(cls, value: str) -> str | None:
         """Validate API key for complexity."""
         try:
             complexity_checker(value)
@@ -182,7 +187,7 @@ class EnvConfig(BaseSettings):
         return value
 
     @field_validator("secret", mode="after")
-    def validate_api_secret(cls, value: str) -> str:  # noqa: PyMethodParameters
+    def validate_api_secret(cls, value: str) -> str:
         """Validate API secret to Fernet compatible."""
         try:
             Fernet(value)
@@ -202,6 +207,7 @@ class EnvConfig(BaseSettings):
             EnvConfig:
             Loads the ``EnvConfig`` model.
         """
+        # noinspection PyArgumentList
         return cls(_env_file=env_file)
 
     class Config:
@@ -256,6 +262,7 @@ def load_env() -> EnvConfig:
     env_file = os.getenv("env_file") or os.getenv("ENV_FILE") or ".env"
     if os.path.isfile(env_file):
         return envfile_loader(env_file)
+    # noinspection PyArgumentList
     return EnvConfig()
 
 
