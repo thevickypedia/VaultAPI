@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v0.2.1 (01/18/2025)
+-------------------
+- Includes startup validations for ``transit_key_length`` and ``transit_time_bucket``
+- Bug fix for docker entrypoint
+- **Full Changelog**: https://github.com/thevickypedia/VaultAPI/compare/v0.2.0...v0.2.1
+
 v0.2.0 (01/18/2025)
 -------------------
 - Improves transit security, **requiring** both APIKey and Secret to decrypt
