@@ -1,6 +1,11 @@
 Release Notes
 =============
 
+v0.3.3 (01/21/2025)
+-------------------
+- Includes a new API endpoint to delete existing tables
+- **Full Changelog**: https://github.com/thevickypedia/VaultAPI/compare/v0.3.2...v0.3.3
+
 v0.3.2 (01/19/2025)
 -------------------
 - Includes exception handlers to avoid the possibility of an ``Internal Server Error``
