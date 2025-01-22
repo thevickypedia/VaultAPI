@@ -109,6 +109,7 @@ print(Fernet.generate_key())
 | `/put-secret`    | Store or update a secret (key-value pairs) | PUT        |
 | `/delete-secret` | Delete a specific secret                   | DELETE     |
 | `/create-table`  | Create a new table                         | POST       |
+| `/delete-table`  | Deletes an existing table                  | DELETE     |
 
 ## Coding Standards
 Docstring format: [`Google`][google-docs] <br>

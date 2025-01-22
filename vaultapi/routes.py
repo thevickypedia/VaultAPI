@@ -278,6 +278,42 @@ async def create_table(
     )
 
 
+async def delete_table(
+    request: Request,
+    table_name: str,
+    apikey: HTTPAuthorizationCredentials = Depends(security),
+):
+    """**API function to delete an existing table from the database.**
+
+    **Args:**
+
+        request: Reference to the FastAPI request object.
+        table_name: Name of the table to be created.
+        apikey: API Key to authenticate the request.
+
+    **Raises:**
+
+        APIResponse:
+        Raises the HTTPStatus object with a status code and detail as response.
+    """
+    await auth.validate(request, apikey)
+    if not database.table_exists(table_name):
+        raise exceptions.APIResponse(
+            status_code=HTTPStatus.NOT_FOUND.real,
+            detail=f"Table {table_name!r} not found!",
+        )
+    try:
+        database.drop_table(table_name)
+    except sqlite3.OperationalError as error:
+        LOGGER.error(error)
+        raise exceptions.APIResponse(
+            status_code=HTTPStatus.EXPECTATION_FAILED.real, detail=error.args[0]
+        )
+    raise exceptions.APIResponse(
+        status_code=HTTPStatus.OK.real, detail=HTTPStatus.OK.phrase
+    )
+
+
 async def health() -> Dict[str, str]:
     """Healthcheck endpoint.
 
@@ -348,6 +384,12 @@ def get_all_routes() -> List[APIRoute]:
             path="/create-table",
             endpoint=create_table,
             methods=["POST"],
+            dependencies=dependencies,
+        ),
+        APIRoute(
+            path="/delete-table",
+            endpoint=delete_table,
+            methods=["DELETE"],
             dependencies=dependencies,
         ),
     ]
