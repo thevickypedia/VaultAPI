@@ -245,6 +245,7 @@ def envfile_loader(filename: str | os.PathLike) -> EnvConfig:
     elif not env_file.suffix or env_file.suffix.lower() in (
         ".text",
         ".txt",
+        ".env",
         "",
     ):
         return EnvConfig.from_env_file(env_file)

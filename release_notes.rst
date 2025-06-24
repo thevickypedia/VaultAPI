@@ -1,6 +1,11 @@
 Release Notes
 =============
 
+v0.3.4 (06/23/2025)
+-------------------
+- Allow dot env files with different name prefixes
+- **Full Changelog**: https://github.com/thevickypedia/VaultAPI/compare/v0.3.3...v0.3.4
+
 v0.3.3 (01/21/2025)
 -------------------
 - Includes a new API endpoint to delete existing tables
