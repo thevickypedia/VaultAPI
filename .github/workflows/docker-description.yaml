@@ -14,13 +14,14 @@ env:
 
 jobs:
   update-docker-hub:
-    runs-on: thevickypedia-lite
+    runs-on: thevickypedia-default
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set Repository
         run: |
-          docker_repository=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
+          repo_name=$(basename ${{ github.repository }})
+          docker_repository=$(echo "${repo_name}" | tr '[:upper:]' '[:lower:]')
           echo "DOCKER_REPOSITORY=${{ secrets.DOCKER_USERNAME }}/${docker_repository}" >> $GITHUB_ENV
         shell: bash
 

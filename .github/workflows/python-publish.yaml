@@ -1,41 +1,40 @@
 name: Build and Publish (PyPi)
 
 on:
-  release:
-    types:
-      - published
+  workflow_dispatch:
   push:
     branches:
       - main
     paths:
-      - '**/*.py'
-  workflow_dispatch:
-    inputs:
-      dry_run:
-        type: choice
-        description: Dry run mode
-        required: true
-        options:
-          - "true"
-          - "false"
+      - "**/version.py"
 
 jobs:
-  pypi-publisher:
-    runs-on: thevickypedia-lite
+  pre-commit:
+    runs-on: thevickypedia-default
     steps:
-      - name: Set dry-run
-        run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "::notice title=DryRun::Setting dry run to ${{ inputs.dry_run }} for '${{ github.event_name }}' event"
-            echo "dry_run=${{ inputs.dry_run }}" >> $GITHUB_ENV
-          elif [[ "${{ github.event_name }}" == "push" ]]; then
-            echo "::notice title=DryRun::Setting dry run to true for '${{ github.event_name }}' event"
-            echo "dry_run=true" >> $GITHUB_ENV
-          else
-            echo "::notice title=DryRun::Setting dry run to false for '${{ github.event_name }}' event"
-            echo "dry_run=false" >> $GITHUB_ENV
-          fi
-      - uses: thevickypedia/pypi-publisher@v3
-        with:
+      - uses: actions/checkout@v6
+      - run: |
+          pip install pre-commit
+          export PATH="$HOME/.local/bin:$PATH"
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          pre-commit run --all-files
+        shell: bash
+
+  pypi-publisher:
+    needs: pre-commit
+    runs-on: thevickypedia-default
+    outputs:
+      version: ${{ steps.publish.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: thevickypedia/pypi-publisher@v5
+        id: publish
+        env:
           token: ${{ secrets.PYPI_TOKEN }}
-          dry-run: ${{ env.dry_run }}
+
+  release:
+    needs: pypi-publisher
+    uses: ./.github/workflows/release.yml
+    with:
+      project_version: ${{ needs.pypi-publisher.outputs.version }}
+    secrets: inherit

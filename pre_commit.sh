@@ -38,13 +38,17 @@ run_pytest() {
   python -m pytest
 }
 
-clean_docs &
-gen_docs &
-update_release_notes &
-#run_pytest &
+if [ "$GITHUB_ACTIONS" = "true" ]; then
+  echo "Running in GitHub Actions"
+else
+  clean_docs &
+  gen_docs &
+  update_release_notes &
+  #run_pytest &
 
-wait
+  wait
 
-# The existence of this file tells GitHub Pages not to run the published files through Jekyll.
-# This is important since Jekyll will discard any files that begin with _
-touch docs/.nojekyll
+  # The existence of this file tells GitHub Pages not to run the published files through Jekyll.
+  # This is important since Jekyll will discard any files that begin with _
+  touch docs/.nojekyll
+fi

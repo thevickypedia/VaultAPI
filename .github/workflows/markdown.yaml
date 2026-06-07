@@ -10,6 +10,6 @@ on:
 
 jobs:
   none-shall-pass:
-    runs-on: thevickypedia-lite
+    runs-on: thevickypedia-default
     steps:
       - uses: thevickypedia/none-shall-pass@v5
