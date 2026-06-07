@@ -74,8 +74,8 @@
 
 <hr class="docutils" />
 <span class="target" id="module-vaultapi.api"></span><dl class="py function">
-<dt class="sig sig-object py" id="vaultapi.api.enable_cors">
-<span class="sig-prename descclassname"><span class="pre">vaultapi.api.</span></span><span class="sig-name descname"><span class="pre">enable_cors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#vaultapi.api.enable_cors" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="vaultapi.api.lifespan">
+<span class="sig-prename descclassname"><span class="pre">vaultapi.api.</span></span><span class="sig-name descname"><span class="pre">lifespan</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#vaultapi.api.lifespan" title="Permalink to this definition">¶</a></dt>
 <dd><p>Enables CORS policy.</p>
 </dd></dl>
 
@@ -219,7 +219,7 @@
 <span id="exceptions"></span><h1>Exceptions<a class="headerlink" href="#module-vaultapi.exceptions" title="Permalink to this heading">¶</a></h1>
 <dl class="py exception">
 <dt class="sig sig-object py" id="vaultapi.exceptions.APIResponse">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vaultapi.exceptions.</span></span><span class="sig-name descname"><span class="pre">APIResponse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status_code</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vaultapi.exceptions.APIResponse" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vaultapi.exceptions.</span></span><span class="sig-name descname"><span class="pre">APIResponse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status_code</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">collections.abc.Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vaultapi.exceptions.APIResponse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Custom <code class="docutils literal notranslate"><span class="pre">HTTPException</span></code> from <code class="docutils literal notranslate"><span class="pre">FastAPI</span></code> to wrap an API response.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">APIResponse</span>
 </pre></div>
@@ -379,6 +379,31 @@
 <dd></dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="vaultapi.models.EnvConfig.enable_ui">
+<span class="sig-name descname"><span class="pre">enable_ui</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#vaultapi.models.EnvConfig.enable_ui" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="vaultapi.models.EnvConfig.username">
+<span class="sig-name descname"><span class="pre">username</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#vaultapi.models.EnvConfig.username" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="vaultapi.models.EnvConfig.password">
+<span class="sig-name descname"><span class="pre">password</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#vaultapi.models.EnvConfig.password" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="vaultapi.models.EnvConfig.totp_token">
+<span class="sig-name descname"><span class="pre">totp_token</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#vaultapi.models.EnvConfig.totp_token" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="vaultapi.models.EnvConfig.ui_timeout">
+<span class="sig-name descname"><span class="pre">ui_timeout</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#vaultapi.models.EnvConfig.ui_timeout" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="vaultapi.models.EnvConfig.log_config">
 <span class="sig-name descname"><span class="pre">log_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#vaultapi.models.EnvConfig.log_config" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -486,7 +511,7 @@
 <hr class="docutils" />
 <span class="target" id="module-vaultapi.models"></span><dl class="py function">
 <dt class="sig sig-object py" id="vaultapi.models.complexity_checker">
-<span class="sig-prename descclassname"><span class="pre">vaultapi.models.</span></span><span class="sig-name descname"><span class="pre">complexity_checker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">secret</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#vaultapi.models.complexity_checker" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">vaultapi.models.</span></span><span class="sig-name descname"><span class="pre">complexity_checker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">secret</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_len</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">32</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#vaultapi.models.complexity_checker" title="Permalink to this definition">¶</a></dt>
 <dd><p>Verifies the strength of a secret.</p>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
@@ -504,6 +529,12 @@
 <dd class="field-odd"><p><strong>AssertionError</strong> – When at least 1 of the above conditions fail to match.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="vaultapi.models.validate_totp_secret">
+<span class="sig-prename descclassname"><span class="pre">vaultapi.models.</span></span><span class="sig-name descname"><span class="pre">validate_totp_secret</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">NoReturn</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#vaultapi.models.validate_totp_secret" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate the provided TOTP secret token.</p>
 </dd></dl>
 
 <dl class="py class">
@@ -636,188 +667,15 @@
 <section id="module-vaultapi.routes">
 <span id="api-routes"></span><h1>API Routes<a class="headerlink" href="#module-vaultapi.routes" title="Permalink to this heading">¶</a></h1>
 <dl class="py function">
-<dt class="sig sig-object py" id="vaultapi.routes.retrieve_secret">
-<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vaultapi.routes.</span></span><span class="sig-name descname"><span class="pre">retrieve_secret</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#vaultapi.routes.retrieve_secret" title="Permalink to this definition">¶</a></dt>
-<dd><p>Retrieve an existing secret from a table in the database.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>key</strong> – Name of the secret to retrieve.</p></li>
-<li><p><strong>table_name</strong> – Name of the table where the secret is stored.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Returns the secret value.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="vaultapi.routes.retrieve_secrets">
-<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vaultapi.routes.</span></span><span class="sig-name descname"><span class="pre">retrieve_secrets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#vaultapi.routes.retrieve_secrets" title="Permalink to this definition">¶</a></dt>
-<dd><p>Retrieve multiple secrets from a table or retrieve the table as a whole.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>table_name</strong> – Name of the table where the secret is stored.</p></li>
-<li><p><strong>keys</strong> – List of keys for which the values have to be retrieved.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Returns the key-value pairs for secret key and it’s value.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Dict[str, str]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="vaultapi.routes.get_secret">
-<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vaultapi.routes.</span></span><span class="sig-name descname"><span class="pre">get_secret</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apikey</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">HTTPAuthorizationCredentials</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(HTTPBearer)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vaultapi.routes.get_secret" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>API function to retrieve multiple secrets at a time.</strong></p>
-<p><strong>Args:</strong></p>
-<blockquote>
-<div><p>request: Reference to the FastAPI request object.
-keys: Comma separated list of secret names to be retrieved.
-table_name: Name of the table where the secrets are stored.
-apikey: API Key to authenticate the request.</p>
-</div></blockquote>
-<p><strong>Raises:</strong></p>
-<blockquote>
-<div><p>APIResponse:
-Raises the HTTPStatus object with a status code and detail as response.</p>
-</div></blockquote>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="vaultapi.routes.list_tables">
-<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vaultapi.routes.</span></span><span class="sig-name descname"><span class="pre">list_tables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apikey</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">HTTPAuthorizationCredentials</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(HTTPBearer)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vaultapi.routes.list_tables" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>API function to retrieve ALL available tables.</strong></p>
-<p><strong>Args:</strong></p>
-<blockquote>
-<div><p>request: Reference to the FastAPI request object.
-apikey: API Key to authenticate the request.</p>
-</div></blockquote>
-<p><strong>Raises:</strong></p>
-<blockquote>
-<div><p>APIResponse:
-Raises the HTTPStatus object with a status code and detail as response.</p>
-</div></blockquote>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="vaultapi.routes.get_table">
-<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vaultapi.routes.</span></span><span class="sig-name descname"><span class="pre">get_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apikey</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">HTTPAuthorizationCredentials</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(HTTPBearer)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vaultapi.routes.get_table" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>API function to retrieve ALL the key-value pairs stored in a particular table.</strong></p>
-<p><strong>Args:</strong></p>
-<blockquote>
-<div><p>request: Reference to the FastAPI request object.
-table_name: Name of the table where the secrets are stored.
-apikey: API Key to authenticate the request.</p>
-</div></blockquote>
-<p><strong>Raises:</strong></p>
-<blockquote>
-<div><p>APIResponse:
-Raises the HTTPStatus object with a status code and detail as response.</p>
-</div></blockquote>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="vaultapi.routes.put_secret">
-<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vaultapi.routes.</span></span><span class="sig-name descname"><span class="pre">put_secret</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#vaultapi.payload.PutSecret" title="vaultapi.payload.PutSecret"><span class="pre">PutSecret</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">apikey</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">HTTPAuthorizationCredentials</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(HTTPBearer)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vaultapi.routes.put_secret" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>API function to add multiple secrets to a table in the database.</strong></p>
-<p><strong>Args:</strong></p>
-<blockquote>
-<div><p>request: Reference to the FastAPI request object.
-data: Payload with <code class="docutils literal notranslate"><span class="pre">key</span></code>, <code class="docutils literal notranslate"><span class="pre">value</span></code>, and <code class="docutils literal notranslate"><span class="pre">table_name</span></code> as body.
-apikey: API Key to authenticate the request.</p>
-</div></blockquote>
-<p><strong>Raises:</strong></p>
-<blockquote>
-<div><p>APIResponse:
-Raises the HTTPStatus object with a status code and detail as response.</p>
-</div></blockquote>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="vaultapi.routes.delete_secret">
-<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vaultapi.routes.</span></span><span class="sig-name descname"><span class="pre">delete_secret</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#vaultapi.payload.DeleteSecret" title="vaultapi.payload.DeleteSecret"><span class="pre">DeleteSecret</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">apikey</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">HTTPAuthorizationCredentials</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(HTTPBearer)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vaultapi.routes.delete_secret" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>API function to delete secrets from database.</strong></p>
-<p><strong>Args:</strong></p>
-<blockquote>
-<div><p>request: Reference to the FastAPI request object.
-data: Payload with <code class="docutils literal notranslate"><span class="pre">key</span></code> and <code class="docutils literal notranslate"><span class="pre">table_name</span></code> as body.
-apikey: API Key to authenticate the request.</p>
-</div></blockquote>
-<p><strong>Raises:</strong></p>
-<blockquote>
-<div><p>APIResponse:
-Raises the HTTPStatus object with a status code and detail as response.</p>
-</div></blockquote>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="vaultapi.routes.create_table">
-<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vaultapi.routes.</span></span><span class="sig-name descname"><span class="pre">create_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apikey</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">HTTPAuthorizationCredentials</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(HTTPBearer)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vaultapi.routes.create_table" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>API function to create a new table in the database.</strong></p>
-<p><strong>Args:</strong></p>
-<blockquote>
-<div><p>request: Reference to the FastAPI request object.
-table_name: Name of the table to be created.
-apikey: API Key to authenticate the request.</p>
-</div></blockquote>
-<p><strong>Raises:</strong></p>
-<blockquote>
-<div><p>APIResponse:
-Raises the HTTPStatus object with a status code and detail as response.</p>
-</div></blockquote>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="vaultapi.routes.delete_table">
-<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vaultapi.routes.</span></span><span class="sig-name descname"><span class="pre">delete_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apikey</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">HTTPAuthorizationCredentials</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Depends(HTTPBearer)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vaultapi.routes.delete_table" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>API function to delete an existing table from the database.</strong></p>
-<p><strong>Args:</strong></p>
-<blockquote>
-<div><p>request: Reference to the FastAPI request object.
-table_name: Name of the table to be created.
-apikey: API Key to authenticate the request.</p>
-</div></blockquote>
-<p><strong>Raises:</strong></p>
-<blockquote>
-<div><p>APIResponse:
-Raises the HTTPStatus object with a status code and detail as response.</p>
-</div></blockquote>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="vaultapi.routes.health">
-<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vaultapi.routes.</span></span><span class="sig-name descname"><span class="pre">health</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#vaultapi.routes.health" title="Permalink to this definition">¶</a></dt>
-<dd><p>Healthcheck endpoint.</p>
+<dt class="sig sig-object py" id="vaultapi.routes.ui_routes">
+<span class="sig-prename descclassname"><span class="pre">vaultapi.routes.</span></span><span class="sig-name descname"><span class="pre">ui_routes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">APIRoute</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#vaultapi.routes.ui_routes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the UI routes to be added for the API server.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Returns the health response.</p>
+<dd class="field-odd"><p>Returns the UI routes as a list of APIRoute objects.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Dict[str, str]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="vaultapi.routes.docs">
-<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vaultapi.routes.</span></span><span class="sig-name descname"><span class="pre">docs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">RedirectResponse</span></span></span><a class="headerlink" href="#vaultapi.routes.docs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Redirect to docs page.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Redirects the user to <code class="docutils literal notranslate"><span class="pre">/docs</span></code> page.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>RedirectResponse</p>
+<dd class="field-even"><p>List[APIRoute]</p>
 </dd>
 </dl>
 </dd></dl>

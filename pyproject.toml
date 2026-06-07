@@ -26,6 +26,7 @@ dependencies = { file = ["requirements.txt"] }
 
 [project.optional-dependencies]
 dev = ["sphinx==5.1.1", "pre-commit", "recommonmark", "gitverse"]
+ui = ["FastAPI-UI-Auth==0.4.*"]
 
 [project.scripts]
 # sends all the args to commandline function, where the arbitary commands as processed accordingly

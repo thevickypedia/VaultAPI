@@ -5,6 +5,7 @@ import pathlib
 import re
 import socket
 import sqlite3
+from datetime import datetime
 from typing import Any, Dict, List, NoReturn, Set
 
 import yaml
@@ -26,7 +27,7 @@ LOGGER = logging.getLogger("uvicorn.default")
 DEFAULT_ALLOWED = ["0.0.0.0", "127.0.0.1", "localhost"]
 
 
-def complexity_checker(secret: str) -> None:
+def complexity_checker(secret: str, max_len: int = 32) -> None:
     """Verifies the strength of a secret.
 
     See Also:
@@ -43,8 +44,8 @@ def complexity_checker(secret: str) -> None:
     """
     # calculates the length
     assert (
-        len(secret) >= 32
-    ), f"secret length must be at least 32, received {len(secret)}"
+        len(secret) >= max_len
+    ), f"secret length must be at least {max_len}, received {len(secret)}"
 
     # searches for digits
     assert re.search(r"\d", secret), "secret must include an integer"
@@ -63,6 +64,17 @@ def complexity_checker(secret: str) -> None:
     assert re.search(
         r"[ !@#$%^&*()_='+,-./[\\\]`{|}~" + r'"]', secret
     ), "secret must contain at least one special character"
+
+
+def validate_totp_secret(token) -> None | NoReturn:
+    """Validate the provided TOTP secret token."""
+    import pyotp
+
+    totp = pyotp.TOTP(token)
+    # Sampler can also be generated with totp.now()
+    now = datetime.now()
+    sampler = totp.generate_otp(totp.timecode(now))
+    assert totp.verify(sampler, for_time=now), "Invalid authenticatorToken!"
 
 
 class Database:
@@ -130,6 +142,11 @@ class EnvConfig(BaseSettings):
     host: str = socket.gethostbyname("localhost") or "0.0.0.0"
     port: PositiveInt = 9010
     workers: PositiveInt = 1
+    enable_ui: bool = False
+    username: str | None = None
+    password: str | None = None
+    totp_token: str | None = None
+    ui_timeout: PositiveInt = Field(900, ge=300, le=3_600)  # 5m to 1h
     log_config: FilePath | Dict[str, Any] | None = None
     allow_public_ip: bool = False
     allow_private_ip: bool = False
