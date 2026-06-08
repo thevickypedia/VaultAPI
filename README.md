@@ -14,9 +14,8 @@ It also includes transit encryption to ensure that the secrets are encrypted dur
 
 **Deployments**
 
-[![docker][label-docker-build]][gha_docker]
+[![docker][label-docker]][gha_docker]
 [![pypi][label-actions-pypi]][gha_pypi]
-[![docker_desc][label-docker-desc]][gha_docker_desc]
 
 [![markdown][label-actions-markdown]][gha_md_valid]
 [![pages][label-actions-pages]][gha_pages]
@@ -169,16 +168,15 @@ pre-commit run --all-files
 
 Licensed under the [MIT License][license]
 
-[label-actions-markdown]: https://github.com/thevickypedia/VaultAPI/actions/workflows/markdown.yaml/badge.svg
-[label-docker-build]: https://github.com/thevickypedia/VaultAPI/actions/workflows/docker-publish.yaml/badge.svg
-[label-docker-desc]: https://github.com/thevickypedia/VaultAPI/actions/workflows/docker-description.yaml/badge.svg
+[label-actions-markdown]: https://github.com/thevickypedia/VaultAPI/actions/workflows/markdown.yml/badge.svg
+[label-docker]: https://github.com/thevickypedia/VaultAPI/actions/workflows/docker-publish.yml/badge.svg
 [label-pypi-package]: https://img.shields.io/badge/Pypi%20Package-VaultAPI-blue?style=for-the-badge&logo=Python
 [label-sphinx-doc]: https://img.shields.io/badge/Made%20with-Sphinx-blue?style=for-the-badge&logo=Sphinx
 [label-docker-doc]: https://img.shields.io/badge/Made%20with-Docker-blue?style=for-the-badge&logo=Docker
 [label-pyversion]: https://img.shields.io/badge/python-3.10%20%7C%203.11-blue
 [label-platform]: https://img.shields.io/badge/Platform-Linux|macOS|Windows-1f425f.svg
 [label-actions-pages]: https://github.com/thevickypedia/VaultAPI/actions/workflows/pages/pages-build-deployment/badge.svg
-[label-actions-pypi]: https://github.com/thevickypedia/VaultAPI/actions/workflows/python-publish.yaml/badge.svg
+[label-actions-pypi]: https://github.com/thevickypedia/VaultAPI/actions/workflows/python-publish.yml/badge.svg
 [label-pypi]: https://img.shields.io/pypi/v/VaultAPI
 [label-pypi-format]: https://img.shields.io/pypi/format/VaultAPI
 [label-pypi-status]: https://img.shields.io/pypi/status/VaultAPI
@@ -189,10 +187,9 @@ Licensed under the [MIT License][license]
 [release-notes]: https://github.com/thevickypedia/VaultAPI/blob/main/release_notes.rst
 [decryptors]: https://github.com/thevickypedia/VaultAPI/blob/main/decryptors
 [gha_pages]: https://github.com/thevickypedia/VaultAPI/actions/workflows/pages/pages-build-deployment
-[gha_docker]: https://github.com/thevickypedia/VaultAPI/actions/workflows/docker-publish.yaml
-[gha_docker_desc]: https://github.com/thevickypedia/VaultAPI/actions/workflows/docker-description.yaml
-[gha_pypi]: https://github.com/thevickypedia/VaultAPI/actions/workflows/python-publish.yaml
-[gha_md_valid]: https://github.com/thevickypedia/VaultAPI/actions/workflows/markdown.yaml
+[gha_docker]: https://github.com/thevickypedia/VaultAPI/actions/workflows/docker.yml
+[gha_pypi]: https://github.com/thevickypedia/VaultAPI/actions/workflows/python-publish.yml
+[gha_md_valid]: https://github.com/thevickypedia/VaultAPI/actions/workflows/markdown.yml
 [google-docs]: https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
 [pep8]: https://www.python.org/dev/peps/pep-0008/
 [isort]: https://pycqa.github.io/isort/
