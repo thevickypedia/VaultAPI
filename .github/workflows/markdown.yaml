@@ -1,4 +1,4 @@
-name: none-shall-pass
+name: None Shall Pass - Markdown Linting
 
 on:
   push:
