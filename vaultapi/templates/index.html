@@ -831,9 +831,7 @@
         'use strict';
 
         // ── State ──────────────────────────────────────
-        // TODO: Move token from in-memory state to session_storage to persist across hard refresh
         const state = {
-            token: null,
             view: 'tables',
             currentTable: null,
             tables: [],
@@ -871,8 +869,8 @@
         // ── API helper — injects Bearer, handles 401 ──
         async function api(method, path, body = null) {
             const headers = {'Content-Type': 'application/json'};
-            if (state.token) headers['Authorization'] = `Bearer ${state.token}`;
-            // TODO: Enum value should be passed by the backend code using Jinja along with version info
+            const session_token = sessionStorage.getItem("session_token");
+            if (session_token) headers['Authorization'] = `Bearer ${session_token}`;
             headers['Authenticator'] = '{{ authenticator }}';
             const opts = {method, headers};
             if (body) opts.body = JSON.stringify(body);
@@ -901,7 +899,7 @@
         }
 
         function logout() {
-            state.token = null;
+            sessionStorage.clear();
             showLogin();
         }
 
@@ -941,7 +939,7 @@
 
             if (ok) {
                 if (data.token) {
-                    state.token = data.token
+                    sessionStorage.setItem("session_token", data.token)
                 }
                 showApp();
                 navigateTo('tables');
