@@ -21,7 +21,7 @@ from pydantic import (
 )
 from pydantic_settings import BaseSettings
 
-from . import ipaddress
+from . import ipaddress, exceptions
 
 LOGGER = logging.getLogger("uvicorn.default")
 DEFAULT_ALLOWED = ["0.0.0.0", "127.0.0.1", "localhost"]
@@ -336,6 +336,12 @@ if env.enable_ui:
     assert (
         env.totp_token is not None
     ), "TOTP token must be provided if enable_ui is True"
+    try:
+        import pyotp
+    except (ImportError, ModuleNotFoundError):
+        raise exceptions.StartupError(
+            "Missing requirements. Please install 'vaultapi[ui]'"
+        )
 database: Database = Database(env.database)
 session = Session()
 __init__()

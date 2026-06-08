@@ -7,3 +7,11 @@ class APIResponse(HTTPException):
     >>> APIResponse
 
     """
+
+
+class StartupError(EnvironmentError):
+    """Custom ``StartupError`` to indicate an error during application startup.
+
+    >>> StartupError
+
+    """
