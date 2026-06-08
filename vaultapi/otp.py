@@ -54,7 +54,9 @@ def generate_qr(show_qr: bool, config: OTPConfig) -> None:
         qr.show()
 
     # Save the QR code
-    qr.save(config.qr_filename)
+    qr_filename = config.qr_filename or "otp_qr.png"
+    qr.save(qr_filename)
+    config.qr_filename = qr_filename
 
     # STEP 4: Update the config with the new secret
     config.secret = secret

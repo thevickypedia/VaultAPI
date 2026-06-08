@@ -87,14 +87,16 @@ def commandline(*args, **kwargs) -> None:
         except (ModuleNotFoundError, ImportError):
             print("\nMissing requirements. Please install 'vaultapi[totp]'\n")
             return
-        filename = kwargs.get("filename", "otp_qr.png")
+        filename = kwargs.get("filename") or "otp_qr.png"
         user = kwargs.get("user")
         app = kwargs.get("app")
         if not all((app, user)):
             print("\nMissing required options.\n" f"Please choose from {choices}")
             raise SystemExit(1)
         config = otp.OTPConfig(
-            qr_filename=filename, authenticator_user=user, authenticator_app=app
+            qr_filename=str(filename),
+            authenticator_user=str(user),
+            authenticator_app=str(app),
         )
         otp.generate_qr(show_qr=True, config=config)
         sys.exit(0)

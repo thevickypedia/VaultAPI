@@ -20,3 +20,4 @@ logging.ini
 discard/
 .coverage
 dist/
+*.png
