@@ -4,8 +4,6 @@ import base64
 import os
 import sqlite3
 import time
-from typing import Generator
-from unittest.mock import patch
 
 import pyotp
 import pytest
@@ -35,8 +33,7 @@ os.environ.update(
 )
 
 # Import after env is set
-from vaultapi import api, auth, database, models  # noqa: E402
-
+from vaultapi import api, auth, models  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Patch the database to an in-memory SQLite that persists per test session
@@ -65,6 +62,7 @@ def _reset_ui_session():
 def _reset_rate_limiters():
     """Clear all in-flight request records on every rate-limiter instance."""
     from vaultapi import routes
+
     for dep in routes.DEPENDENCIES:
         limiter = dep.dependency.__self__
         limiter.requests.clear()

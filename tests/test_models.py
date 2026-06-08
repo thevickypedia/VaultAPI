@@ -1,9 +1,6 @@
 """Tests for vaultapi/models.py — EnvConfig validators, Database, envfile_loader."""
 
 import json
-import os
-import pathlib
-import tempfile
 
 import pytest
 from cryptography.fernet import Fernet
@@ -61,6 +58,7 @@ class TestComplexityChecker:
 class TestValidateTotpSecret:
     def test_valid_totp_token(self):
         import pyotp
+
         token = pyotp.random_base32()
         validate_totp_secret(token)  # should not raise
 
@@ -239,6 +237,7 @@ class TestLoadEnvNoFile:
     def test_returns_env_config_when_no_file_exists(self, monkeypatch):
         """load_env() must fall through to bare EnvConfig() when env_file is absent."""
         from vaultapi.models import load_env
+
         # Point env_file at a path that definitely doesn't exist
         monkeypatch.setenv("env_file", "/tmp/does_not_exist_xyz.env")
         monkeypatch.delenv("ENV_FILE", raising=False)

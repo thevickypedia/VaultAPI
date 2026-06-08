@@ -1,7 +1,7 @@
 """Tests for vaultapi/auth.py — validate() function."""
 
 import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from fastapi.security import HTTPAuthorizationCredentials
@@ -34,6 +34,7 @@ class TestAuthValidate:
 
     async def test_valid_api_key_accepted(self):
         from tests.conftest import API_KEY
+
         req = _make_request()
         await auth.validate(req, _make_creds(API_KEY))  # must not raise
 
@@ -45,7 +46,7 @@ class TestAuthValidate:
 
     async def test_api_key_with_backslash_escape(self):
         """Credentials starting with \\ should be unicode-escape decoded."""
-        from tests.conftest import API_KEY
+
         req = _make_request()
         # Encode then try an escaped version that doesn't match
         with pytest.raises(APIResponse) as exc_info:
@@ -54,12 +55,14 @@ class TestAuthValidate:
 
     async def test_valid_ui_session_accepted(self):
         from tests.conftest import _set_valid_ui_session
+
         token = _set_valid_ui_session()
         req = _make_request(headers={"authenticator": "VaultAPI-UI"})
         await auth.validate(req, _make_creds(token))  # must not raise
 
     async def test_invalid_ui_session_token_rejected(self):
         from tests.conftest import _set_valid_ui_session
+
         _set_valid_ui_session()
         req = _make_request(headers={"authenticator": "VaultAPI-UI"})
         with pytest.raises(APIResponse) as exc_info:
@@ -68,6 +71,7 @@ class TestAuthValidate:
 
     async def test_expired_ui_session_rejected(self):
         from tests.conftest import _set_valid_ui_session
+
         _set_valid_ui_session()
         # Wind the expiry into the past
         auth.UI_SESSION["expires"] = int(time.time()) - models.env.ui_lifetime - 1
@@ -85,7 +89,9 @@ class TestAuthValidate:
 
     async def test_user_agent_logged(self, caplog):
         from tests.conftest import API_KEY
+
         req = _make_request(headers={"user-agent": "pytest/1.0"})
         import logging
+
         with caplog.at_level(logging.DEBUG, logger="uvicorn.default"):
             await auth.validate(req, _make_creds(API_KEY))

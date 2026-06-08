@@ -1,12 +1,8 @@
 """Tests for vaultapi/util.py — dotenv_to_table and transit_decrypt."""
 
-import sqlite3
-import tempfile
-import pathlib
-
 import pytest
 
-from vaultapi import database, models, transit
+from vaultapi import database, models
 from vaultapi.util import dotenv_to_table, transit_decrypt
 
 
@@ -57,8 +53,10 @@ class TestDotenvToTableUnexpectedError:
 
         # Simulate drop_existing=False so the get_table path is taken,
         # then inject an error that is NOT "no such table: …"
-        with patch("vaultapi.database.get_table",
-                   side_effect=_sqlite3.OperationalError("disk I/O error")):
+        with patch(
+            "vaultapi.database.get_table",
+            side_effect=_sqlite3.OperationalError("disk I/O error"),
+        ):
             with pytest.raises(_sqlite3.OperationalError, match="disk I/O error"):
                 dotenv_to_table("wont_matter", dotenv_file, drop_existing=False)
 
@@ -67,10 +65,11 @@ class TestTransitDecrypt:
     def test_roundtrip(self):
         import base64
         import hashlib
-        import time
         import json
-        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
         import secrets as _secrets
+        import time
+
+        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
         payload = {"MY_KEY": "MY_VALUE"}
         epoch = int(time.time()) // models.env.transit_time_bucket
@@ -85,12 +84,12 @@ class TestTransitDecrypt:
         assert result == payload
 
     def test_accepts_bytes(self):
-        import base64
         import hashlib
-        import time
         import json
-        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
         import secrets as _secrets
+        import time
+
+        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
         payload = {"K": "V"}
         epoch = int(time.time()) // models.env.transit_time_bucket

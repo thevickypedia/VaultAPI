@@ -1,21 +1,11 @@
 """Tests for UI endpoints — login, CRUD via session tokens, import."""
 
-import base64
-import os
-import time
 from unittest.mock import patch
 
-import pyotp
 import pytest
 
-from tests.conftest import (
-    API_KEY,
-    TOTP_SECRET,
-    _set_valid_ui_session,
-    make_totp,
-    ui_session_headers,
-)
-from vaultapi import auth, database, models
+from tests.conftest import API_KEY, _set_valid_ui_session, make_totp, ui_session_headers
+from vaultapi import database, models
 
 
 def _ui_headers(token):
@@ -200,8 +190,10 @@ class TestUiPutSecret:
 class TestUiDeleteSecret:
     async def _delete(self, client, path, payload, headers):
         import json as _json
+
         return await client.request(
-            "DELETE", path,
+            "DELETE",
+            path,
             content=_json.dumps(payload),
             headers={**headers, "Content-Type": "application/json"},
         )
@@ -211,19 +203,31 @@ class TestUiDeleteSecret:
         encrypted = models.session.fernet.encrypt(b"v")
         database.put_secret("DEL_KEY", encrypted, "del_tbl")
         token = _set_valid_ui_session()
-        r = await self._delete(client, "/ui/secret", {"table_name": "del_tbl", "key": "DEL_KEY"}, _ui_headers(token))
+        r = await self._delete(
+            client,
+            "/ui/secret",
+            {"table_name": "del_tbl", "key": "DEL_KEY"},
+            _ui_headers(token),
+        )
         assert r.status_code == 200
         assert database.get_secret("DEL_KEY", "del_tbl") is None
 
     async def test_delete_empty_key_returns_400(self, client):
         token = _set_valid_ui_session()
-        r = await self._delete(client, "/ui/secret", {"table_name": "any", "key": ""}, _ui_headers(token))
+        r = await self._delete(
+            client, "/ui/secret", {"table_name": "any", "key": ""}, _ui_headers(token)
+        )
         assert r.status_code == 400
 
     async def test_delete_nonexistent_secret_returns_404(self, client):
         database.create_table("del_tbl2", ["key", "value"])
         token = _set_valid_ui_session()
-        r = await self._delete(client, "/ui/secret", {"table_name": "del_tbl2", "key": "GHOST"}, _ui_headers(token))
+        r = await self._delete(
+            client,
+            "/ui/secret",
+            {"table_name": "del_tbl2", "key": "GHOST"},
+            _ui_headers(token),
+        )
         assert r.status_code == 404
 
 

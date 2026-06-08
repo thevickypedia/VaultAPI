@@ -1,14 +1,11 @@
 """Direct unit tests for UI endpoint handlers to cover auth-exception branches."""
 
-import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.security import HTTPAuthorizationCredentials
 
-from vaultapi import auth, database, exceptions, models, ui_endpoints
-from vaultapi.models import EnvConfig
-from cryptography.fernet import Fernet
+from vaultapi import database, exceptions, models, ui_endpoints
 
 VALID_KEY = "TestApiKey1!SecurePass#Word99@XYZ"
 
@@ -30,8 +27,10 @@ def _creds(token="bad"):
 
 def _forbid_validate():
     """Patch auth.validate to always raise 401."""
+
     async def _raise(*a, **kw):
         raise exceptions.APIResponse(status_code=401, detail="Unauthorized")
+
     return patch("vaultapi.auth.validate", side_effect=_raise)
 
 
@@ -75,9 +74,13 @@ class TestUiAuthExceptBranches:
 
     async def test_import_secrets_auth_fail(self):
         req = _req()
-        req.json = AsyncMock(return_value={
-            "table_name": "t", "payload": '{"k":"v"}', "payload_type": "json"
-        })
+        req.json = AsyncMock(
+            return_value={
+                "table_name": "t",
+                "payload": '{"k":"v"}',
+                "payload_type": "json",
+            }
+        )
         with _forbid_validate():
             resp = await ui_endpoints.ui_import_secrets(req, _creds())
         assert resp.status_code == 401
@@ -105,13 +108,16 @@ class TestUiDeleteSecretRetrieveError:
         database.put_secret("ERR_K", encrypted, "ds_rerr")
 
         from tests.conftest import _set_valid_ui_session
+
         token = _set_valid_ui_session()
 
         req = _req(headers={"authenticator": "VaultAPI-UI"})
         req.json = AsyncMock(return_value={"table_name": "ds_rerr", "key": "ERR_K"})
         creds = _creds(token)
 
-        with patch("vaultapi.api_endpoints.retrieve_secret",
-                   side_effect=exceptions.APIResponse(status_code=400, detail="db error")):
+        with patch(
+            "vaultapi.api_endpoints.retrieve_secret",
+            side_effect=exceptions.APIResponse(status_code=400, detail="db error"),
+        ):
             resp = await ui_endpoints.ui_delete_secret(req, creds)
         assert resp.status_code == 400

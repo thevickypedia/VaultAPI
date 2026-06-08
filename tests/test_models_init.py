@@ -3,10 +3,10 @@
 from unittest.mock import patch
 
 import pytest
+from cryptography.fernet import Fernet
 
 from vaultapi import models
-from vaultapi.models import Session, EnvConfig
-from cryptography.fernet import Fernet
+from vaultapi.models import EnvConfig, Session
 
 VALID_KEY = "TestApiKey1!SecurePass#Word99@XYZ"
 VALID_SECRET = Fernet.generate_key().decode()
@@ -22,10 +22,12 @@ def _run_init(env_overrides=None, private_ip=None, public_ip=None):
     test_env = EnvConfig(**base_env)
     test_session = Session()
 
-    with patch("vaultapi.models.env", test_env), \
-         patch("vaultapi.models.session", test_session), \
-         patch("vaultapi.ipaddress.private", return_value=private_ip), \
-         patch("vaultapi.ipaddress.public", return_value=public_ip):
+    with (
+        patch("vaultapi.models.env", test_env),
+        patch("vaultapi.models.session", test_session),
+        patch("vaultapi.ipaddress.private", return_value=private_ip),
+        patch("vaultapi.ipaddress.public", return_value=public_ip),
+    ):
         models.__init__()
 
     return test_session

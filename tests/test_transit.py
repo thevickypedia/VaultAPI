@@ -1,7 +1,6 @@
 """Tests for vaultapi/transit.py — AES-GCM encrypt/decrypt round-trips."""
 
 import base64
-import time
 
 import pytest
 
@@ -58,7 +57,6 @@ class TestEncryptDecrypt:
         assert transit.decrypt(ct_bytes) == payload
 
     def test_decrypt_wrong_ciphertext_raises(self):
-        from cryptography.exceptions import InvalidTag
         bad = base64.b64encode(b"\x00" * 40).decode()
         with pytest.raises(Exception):
             transit.decrypt(bad)

@@ -40,12 +40,14 @@ class TestPrivateIp:
 class TestPublicIp:
     def test_returns_none_when_all_fail(self):
         import requests as req_lib
+
         with patch.object(req_lib, "get", side_effect=req_lib.RequestException):
             result = public()
             assert result is None
 
     def test_returns_ip_from_first_endpoint(self):
         import requests as req_lib
+
         mock_response = MagicMock()
         mock_response.text = "1.2.3.4\n"
         mock_response.__enter__ = MagicMock(return_value=mock_response)

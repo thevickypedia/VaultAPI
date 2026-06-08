@@ -21,7 +21,7 @@ from pydantic import (
 )
 from pydantic_settings import BaseSettings
 
-from . import ipaddress, exceptions
+from . import exceptions, ipaddress
 
 LOGGER = logging.getLogger("uvicorn.default")
 DEFAULT_ALLOWED = ["0.0.0.0", "127.0.0.1", "localhost"]
@@ -68,8 +68,6 @@ def complexity_checker(secret: str, max_len: int = 32) -> None:
 
 def validate_totp_secret(token) -> None | NoReturn:
     """Validate the provided TOTP secret token."""
-    import pyotp
-
     totp = pyotp.TOTP(token)
     # Sampler can also be generated with totp.now()
     now = datetime.now()
@@ -337,11 +335,12 @@ if env.enable_ui:
         env.totp_token is not None
     ), "TOTP token must be provided if enable_ui is True"
     try:
-        import pyotp
+        import pyotp  # noqa: F401
     except (ImportError, ModuleNotFoundError):  # pragma: no cover
         raise exceptions.StartupError(
             "Missing requirements. Please install 'vaultapi[ui]'"
         )
+    validate_totp_secret(env.totp_token)
 database: Database = Database(env.database)
 session = Session()
 __init__()

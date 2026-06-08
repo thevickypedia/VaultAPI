@@ -34,18 +34,24 @@ class TestListTables:
 @pytest.mark.asyncio
 class TestCreateAndDeleteTable:
     async def test_create_table(self, client):
-        r = await client.post("/create-table?table_name=newtable", headers=auth_headers())
+        r = await client.post(
+            "/create-table?table_name=newtable", headers=auth_headers()
+        )
         assert r.status_code == 200
         assert database.table_exists("newtable")
 
     async def test_delete_existing_table(self, client):
         database.create_table("todel", ["key", "value"])
-        r = await client.delete("/delete-table?table_name=todel", headers=auth_headers())
+        r = await client.delete(
+            "/delete-table?table_name=todel", headers=auth_headers()
+        )
         assert r.status_code == 200
         assert not database.table_exists("todel")
 
     async def test_delete_nonexistent_table(self, client):
-        r = await client.delete("/delete-table?table_name=ghost", headers=auth_headers())
+        r = await client.delete(
+            "/delete-table?table_name=ghost", headers=auth_headers()
+        )
         assert r.status_code == 404
 
 
@@ -99,9 +105,7 @@ class TestPutAndGetSecret:
         database.create_table("fulltbl", ["key", "value"])
         encrypted = models.session.fernet.encrypt(b"v")
         database.put_secret("k", encrypted, "fulltbl")
-        r = await client.get(
-            "/get-table?table_name=fulltbl", headers=auth_headers()
-        )
+        r = await client.get("/get-table?table_name=fulltbl", headers=auth_headers())
         assert r.status_code == 200
 
 
@@ -109,12 +113,14 @@ class TestPutAndGetSecret:
 class TestDeleteSecret:
     async def test_delete_existing_secret(self, client):
         import json as _json
+
         database.create_table("ds_table", ["key", "value"])
         encrypted = models.session.fernet.encrypt(b"v")
         database.put_secret("DEL_ME", encrypted, "ds_table")
         payload = {"key": "DEL_ME", "table_name": "ds_table"}
         r = await client.request(
-            "DELETE", "/delete-secret",
+            "DELETE",
+            "/delete-secret",
             content=_json.dumps(payload),
             headers={**auth_headers(), "Content-Type": "application/json"},
         )
@@ -122,10 +128,12 @@ class TestDeleteSecret:
 
     async def test_delete_nonexistent_secret(self, client):
         import json as _json
+
         database.create_table("ds_table2", ["key", "value"])
         payload = {"key": "GHOST", "table_name": "ds_table2"}
         r = await client.request(
-            "DELETE", "/delete-secret",
+            "DELETE",
+            "/delete-secret",
             content=_json.dumps(payload),
             headers={**auth_headers(), "Content-Type": "application/json"},
         )
@@ -136,6 +144,7 @@ class TestDeleteSecret:
 class TestPutSecretTransitEncrypted:
     async def test_put_transit_encrypted_secrets(self, client):
         from vaultapi import transit
+
         database.create_table("transit_tbl", ["key", "value"])
         encrypted_payload = transit.encrypt({"TK": "tv"})
         payload = {"secrets": encrypted_payload, "table_name": "transit_tbl"}
