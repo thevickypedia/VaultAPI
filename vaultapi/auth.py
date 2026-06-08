@@ -9,7 +9,7 @@ from . import exceptions, models
 
 LOGGER = logging.getLogger("uvicorn.default")
 SECURITY = HTTPBearer()
-UI_SESSION = {"token": ""}
+UI_SESSION = {"token": "", "authenticator": "VaultAPI-UI"}
 
 
 async def validate(
@@ -41,8 +41,7 @@ async def validate(
         )
     else:
         auth = authorization.credentials
-    authenticator = request.headers.get("authenticator")
-    if authenticator == "VaultAPI-UI":
+    if request.headers.get("authenticator", "") == UI_SESSION["authenticator"]:
         authenticated = UI_SESSION["token"] != "" and secrets.compare_digest(
             auth, UI_SESSION["token"]
         )

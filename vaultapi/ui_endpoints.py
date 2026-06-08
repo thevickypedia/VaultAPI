@@ -8,23 +8,28 @@ import warnings
 from http import HTTPStatus
 
 from fastapi import Depends, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials
+from fastapi.templating import Jinja2Templates
 
 from . import api_endpoints, auth, database, exceptions, models
 
 LOGGER = logging.getLogger("uvicorn.default")
+templates = Jinja2Templates(directory=pathlib.Path(__file__).parent / "templates")
 
 
-async def index():
+async def index(request: Request):
     """Endpoint for the UI of the API server.
 
     Returns:
         HTMLResponse:
         Returns the HTML content for the UI.
     """
-    with open(pathlib.Path(__file__).parent / "index.html") as file:
-        return HTMLResponse(content=file.read(), status_code=200)
+    return templates.TemplateResponse(
+        name="index.html",
+        request=request,
+        context={"request": request, "authenticator": auth.UI_SESSION["authenticator"]},
+    )
 
 
 async def ui_login(request: Request):

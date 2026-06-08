@@ -873,7 +873,7 @@
             const headers = {'Content-Type': 'application/json'};
             if (state.token) headers['Authorization'] = `Bearer ${state.token}`;
             // TODO: Enum value should be passed by the backend code using Jinja along with version info
-            headers['Authenticator'] = 'VaultAPI-UI'
+            headers['Authenticator'] = '{{ authenticator }}';
             const opts = {method, headers};
             if (body) opts.body = JSON.stringify(body);
             const res = await fetch(path, opts);
