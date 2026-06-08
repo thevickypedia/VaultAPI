@@ -1,9 +1,6 @@
 """Tests for vaultapi/ipaddress.py — private() and public()."""
 
-import socket
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 from vaultapi.ipaddress import IP_REGEX, private, public
 

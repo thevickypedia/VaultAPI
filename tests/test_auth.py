@@ -45,8 +45,7 @@ class TestAuthValidate:
         assert exc_info.value.status_code == 401
 
     async def test_api_key_with_backslash_escape(self):
-        """Credentials starting with \\ should be unicode-escape decoded."""
-
+        r"""Credentials starting with \\ should be unicode-escape decoded."""
         req = _make_request()
         # Encode then try an escaped version that doesn't match
         with pytest.raises(APIResponse) as exc_info:

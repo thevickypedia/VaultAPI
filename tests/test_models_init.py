@@ -2,7 +2,6 @@
 
 from unittest.mock import patch
 
-import pytest
 from cryptography.fernet import Fernet
 
 from vaultapi import models

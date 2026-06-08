@@ -1,9 +1,8 @@
 """Tests for API endpoints via HTTP (no UI auth)."""
 
 import pytest
-import pytest_asyncio
 
-from tests.conftest import API_KEY, auth_headers
+from tests.conftest import auth_headers
 from vaultapi import database, models
 
 
