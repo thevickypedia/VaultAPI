@@ -19,3 +19,4 @@ logging.ini
 
 discard/
 .coverage
+dist/

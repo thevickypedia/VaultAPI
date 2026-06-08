@@ -6,3 +6,5 @@ doc_gen/
 .github/
 .coverage
 tests/
+decryptors/
+dist/

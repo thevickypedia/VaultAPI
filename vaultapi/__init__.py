@@ -14,6 +14,14 @@ from . import version
 @click.option("--version", "-V", is_flag=True, help="Prints the version.")
 @click.option("--help", "-H", is_flag=True, help="Prints the help section.")
 @click.option(
+    "--filename",
+    "-F",
+    is_flag=False,
+    help="Filename for OTP QR code (default: otp_qr.png).",
+)
+@click.option("--user", "-U", is_flag=False, help="Username for OTP QR code.")
+@click.option("--app", "-A", is_flag=False, help="Application name for OTP QR code.")
+@click.option(
     "--env",
     "-E",
     type=click.Path(exists=True),
@@ -32,6 +40,10 @@ def commandline(*args, **kwargs) -> None:
         "--version | -V": "Prints the version.",
         "--help | -H": "Prints the help section.",
         "--env | -E": "Environment configuration filepath.",
+        "--filename | -F": "Filename for OTP QR code.",
+        "--user | -U": "Username for OTP QR code.",
+        "--app | -A": "Application name for OTP QR code.",
+        "totp": "Generate TOTP QR code.",
         "start | run": "Initiates the API server.",
     }
     # weird way to increase spacing to keep all values monotonic
@@ -68,6 +80,23 @@ def commandline(*args, **kwargs) -> None:
             fg="green",
         )
         click.secho(key.decode() + "\n", bold=True)
+        sys.exit(0)
+    elif trigger == "totp":
+        try:
+            from . import otp
+        except (ModuleNotFoundError, ImportError):
+            print("\nMissing requirements. Please install 'vaultapi[totp]'\n")
+            return
+        filename = kwargs.get("filename", "otp_qr.png")
+        user = kwargs.get("user")
+        app = kwargs.get("app")
+        if not all((app, user)):
+            print("\nMissing required options.\n" f"Please choose from {choices}")
+            raise SystemExit(1)
+        config = otp.OTPConfig(
+            qr_filename=filename, authenticator_user=user, authenticator_app=app
+        )
+        otp.generate_qr(show_qr=True, config=config)
         sys.exit(0)
     else:
         click.secho(f"\n{kwargs}\nNo command provided", fg="red")
