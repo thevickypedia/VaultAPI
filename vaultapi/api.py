@@ -46,6 +46,7 @@ def lifespan() -> None:
             "host",
             "user-agent",
             "authorization",
+            "authenticator",
         ],
     )
 

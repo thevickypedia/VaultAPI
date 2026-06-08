@@ -4,6 +4,7 @@ import os
 import pathlib
 import secrets
 import sqlite3
+import time
 import warnings
 from http import HTTPStatus
 
@@ -85,7 +86,8 @@ async def ui_login(request: Request):
         )
 
     auth.UI_SESSION["token"] = base64.urlsafe_b64encode(os.urandom(32)).decode("utf-8")
-    return JSONResponse(content={"token": auth.UI_SESSION["token"]})
+    auth.UI_SESSION["expires"] = int(time.time())
+    return JSONResponse(content={"token": auth.UI_SESSION["token"], "expires": auth.UI_SESSION["expires"]})
 
 
 async def ui_list_tables(

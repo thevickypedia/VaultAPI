@@ -149,10 +149,8 @@ class EnvConfig(BaseSettings):
     port: PositiveInt = 9010
     workers: PositiveInt = 1
     enable_ui: bool = False
-    username: str | None = None
-    password: str | None = None
     totp_token: str | None = None
-    ui_timeout: PositiveInt = Field(900, ge=300, le=3_600)  # 5m to 1h
+    ui_lifetime: PositiveInt = Field(900, ge=30, le=3_600)  # 5m to 1h
     log_config: FilePath | Dict[str, Any] | None = None
     allow_public_ip: bool = False
     allow_private_ip: bool = False

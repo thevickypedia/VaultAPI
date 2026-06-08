@@ -1,5 +1,6 @@
 import logging
 import secrets
+import time
 from http import HTTPStatus
 
 from fastapi import Request
@@ -9,7 +10,8 @@ from . import exceptions, models
 
 LOGGER = logging.getLogger("uvicorn.default")
 SECURITY = HTTPBearer()
-UI_SESSION = {"token": "", "authenticator": "VaultAPI-UI"}
+
+UI_SESSION = {"token": "", "authenticator": "VaultAPI-UI", "expires": "0"}
 
 
 async def validate(
@@ -42,9 +44,12 @@ async def validate(
     else:
         auth = authorization.credentials
     if request.headers.get("authenticator", "") == UI_SESSION["authenticator"]:
-        authenticated = UI_SESSION["token"] != "" and secrets.compare_digest(
-            auth, UI_SESSION["token"]
-        )
+        authenticated = all((
+            UI_SESSION["token"] != "",
+            UI_SESSION["expires"] != "0",
+            secrets.compare_digest(auth, UI_SESSION["token"]),
+            int(UI_SESSION["expires"]) + models.env.ui_lifetime > time.time(),
+         ))
     else:
         authenticated = secrets.compare_digest(auth, models.env.apikey)
     if authenticated:
