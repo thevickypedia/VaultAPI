@@ -1,6 +1,10 @@
 # VaultAPI
 Lightweight API to store/retrieve secrets to/from an encrypted Database
 
+VaultAPI is designed to be extremely lightweight, secure, and easy to use.
+It provides cutting edge security features like AES encryption, IP-based access control, and rate limiting all out of the box.
+It also includes transit encryption to ensure that the secrets are encrypted during transit to protect against man-in-the-middle attacks.
+
 ![Python][label-pyversion]
 
 **Platform Supported**
@@ -36,7 +40,6 @@ python -m pip install vaultapi
 **Initiate - IDE**
 ```python
 import vaultapi.server
-
 
 if __name__ == '__main__':
     vaultapi.server.start()
@@ -78,6 +81,11 @@ Defaults to 5req/2s [AND] 10req/30s
 - **LOG_CONFIG** - FilePath or dictionary of key-value pairs for log config.
 - **ALLOWED_ORIGINS** - Origins that are allowed to retrieve secrets.
 - **ALLOWED_IP_RANGE** - IP range that is allowed to retrieve secrets. _(eg: `10.112.8.10-210`)_
+
+**Optional (UI integration)**
+- **ENABLE_UI** - Boolean flag to enable the UI. Defaults to `false`
+- **TOTP_TOKEN** - Secret token for TOTP authentication in the UI. Can be generated using any TOTP generator app like `Google Authenticator` or `Authy`.
+- **UI_LIFETIME** - Time in seconds for which the UI session should remain active. Defaults to `900` (15 minutes)
 
 > Checkout [decryptors][decryptors] for more information about decrypting the retrieved secret from the server.
 

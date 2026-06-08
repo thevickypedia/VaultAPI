@@ -46,6 +46,9 @@
   <section id="vaultapi">
 <h1>VaultAPI<a class="headerlink" href="#vaultapi" title="Permalink to this heading">¶</a></h1>
 <p>Lightweight API to store/retrieve secrets to/from an encrypted Database</p>
+<p>VaultAPI is designed to be extremely lightweight, secure, and easy to use.
+It provides cutting edge security features like AES encryption, IP-based access control, and rate limiting all out of the box.
+It also includes transit encryption to ensure that the secrets are encrypted during transit to protect against man-in-the-middle attacks.</p>
 <p><img alt="Python" src="https://img.shields.io/badge/python-3.10%20%7C%203.11-blue" /></p>
 <p><strong>Platform Supported</strong></p>
 <p><img alt="Platform" src="https://img.shields.io/badge/Platform-Linux%7CmacOS%7CWindows-1f425f.svg" />
@@ -72,7 +75,6 @@
 </div>
 <p><strong>Initiate - IDE</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">vaultapi.server</span>
-
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="n">vaultapi</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
@@ -116,6 +118,12 @@ Defaults to 5req/2s [AND] 10req/30s</p></li>
 <li><p><strong>LOG_CONFIG</strong> - FilePath or dictionary of key-value pairs for log config.</p></li>
 <li><p><strong>ALLOWED_ORIGINS</strong> - Origins that are allowed to retrieve secrets.</p></li>
 <li><p><strong>ALLOWED_IP_RANGE</strong> - IP range that is allowed to retrieve secrets. <em>(eg: <code class="docutils literal notranslate"><span class="pre">10.112.8.10-210</span></code>)</em></p></li>
+</ul>
+<p><strong>Optional (UI integration)</strong></p>
+<ul class="simple">
+<li><p><strong>ENABLE_UI</strong> - Boolean flag to enable the UI. Defaults to <code class="docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><strong>TOTP_TOKEN</strong> - Secret token for TOTP authentication in the UI. Can be generated using any TOTP generator app like <code class="docutils literal notranslate"><span class="pre">Google</span> <span class="pre">Authenticator</span></code> or <code class="docutils literal notranslate"><span class="pre">Authy</span></code>.</p></li>
+<li><p><strong>UI_LIFETIME</strong> - Time in seconds for which the UI session should remain active. Defaults to <code class="docutils literal notranslate"><span class="pre">900</span></code> (15 minutes)</p></li>
 </ul>
 <blockquote>
 <div><p>Checkout <a class="reference external" href="https://github.com/thevickypedia/VaultAPI/blob/main/decryptors">decryptors</a> for more information about decrypting the retrieved secret from the server.</p>

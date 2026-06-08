@@ -44,12 +44,14 @@ async def validate(
     else:
         auth = authorization.credentials
     if request.headers.get("authenticator", "") == UI_SESSION["authenticator"]:
-        authenticated = all((
-            UI_SESSION["token"] != "",
-            UI_SESSION["expires"] != "0",
-            secrets.compare_digest(auth, UI_SESSION["token"]),
-            int(UI_SESSION["expires"]) + models.env.ui_lifetime > time.time(),
-         ))
+        authenticated = all(
+            (
+                UI_SESSION["token"] != "",
+                UI_SESSION["expires"] != "0",
+                secrets.compare_digest(auth, UI_SESSION["token"]),
+                int(UI_SESSION["expires"]) + models.env.ui_lifetime > time.time(),
+            )
+        )
     else:
         authenticated = secrets.compare_digest(auth, models.env.apikey)
     if authenticated:
