@@ -2,6 +2,9 @@ import logging
 import pathlib
 import secrets
 import sqlite3
+import base64
+import os
+import warnings
 from http import HTTPStatus
 
 from fastapi import Depends, Request
@@ -11,18 +14,6 @@ from fastapi.security import HTTPAuthorizationCredentials
 from . import api_endpoints, auth, database, exceptions, models
 
 LOGGER = logging.getLogger("uvicorn.default")
-
-# TODO: Complete session tracker for UI
-SESSION = {"token": None}
-
-
-def validate():
-    """Validate credentials submitted by the login form.
-
-    Returns:
-        bool:
-        True if credentials are valid, False otherwise.
-    """
 
 
 async def index():
@@ -34,16 +25,6 @@ async def index():
     """
     with open(pathlib.Path(__file__).parent / "index.html") as file:
         return HTMLResponse(content=file.read(), status_code=200)
-
-
-async def ui_auth_config():
-    """Return auth configuration so the login page knows which fields are required.
-
-    Returns:
-        JSONResponse:
-        Returns whether TOTP is required.
-    """
-    return JSONResponse(content={"totp_required": bool(models.env.totp_token)})
 
 
 async def ui_login(request: Request):
@@ -63,15 +44,12 @@ async def ui_login(request: Request):
         )
     body = await request.json()
     apikey = str(body.get("apikey", ""))
-    secret = str(body.get("secret", ""))
     totp_code = str(body.get("totp_code", "")).strip()
 
     if apikey.startswith("\\"):
         apikey = bytes(apikey, "utf-8").decode(encoding="unicode_escape")
 
-    if not secrets.compare_digest(apikey, models.env.apikey) or not secrets.compare_digest(
-        secret, models.env.secret
-    ):
+    if not secrets.compare_digest(apikey, models.env.apikey):
         return JSONResponse(
             status_code=HTTPStatus.UNAUTHORIZED.real,
             content={"detail": "Invalid credentials"},
@@ -92,26 +70,30 @@ async def ui_login(request: Request):
                 status_code=HTTPStatus.UNAUTHORIZED.real,
                 content={"detail": "Invalid credentials"},
             )
+    else:
+        warnings.warn("TOTP not enabled but UI login attempt has been made.", UserWarning)
+        return JSONResponse(status_code=HTTPStatus.UNAUTHORIZED.real, content={"detail": "Invalid credentials"})
 
-    return JSONResponse(content={"detail": "OK"})
+    auth.UI_SESSION['token'] = base64.urlsafe_b64encode(os.urandom(32)).decode('utf-8')
+    return JSONResponse(content={"token": auth.UI_SESSION['token']})
 
 
 async def ui_list_tables(
     request: Request,
-    apikey: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
+    session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
 ):
     """List all tables for the UI.
 
     Args:
         request: Reference to the FastAPI request object.
-        apikey: API Key to authenticate the request.
+        session_token: Session token generated after a successful login.
 
     Returns:
         JSONResponse:
         Returns a JSON response with the list of tables.
     """
     try:
-        await auth.validate(request, apikey)
+        await auth.validate(request, session_token)
     except exceptions.APIResponse as exc:
         return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
     return JSONResponse(content={"tables": database.list_tables()})
@@ -120,21 +102,21 @@ async def ui_list_tables(
 async def ui_get_table(
     request: Request,
     table_name: str,
-    apikey: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
+    session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
 ):
     """Get all secrets in a table, decrypted, for the UI.
 
     Args:
         request: Reference to the FastAPI request object.
         table_name: Name of the table to retrieve secrets from.
-        apikey: API Key to authenticate the request.
+        session_token: Session token generated after a successful login.
 
     Returns:
         JSONResponse:
         Returns a JSON response with the decrypted key-value pairs.
     """
     try:
-        await auth.validate(request, apikey)
+        await auth.validate(request, session_token)
     except exceptions.APIResponse as exc:
         return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
     if not database.table_exists(table_name):
@@ -156,21 +138,21 @@ async def ui_get_table(
 async def ui_create_table(
     request: Request,
     table_name: str,
-    apikey: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
+    session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
 ):
     """Create a new table for the UI.
 
     Args:
         request: Reference to the FastAPI request object.
         table_name: Name of the table to create.
-        apikey: API Key to authenticate the request.
+        session_token: Session token generated after a successful login.
 
     Returns:
         JSONResponse:
         Returns a JSON response indicating success or failure.
     """
     try:
-        await auth.validate(request, apikey)
+        await auth.validate(request, session_token)
     except exceptions.APIResponse as exc:
         return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
     try:
@@ -186,21 +168,21 @@ async def ui_create_table(
 async def ui_delete_table(
     request: Request,
     table_name: str,
-    apikey: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
+    session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
 ):
     """Delete a table for the UI.
 
     Args:
         request: Reference to the FastAPI request object.
         table_name: Name of the table to delete.
-        apikey: API Key to authenticate the request.
+        session_token: Session token generated after a successful login.
 
     Returns:
         JSONResponse:
         Returns a JSON response indicating success or failure.
     """
     try:
-        await auth.validate(request, apikey)
+        await auth.validate(request, session_token)
     except exceptions.APIResponse as exc:
         return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
     if not database.table_exists(table_name):
@@ -220,20 +202,20 @@ async def ui_delete_table(
 
 async def ui_put_secret(
     request: Request,
-    apikey: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
+    session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
 ):
     """Add or update a secret for the UI.
 
     Args:
         request: Reference to the FastAPI request object.
-        apikey: API Key to authenticate the request.
+        session_token: Session token generated after a successful login.
 
     Returns:
         JSONResponse:
         Returns a JSON response indicating success or failure.
     """
     try:
-        await auth.validate(request, apikey)
+        await auth.validate(request, session_token)
     except exceptions.APIResponse as exc:
         return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
     body = await request.json()
@@ -257,20 +239,20 @@ async def ui_put_secret(
 
 async def ui_delete_secret(
     request: Request,
-    apikey: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
+    session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
 ):
     """Delete a secret for the UI.
 
     Args:
         request: Reference to the FastAPI request object.
-        apikey: API Key to authenticate the request.
+        session_token: Session token generated after a successful login.
 
     Returns:
         JSONResponse:
         Returns a JSON response indicating success or failure.
     """
     try:
-        await auth.validate(request, apikey)
+        await auth.validate(request, session_token)
     except exceptions.APIResponse as exc:
         return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
     body = await request.json()

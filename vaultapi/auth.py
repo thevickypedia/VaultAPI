@@ -9,14 +9,15 @@ from . import exceptions, models
 
 LOGGER = logging.getLogger("uvicorn.default")
 SECURITY = HTTPBearer()
+UI_SESSION = {"token": ""}
 
 
-async def validate(request: Request, apikey: HTTPAuthorizationCredentials) -> None:
+async def validate(request: Request, authorization: HTTPAuthorizationCredentials) -> None:
     """Validates the auth request using HTTPBearer.
 
     Args:
         request: Takes the authorization header token as an argument.
-        apikey: Basic APIKey required for all the routes.
+        authorization: Basic APIKey required for API routes [OR] session token required for UI routes.
 
     Raises:
         APIResponse:
@@ -32,11 +33,16 @@ async def validate(request: Request, apikey: HTTPAuthorizationCredentials) -> No
         raise exceptions.APIResponse(
             status_code=HTTPStatus.FORBIDDEN.real, detail=HTTPStatus.FORBIDDEN.phrase
         )
-    if apikey.credentials.startswith("\\"):
-        auth = bytes(apikey.credentials, "utf-8").decode(encoding="unicode_escape")
+    if authorization.credentials.startswith("\\"):
+        auth = bytes(authorization.credentials, "utf-8").decode(encoding="unicode_escape")
     else:
-        auth = apikey.credentials
-    if secrets.compare_digest(auth, models.env.apikey):
+        auth = authorization.credentials
+    authenticator = request.headers.get("authenticator")
+    if authenticator == 'VaultAPI-UI':
+        authenticated = UI_SESSION["token"] != "" and secrets.compare_digest(auth, UI_SESSION["token"])
+    else:
+        authenticated = secrets.compare_digest(auth, models.env.apikey)
+    if authenticated:
         LOGGER.debug(
             "Connection received from client-host: %s, host-header: %s, x-fwd-host: %s",
             request.client.host,

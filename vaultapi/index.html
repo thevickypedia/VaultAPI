@@ -665,12 +665,7 @@
             <input class="form-input mono" id="login-apikey" type="password" placeholder="your-api-key"
                    autocomplete="current-password" spellcheck="false">
         </div>
-        <div class="form-field">
-            <label class="form-label" for="login-secret">Secret</label>
-            <input class="form-input mono" id="login-secret" type="password" placeholder="your-fernet-secret"
-                   autocomplete="off" spellcheck="false">
-        </div>
-        <div class="form-field" id="totp-field" style="display:none">
+        <div class="form-field" id="totp-field">
             <label class="form-label" for="login-totp">Authenticator Code</label>
             <input class="form-input mono" id="login-totp" type="text" placeholder="000000"
                    autocomplete="one-time-code" inputmode="numeric" maxlength="6" spellcheck="false"
@@ -836,8 +831,9 @@
         'use strict';
 
         // ── State ──────────────────────────────────────
+        // TODO: Move token from in-memory state to session_storage to persist across hard refresh
         const state = {
-            apikey: null,
+            token: null,
             view: 'tables',
             currentTable: null,
             tables: [],
@@ -875,7 +871,9 @@
         // ── API helper — injects Bearer, handles 401 ──
         async function api(method, path, body = null) {
             const headers = {'Content-Type': 'application/json'};
-            if (state.apikey) headers['Authorization'] = `Bearer ${state.apikey}`;
+            if (state.token) headers['Authorization'] = `Bearer ${state.token}`;
+            // TODO: Enum value should be passed by the backend code using Jinja along with version info
+            headers['Authenticator'] = 'VaultAPI-UI'
             const opts = {method, headers};
             if (body) opts.body = JSON.stringify(body);
             const res = await fetch(path, opts);
@@ -893,7 +891,6 @@
             document.getElementById('app-shell').classList.remove('active');
             document.getElementById('login-error').classList.remove('visible');
             document.getElementById('login-apikey').value = '';
-            document.getElementById('login-secret').value = '';
             document.getElementById('login-totp').value = '';
             setTimeout(() => document.getElementById('login-apikey').focus(), 60);
         }
@@ -904,7 +901,7 @@
         }
 
         function logout() {
-            state.apikey = null;
+            state.token = null;
             showLogin();
         }
 
@@ -913,11 +910,10 @@
             const errEl = document.getElementById('login-error');
             const errText = document.getElementById('login-error-text');
             const apikey = document.getElementById('login-apikey').value.trim();
-            const secret = document.getElementById('login-secret').value.trim();
             const totp_code = document.getElementById('login-totp').value.trim();
 
-            if (!apikey || !secret) {
-                errText.textContent = 'API Key and Secret are required.';
+            if (!apikey || !totp_code) {
+                errText.textContent = 'API Key and OTP code are required.';
                 errEl.classList.add('visible');
                 return;
             }
@@ -930,8 +926,8 @@
             const {ok, data} = await fetch('/ui/login', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({apikey, secret, totp_code}),
-            }).then(r => r.json().then(d => ({ok: r.ok, data: d}))).catch(() => ({ok: false, data: {}}));
+                body: JSON.stringify({apikey, totp_code}),
+            }).then(async (r) => ({ ok: r.ok, data: await r.json()})).catch(() => ({ok: false, data: {}}));
 
             btn.disabled = false;
             btn.classList.remove('loading');
@@ -944,7 +940,9 @@
                 Sign in`;
 
             if (ok) {
-                state.apikey = apikey;
+                if (data.token) {
+                    state.token = data.token
+                }
                 showApp();
                 navigateTo('tables');
             } else {
@@ -1198,17 +1196,11 @@
 
         // ── Bootstrap ─────────────────────────────────
         (async function init() {
-            const res = await fetch('/ui/auth-config').then(r => r.json()).catch(() => ({}));
-            if (res.totp_required) {
-                document.getElementById('totp-field').style.display = 'block';
-            }
             showLogin();
-            // Allow Enter from secret field to submit when TOTP is not shown
+            // Allow Enter from TOTP field to submit
             document.getElementById('login-secret').addEventListener('keydown', e => {
                 if (e.key === 'Enter') {
-                    const totpVisible = document.getElementById('totp-field').style.display !== 'none';
-                    if (!totpVisible) submitLogin();
-                    else document.getElementById('login-totp').focus();
+                    submitLogin();
                 }
             });
         })();

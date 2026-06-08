@@ -27,13 +27,6 @@ def ui_routes() -> List[APIRoute]:
             dependencies=DEPENDENCIES,
         ),
         APIRoute(
-            path="/ui/auth-config",
-            endpoint=ui_endpoints.ui_auth_config,
-            methods=["GET"],
-            include_in_schema=False,
-            dependencies=DEPENDENCIES,
-        ),
-        APIRoute(
             path="/ui/login",
             endpoint=ui_endpoints.ui_login,
             methods=["POST"],

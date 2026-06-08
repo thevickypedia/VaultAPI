@@ -334,6 +334,8 @@ def __init__() -> None:
 
 
 env: EnvConfig = load_env()
+if env.enable_ui:
+    assert env.totp_token is not None, "TOTP token must be provided if enable_ui is True"
 database: Database = Database(env.database)
 session = Session()
 __init__()
