@@ -1,9 +1,9 @@
+import base64
 import logging
+import os
 import pathlib
 import secrets
 import sqlite3
-import base64
-import os
 import warnings
 from http import HTTPStatus
 
@@ -71,11 +71,16 @@ async def ui_login(request: Request):
                 content={"detail": "Invalid credentials"},
             )
     else:
-        warnings.warn("TOTP not enabled but UI login attempt has been made.", UserWarning)
-        return JSONResponse(status_code=HTTPStatus.UNAUTHORIZED.real, content={"detail": "Invalid credentials"})
+        warnings.warn(
+            "TOTP not enabled but UI login attempt has been made.", UserWarning
+        )
+        return JSONResponse(
+            status_code=HTTPStatus.UNAUTHORIZED.real,
+            content={"detail": "Invalid credentials"},
+        )
 
-    auth.UI_SESSION['token'] = base64.urlsafe_b64encode(os.urandom(32)).decode('utf-8')
-    return JSONResponse(content={"token": auth.UI_SESSION['token']})
+    auth.UI_SESSION["token"] = base64.urlsafe_b64encode(os.urandom(32)).decode("utf-8")
+    return JSONResponse(content={"token": auth.UI_SESSION["token"]})
 
 
 async def ui_list_tables(

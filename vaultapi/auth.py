@@ -12,7 +12,9 @@ SECURITY = HTTPBearer()
 UI_SESSION = {"token": ""}
 
 
-async def validate(request: Request, authorization: HTTPAuthorizationCredentials) -> None:
+async def validate(
+    request: Request, authorization: HTTPAuthorizationCredentials
+) -> None:
     """Validates the auth request using HTTPBearer.
 
     Args:
@@ -34,12 +36,16 @@ async def validate(request: Request, authorization: HTTPAuthorizationCredentials
             status_code=HTTPStatus.FORBIDDEN.real, detail=HTTPStatus.FORBIDDEN.phrase
         )
     if authorization.credentials.startswith("\\"):
-        auth = bytes(authorization.credentials, "utf-8").decode(encoding="unicode_escape")
+        auth = bytes(authorization.credentials, "utf-8").decode(
+            encoding="unicode_escape"
+        )
     else:
         auth = authorization.credentials
     authenticator = request.headers.get("authenticator")
-    if authenticator == 'VaultAPI-UI':
-        authenticated = UI_SESSION["token"] != "" and secrets.compare_digest(auth, UI_SESSION["token"])
+    if authenticator == "VaultAPI-UI":
+        authenticated = UI_SESSION["token"] != "" and secrets.compare_digest(
+            auth, UI_SESSION["token"]
+        )
     else:
         authenticated = secrets.compare_digest(auth, models.env.apikey)
     if authenticated:

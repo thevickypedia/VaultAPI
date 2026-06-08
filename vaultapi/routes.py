@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import Depends, dependencies
+from fastapi import Depends
 from fastapi.routing import APIRoute
 
 from . import api_endpoints, models, rate_limit, ui_endpoints
