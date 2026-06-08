@@ -61,7 +61,7 @@
             min-height: 100vh;
             align-items: center;
             justify-content: center;
-            padding: 24px;
+            padding: 24px 24px 56px;
         }
         #login-screen.active { display: flex; }
 
@@ -279,7 +279,7 @@
         main {
             max-width: 1100px;
             margin: 0 auto;
-            padding: 36px 28px 60px;
+            padding: 36px 28px 72px;
         }
 
         .page { display: none; }
@@ -633,6 +633,50 @@
             border: 1px solid rgba(0, 212, 255, 0.2);
         }
 
+        /* ── Footer ──────────────────────────────────── */
+        .site-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
+            pointer-events: none;
+            z-index: 50;
+        }
+        .footer-version {
+            font-size: 11px;
+            color: var(--text-3);
+            font-family: var(--mono);
+            letter-spacing: 0.04em;
+        }
+        .footer-timer {
+            position: absolute;
+            right: 20px;
+            display: none;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-family: var(--mono);
+            color: var(--text-3);
+            letter-spacing: 0.03em;
+        }
+        .footer-timer.visible { display: flex; }
+        .footer-timer.warn { color: var(--warn); }
+        .footer-timer.urgent { color: var(--danger); }
+        .footer-timer-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: currentColor;
+            opacity: 0.7;
+        }
+        .footer-timer.urgent .footer-timer-dot { animation: pulse 1s ease-in-out infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 0.7; } 50% { opacity: 0.2; } }
+
         /* ── Scrollbar ───────────────────────────────── */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -831,6 +875,14 @@
 
 <div id="toast-root"></div>
 
+<footer class="site-footer">
+    <span class="footer-version">VaultAPI-UI v{{ version }}</span>
+    <div class="footer-timer" id="session-timer">
+        <div class="footer-timer-dot"></div>
+        <span id="timer-display">--:--</span>
+    </div>
+</footer>
+
 <script>
     (function () {
         'use strict';
@@ -842,6 +894,42 @@
             tables: [],
             secrets: {},
         };
+
+        // ── Session timer ──────────────────────────────
+        let timerInterval = null;
+
+        function startTimer() {
+            stopTimer();
+            const timerEl = document.getElementById('session-timer');
+            const displayEl = document.getElementById('timer-display');
+            const expires = parseInt(sessionStorage.getItem('expires') || '0', 10);
+            if (!expires) return;
+
+            function tick() {
+                const remaining = expires - Math.floor(Date.now() / 1000);
+                if (remaining <= 0) {
+                    stopTimer();
+                    logout('Session expired. Please sign in again.', 'error');
+                    return;
+                }
+                const mm = String(Math.floor(remaining / 60)).padStart(2, '0');
+                const ss = String(remaining % 60).padStart(2, '0');
+                displayEl.textContent = `${mm}:${ss}`;
+                timerEl.classList.toggle('warn', remaining <= 120 && remaining > 30);
+                timerEl.classList.toggle('urgent', remaining <= 30);
+            }
+
+            tick();
+            timerInterval = setInterval(tick, 1000);
+            timerEl.classList.add('visible');
+        }
+
+        function stopTimer() {
+            if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+            const timerEl = document.getElementById('session-timer');
+            timerEl.classList.remove('visible', 'warn', 'urgent');
+            document.getElementById('timer-display').textContent = '--:--';
+        }
 
         // ── SVG icons ──────────────────────────────────
         const ICONS = {
@@ -907,10 +995,13 @@
         function showApp() {
             document.getElementById('login-screen').classList.remove('active');
             document.getElementById('app-shell').classList.add('active');
+            startTimer();
         }
 
         function logout(message = 'Signed out successfully.', type = 'info') {
+            stopTimer();
             sessionStorage.removeItem('session_token');
+            sessionStorage.removeItem('expires');
             showLogin(message, type);
         }
 
@@ -951,6 +1042,9 @@
             if (ok) {
                 if (data.token) {
                     sessionStorage.setItem("session_token", data.token)
+                }
+                if (data.expires) {
+                    sessionStorage.setItem("expires", data.expires)
                 }
                 showApp();
                 navigateTo('tables');
@@ -1217,6 +1311,8 @@
         window.navigateTo = navigateTo;
         window.refresh = refresh;
         window.logout = logout;
+        window.startTimer = startTimer;
+        window.stopTimer = stopTimer;
         window.submitLogin = submitLogin;
         window.openModal = openModal;
         window.closeModal = closeModal;

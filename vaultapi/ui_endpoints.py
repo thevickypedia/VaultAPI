@@ -13,7 +13,7 @@ from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials
 from fastapi.templating import Jinja2Templates
 
-from . import api_endpoints, auth, database, exceptions, models
+from . import api_endpoints, auth, database, exceptions, models, version
 
 LOGGER = logging.getLogger("uvicorn.default")
 templates = Jinja2Templates(directory=pathlib.Path(__file__).parent / "templates")
@@ -29,7 +29,11 @@ async def index(request: Request):
     return templates.TemplateResponse(
         name="index.html",
         request=request,
-        context={"request": request, "authenticator": auth.UI_SESSION["authenticator"]},
+        context={
+            "request": request,
+            "authenticator": auth.UI_SESSION["authenticator"],
+            "version": version.__version__,
+        },
     )
 
 
@@ -86,7 +90,7 @@ async def ui_login(request: Request):
         )
 
     auth.UI_SESSION["token"] = base64.urlsafe_b64encode(os.urandom(32)).decode("utf-8")
-    auth.UI_SESSION["expires"] = int(time.time())
+    auth.UI_SESSION["expires"] = int(time.time()) + models.env.ui_lifetime
     return JSONResponse(content={"token": auth.UI_SESSION["token"], "expires": auth.UI_SESSION["expires"]})
 
 
