@@ -633,6 +633,154 @@
             border: 1px solid rgba(0, 212, 255, 0.2);
         }
 
+        /* ── Import modal ────────────────────────────── */
+        .modal-wide {
+            max-width: 680px;
+        }
+
+        .import-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+            background: var(--bg-2);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            padding: 4px;
+        }
+        .import-tab {
+            flex: 1;
+            padding: 7px 10px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            color: var(--text-3);
+            font-size: 12px;
+            font-weight: 600;
+            font-family: var(--mono);
+            cursor: pointer;
+            transition: all var(--transition);
+            letter-spacing: 0.04em;
+        }
+        .import-tab:hover { color: var(--text-2); }
+        .import-tab.active {
+            background: var(--bg-1);
+            color: var(--accent);
+            border: 1px solid var(--border-h);
+        }
+
+        .import-source-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        .import-source-tab {
+            padding: 5px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-3);
+            font-size: 12px;
+            font-weight: 500;
+            font-family: var(--sans);
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+        .import-source-tab:hover { color: var(--text-2); border-color: rgba(255,255,255,0.14); }
+        .import-source-tab.active {
+            background: var(--accent-dim);
+            color: var(--accent);
+            border-color: rgba(0, 212, 255, 0.35);
+        }
+
+        .import-drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 40px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition);
+            background: var(--bg-2);
+        }
+        .import-drop-zone:hover,
+        .import-drop-zone.drag-over {
+            border-color: var(--accent);
+            background: var(--accent-dim);
+        }
+        .import-drop-zone-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--bg-1);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 14px;
+        }
+        .import-drop-zone-icon svg { width: 20px; height: 20px; stroke: var(--text-3); fill: none; }
+        .import-drop-zone h4 { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+        .import-drop-zone p { font-size: 12px; color: var(--text-3); line-height: 1.5; }
+        .import-drop-zone .drop-accepted { font-size: 11px; color: var(--text-3); margin-top: 8px; font-family: var(--mono); }
+
+        .import-file-name {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: var(--accent-dim);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 7px;
+            font-size: 12px;
+            font-family: var(--mono);
+            color: var(--accent);
+            margin-top: 10px;
+        }
+        .import-file-name.visible { display: flex; }
+        .import-file-name svg { width: 13px; height: 13px; stroke: currentColor; fill: none; flex-shrink: 0; }
+
+        .import-paste-area {
+            width: 100%;
+            min-height: 220px;
+            resize: vertical;
+            background: var(--bg-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 14px;
+            font-size: 12.5px;
+            color: var(--text);
+            font-family: var(--mono);
+            line-height: 1.6;
+            outline: none;
+            transition: border-color var(--transition), box-shadow var(--transition);
+            tab-size: 2;
+        }
+        .import-paste-area:focus {
+            border-color: rgba(0, 212, 255, 0.45);
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+        }
+        .import-paste-area::placeholder { color: var(--text-3); }
+
+        .import-detected {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: var(--text-3);
+            margin-top: 7px;
+            font-family: var(--mono);
+        }
+        .import-detected.visible { display: flex; }
+        .import-detected-badge {
+            padding: 2px 8px;
+            border-radius: 20px;
+            background: var(--accent-dim);
+            color: var(--accent);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+        }
+
         /* ── Footer ──────────────────────────────────── */
         .site-footer {
             position: fixed;
@@ -798,6 +946,14 @@
                     <div class="page-subtitle">Encrypted at rest · Decrypted on read</div>
                 </div>
                 <div class="page-actions">
+                    <button class="btn btn-ghost" onclick="openImport()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        Import
+                    </button>
                     <button class="btn btn-primary" onclick="openAddSecret()">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                              stroke-linecap="round">
@@ -855,6 +1011,79 @@
         <div class="modal-footer">
             <button class="btn btn-ghost" onclick="closeModal('modal-add-secret')">Cancel</button>
             <button class="btn btn-primary" onclick="confirmAddSecret()">Save Secret</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Import Secrets -->
+<div class="overlay" id="modal-import" onclick="overlayClick(event, 'modal-import')">
+    <div class="modal modal-wide" role="dialog" aria-modal="true">
+        <div class="modal-header">
+            <div class="modal-title">Import Secrets</div>
+            <div class="modal-subtitle" id="import-modal-subtitle">Bulk import key-value pairs into this table.</div>
+        </div>
+
+        <!-- Format tabs -->
+        <div class="import-tabs">
+            <button class="import-tab active" id="tab-json" onclick="setImportFormat('json')">JSON</button>
+            <button class="import-tab" id="tab-yaml" onclick="setImportFormat('yaml')">YAML</button>
+            <button class="import-tab" id="tab-env" onclick="setImportFormat('env')">.env</button>
+            <button class="import-tab" id="tab-auto" onclick="setImportFormat('auto')">Auto-detect</button>
+        </div>
+
+        <!-- Source tabs: File vs Paste -->
+        <div class="import-source-tabs">
+            <button class="import-source-tab active" id="src-file" onclick="setImportSource('file')">
+                Upload file
+            </button>
+            <button class="import-source-tab" id="src-paste" onclick="setImportSource('paste')">
+                Paste text
+            </button>
+        </div>
+
+        <!-- File drop zone -->
+        <div id="import-file-panel">
+            <div class="import-drop-zone" id="import-drop-zone"
+                 onclick="document.getElementById('import-file-input').click()"
+                 ondragover="importDragOver(event)" ondragleave="importDragLeave(event)" ondrop="importDrop(event)">
+                <div class="import-drop-zone-icon">
+                    <svg viewBox="0 0 24 24" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="12" y1="18" x2="12" y2="12"/>
+                        <line x1="9" y1="15" x2="15" y2="15"/>
+                    </svg>
+                </div>
+                <h4>Drop a file here</h4>
+                <p>or click to browse</p>
+                <div class="drop-accepted">json &nbsp;·&nbsp; yaml / yml &nbsp;·&nbsp; env</div>
+            </div>
+            <div class="import-file-name" id="import-file-name">
+                <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <span id="import-file-label">—</span>
+            </div>
+            <input type="file" id="import-file-input" accept=".json,.yaml,.yml,.env" style="display:none"
+                   onchange="importFileSelected(event)">
+        </div>
+
+        <!-- Paste panel -->
+        <div id="import-paste-panel" style="display:none">
+            <textarea class="import-paste-area" id="import-paste-content"
+                      placeholder="Paste your secrets here…&#10;&#10;Auto-detect will identify JSON, YAML, or .env format automatically."
+                      spellcheck="false" oninput="detectPasteFormat()"></textarea>
+            <div class="import-detected" id="import-detected">
+                Detected: <span class="import-detected-badge" id="import-detected-badge">—</span>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('modal-import')">Cancel</button>
+            <button class="btn btn-primary" id="btn-import-confirm" onclick="confirmImport()">
+                Import Secrets
+            </button>
         </div>
     </div>
 </div>
@@ -1262,6 +1491,146 @@
             else toast(data.detail || 'Failed to save secret', 'error');
         }
 
+        // ── Import secrets ─────────────────────────────
+        const importState = { format: 'json', source: 'file', fileContent: null, fileName: null };
+
+        function openImport() {
+            document.getElementById('import-modal-subtitle').textContent =
+                `Bulk import into table "${state.currentTable}"`;
+            importState.fileContent = null;
+            importState.fileName = null;
+            document.getElementById('import-file-label').textContent = '—';
+            document.getElementById('import-file-name').classList.remove('visible');
+            document.getElementById('import-paste-content').value = '';
+            document.getElementById('import-detected').classList.remove('visible');
+            document.getElementById('import-file-input').value = '';
+            setImportFormat('json');
+            setImportSource('file');
+            openModal('modal-import');
+        }
+
+        function setImportFormat(fmt) {
+            importState.format = fmt;
+            ['json', 'yaml', 'env', 'auto'].forEach(f => {
+                document.getElementById(`tab-${f}`).classList.toggle('active', f === fmt);
+            });
+            if (fmt !== 'auto') {
+                document.getElementById('import-detected').classList.remove('visible');
+            }
+        }
+
+        function setImportSource(src) {
+            importState.source = src;
+            document.getElementById('src-file').classList.toggle('active', src === 'file');
+            document.getElementById('src-paste').classList.toggle('active', src === 'paste');
+            document.getElementById('import-file-panel').style.display = src === 'file' ? '' : 'none';
+            document.getElementById('import-paste-panel').style.display = src === 'paste' ? '' : 'none';
+            if (src === 'paste') setTimeout(() => document.getElementById('import-paste-content').focus(), 50);
+        }
+
+        function detectFormat(text) {
+            const t = text.trim();
+            if (!t) return null;
+            try { const p = JSON.parse(t); if (typeof p === 'object' && !Array.isArray(p)) return 'json'; } catch (_) {}
+            if (/^[A-Z_][A-Z0-9_]*\s*=/im.test(t) && !t.startsWith('{') && !t.startsWith('-')) return 'env';
+            if (t.includes(':') && !t.startsWith('{')) return 'yaml';
+            return null;
+        }
+
+        function detectPasteFormat() {
+            if (importState.format !== 'auto') return;
+            const text = document.getElementById('import-paste-content').value;
+            const detected = detectFormat(text);
+            const detectedEl = document.getElementById('import-detected');
+            const badgeEl = document.getElementById('import-detected-badge');
+            if (detected) {
+                badgeEl.textContent = detected.toUpperCase();
+                detectedEl.classList.add('visible');
+            } else {
+                detectedEl.classList.remove('visible');
+            }
+        }
+
+        function importDragOver(e) {
+            e.preventDefault();
+            document.getElementById('import-drop-zone').classList.add('drag-over');
+        }
+
+        function importDragLeave(e) {
+            document.getElementById('import-drop-zone').classList.remove('drag-over');
+        }
+
+        function importDrop(e) {
+            e.preventDefault();
+            document.getElementById('import-drop-zone').classList.remove('drag-over');
+            const file = e.dataTransfer?.files?.[0];
+            if (file) loadImportFile(file);
+        }
+
+        function importFileSelected(e) {
+            const file = e.target.files?.[0];
+            if (file) loadImportFile(file);
+        }
+
+        function loadImportFile(file) {
+            const ext = file.name.split('.').pop().toLowerCase();
+            const reader = new FileReader();
+            reader.onload = ev => {
+                importState.fileContent = ev.target.result;
+                importState.fileName = file.name;
+                document.getElementById('import-file-label').textContent = file.name;
+                document.getElementById('import-file-name').classList.add('visible');
+                if (importState.format === 'auto') {
+                    const guessed = ext === 'json' ? 'json' : (ext === 'env' ? 'env' : 'yaml');
+                    document.getElementById(`tab-${guessed}`).classList.add('active');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        async function confirmImport() {
+            let payload, payloadType;
+
+            if (importState.source === 'file') {
+                if (!importState.fileContent) { toast('No file selected', 'error'); return; }
+                payload = importState.fileContent;
+                if (importState.format === 'auto') {
+                    const ext = importState.fileName?.split('.').pop().toLowerCase() || '';
+                    payloadType = ext === 'json' ? 'json' : (ext === 'env' ? 'env' : 'yaml');
+                } else {
+                    payloadType = importState.format;
+                }
+            } else {
+                payload = document.getElementById('import-paste-content').value.trim();
+                if (!payload) { toast('Nothing to import', 'error'); return; }
+                if (importState.format === 'auto') {
+                    payloadType = detectFormat(payload);
+                    if (!payloadType) { toast('Could not detect format — please select one manually', 'error'); return; }
+                } else {
+                    payloadType = importState.format;
+                }
+            }
+
+            closeModal('modal-import');
+            const btn = document.getElementById('btn-import-confirm');
+            btn.disabled = true;
+            const {ok, data} = await api('POST', '/ui/import', {
+                table_name: state.currentTable,
+                payload,
+                payload_type: payloadType,
+            });
+            btn.disabled = false;
+            if (ok) {
+                const msg = data.skipped
+                    ? `Imported ${data.imported} secret${data.imported !== 1 ? 's' : ''}, ${data.skipped} skipped`
+                    : `Imported ${data.imported} secret${data.imported !== 1 ? 's' : ''}`;
+                toast(msg, 'success');
+                await loadSecrets(state.currentTable);
+            } else {
+                toast(data.detail || 'Import failed', 'error');
+            }
+        }
+
         // ── Delete table ───────────────────────────────
         function promptDeleteTable(name) {
             document.getElementById('confirm-title').textContent = 'Delete Table';
@@ -1323,6 +1692,15 @@
         window.promptDeleteTable = promptDeleteTable;
         window.promptDeleteSecret = promptDeleteSecret;
         window.toggleReveal = toggleReveal;
+        window.openImport = openImport;
+        window.setImportFormat = setImportFormat;
+        window.setImportSource = setImportSource;
+        window.detectPasteFormat = detectPasteFormat;
+        window.importDragOver = importDragOver;
+        window.importDragLeave = importDragLeave;
+        window.importDrop = importDrop;
+        window.importFileSelected = importFileSelected;
+        window.confirmImport = confirmImport;
     })();
 </script>
 </body>

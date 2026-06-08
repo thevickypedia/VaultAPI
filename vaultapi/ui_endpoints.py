@@ -1,4 +1,5 @@
 import base64
+import json
 import logging
 import os
 import pathlib
@@ -8,6 +9,7 @@ import time
 import warnings
 from http import HTTPStatus
 
+import yaml
 from fastapi import Depends, Request
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials
@@ -91,7 +93,12 @@ async def ui_login(request: Request):
 
     auth.UI_SESSION["token"] = base64.urlsafe_b64encode(os.urandom(32)).decode("utf-8")
     auth.UI_SESSION["expires"] = int(time.time()) + models.env.ui_lifetime
-    return JSONResponse(content={"token": auth.UI_SESSION["token"], "expires": auth.UI_SESSION["expires"]})
+    return JSONResponse(
+        content={
+            "token": auth.UI_SESSION["token"],
+            "expires": auth.UI_SESSION["expires"],
+        }
+    )
 
 
 async def ui_list_tables(
@@ -251,6 +258,101 @@ async def ui_put_secret(
     encrypted = models.session.fernet.encrypt(value.encode("UTF-8"))
     database.put_secret(key=key, value=encrypted, table_name=table_name)
     return JSONResponse(content={"detail": "OK"})
+
+
+async def ui_import_secrets(
+    request: Request,
+    session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
+):
+    """Import multiple secrets into a table from a JSON, YAML, or .env payload.
+
+    Args:
+        request: Reference to the FastAPI request object.
+        session_token: Session token generated after a successful login.
+
+    Returns:
+        JSONResponse:
+        Returns a JSON response with counts of imported and skipped secrets.
+    """
+    try:
+        await auth.validate(request, session_token)
+    except exceptions.APIResponse as exc:
+        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+
+    body = await request.json()
+    table_name = body.get("table_name", "default")
+    payload = body.get("payload", "")
+    payload_type = body.get("payload_type", "").lower()
+
+    if not database.table_exists(table_name):
+        return JSONResponse(
+            status_code=HTTPStatus.NOT_FOUND.real,
+            content={"detail": f"Table {table_name!r} not found"},
+        )
+
+    try:
+        if payload_type == "json":
+            parsed = json.loads(payload)
+            if not isinstance(parsed, dict):
+                return JSONResponse(
+                    status_code=HTTPStatus.BAD_REQUEST.real,
+                    content={"detail": "JSON payload must be a flat object"},
+                )
+            pairs = {str(k): str(v) for k, v in parsed.items()}
+        elif payload_type == "yaml":
+            parsed = yaml.safe_load(payload)
+            if not isinstance(parsed, dict):
+                return JSONResponse(
+                    status_code=HTTPStatus.BAD_REQUEST.real,
+                    content={"detail": "YAML payload must be a flat mapping"},
+                )
+            pairs = {str(k): str(v) for k, v in parsed.items()}
+        elif payload_type == "env":
+            pairs = {}
+            for line in payload.splitlines():
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                if "=" not in line:
+                    continue
+                key, _, value = line.partition("=")
+                key = key.strip()
+                value = value.strip().strip('"').strip("'")
+                if key:
+                    pairs[key] = value
+        else:
+            return JSONResponse(
+                status_code=HTTPStatus.BAD_REQUEST.real,
+                content={
+                    "detail": f"Unsupported payload_type {payload_type!r}; use json, yaml, or env"
+                },
+            )
+    except Exception as error:
+        return JSONResponse(
+            status_code=HTTPStatus.BAD_REQUEST.real,
+            content={"detail": f"Failed to parse payload: {error}"},
+        )
+
+    if not pairs:
+        return JSONResponse(
+            status_code=HTTPStatus.BAD_REQUEST.real,
+            content={"detail": "No key-value pairs found in payload"},
+        )
+
+    imported, skipped = 0, 0
+    for key, value in pairs.items():
+        if not key:
+            skipped += 1
+            continue
+        try:
+            encrypted = models.session.fernet.encrypt(value.encode("UTF-8"))
+            database.put_secret(key=key, value=encrypted, table_name=table_name)
+            imported += 1
+        except Exception as error:
+            LOGGER.error("Failed to import secret %r: %s", key, error)
+            skipped += 1
+
+    return JSONResponse(content={"imported": imported, "skipped": skipped})
 
 
 async def ui_delete_secret(

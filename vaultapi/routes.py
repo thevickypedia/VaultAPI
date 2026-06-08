@@ -75,6 +75,13 @@ def ui_routes() -> List[APIRoute]:
             include_in_schema=False,
             dependencies=DEPENDENCIES,
         ),
+        APIRoute(
+            path="/ui/import",
+            endpoint=ui_endpoints.ui_import_secrets,
+            methods=["POST"],
+            include_in_schema=False,
+            dependencies=DEPENDENCIES,
+        ),
     ]
 
 
