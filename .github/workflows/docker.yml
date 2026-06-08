@@ -27,13 +27,13 @@ jobs:
       - name: Set Environment Variables
         run: |
           # Convert repository and repository_name to lowercase
-          repository="${{ github.repository || 'thevickypedia/PyObservability' }}" 
-          repository_name="${{ github.repository.name || 'PyObservability' }}"
+          repository="${{ github.repository || 'thevickypedia/VaultAPI' }}" 
+          repository_name="${{ github.repository.name || 'VaultAPI' }}"
           echo "repository=${repository,,}" >> $GITHUB_ENV  # Convert to lowercase
           echo "repository_name=${repository_name,,}" >> $GITHUB_ENV  # Convert to lowercase
 
           # Set repository description
-          echo "repository_description=${{ github.event.repository.description || '🔎 Observability UI for PyNinja' }}" >> $GITHUB_ENV
+          echo "repository_description=${{ github.event.repository.description || '🔐 Lightweight API to store/retrieve secrets to/from an encrypted Database' }}" >> $GITHUB_ENV
 
           # Handle tag_name: remove 'v' prefix if exists
           tag_name="${{ inputs.tag_name || github.event.inputs.tag_name }}"
@@ -66,7 +66,7 @@ jobs:
         with:
           context: .
           push: true
-          file: docker/Dockerfile
+          file: Dockerfile
           platforms: linux/amd64,linux/arm64
           tags: ${{ env.dockertags }}
           build-args: |
