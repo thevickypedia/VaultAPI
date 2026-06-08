@@ -49,29 +49,9 @@ def lifespan() -> None:
         ],
     )
 
-    VaultAPI.routes.extend(routes.get_all_routes())
+    VaultAPI.routes.extend(routes.api_routes())
     if models.env.enable_ui:
-        assert all(
-            (models.env.username, models.env.password, models.env.totp_token)
-        ), "Username, password and TOTP token must be provided to enable UI"
-        try:
-            import uiauth
-        except (ModuleNotFoundError, ImportError) as error:
-            raise ImportError(
-                "UI dependencies not found. Please install 'vaultapi[ui]' to enable UI features."
-            ) from error
-        # TODO: Revert this
-        # models.complexity_checker(models.env.password, max_len=8)
-        models.validate_totp_secret(models.env.totp_token)
-        uiauth.protect(
-            app=VaultAPI,
-            username=models.env.username,
-            password=models.env.password,
-            totp_token=models.env.totp_token,
-            session_timeout=models.env.ui_timeout,
-            custom_logger=LOGGER,
-            routes=routes.ui_routes(),
-        )
+        VaultAPI.routes.extend(routes.ui_routes())
     else:
         VaultAPI.routes.append(
             APIRoute(

@@ -89,10 +89,16 @@ class Database:
 
     def __init__(self, filepath: FilePath | str, timeout: int = 10):
         """Instantiates the class ``Database`` to create a connection and a cursor."""
-        if not filepath.endswith(".db"):
-            filepath = filepath + ".db"
+        db_path = pathlib.Path(filepath)
+        if db_path.suffix != ".db":
+            db_path = db_path.with_suffix(".db")
+
+        # sqlite can create files, but not missing parent directories
+        db_path.parent.mkdir(parents=True, exist_ok=True)
+        db_path.touch(exist_ok=True)
+
         self.connection = sqlite3.connect(
-            database=filepath, check_same_thread=False, timeout=timeout
+            database=str(db_path), check_same_thread=False, timeout=timeout
         )
 
 

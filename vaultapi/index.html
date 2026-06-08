@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VaultAPI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+          rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #07090e;
+            --bg-1: #0d1017;
+            --bg-2: #121620;
+            --border: rgba(255, 255, 255, 0.07);
+            --border-h: rgba(0, 212, 255, 0.35);
+            --accent: #00d4ff;
+            --accent-dim: rgba(0, 212, 255, 0.12);
+            --accent-glow: rgba(0, 212, 255, 0.25);
+            --purple: #7c3aed;
+            --purple-dim: rgba(124, 58, 237, 0.15);
+            --success: #10b981;
+            --danger: #ef4444;
+            --danger-dim: rgba(239, 68, 68, 0.12);
+            --warn: #f59e0b;
+            --text: #e2e8f0;
+            --text-2: #94a3b8;
+            --text-3: #475569;
+            --mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            --sans: 'Inter', system-ui, sans-serif;
+            --radius: 10px;
+            --radius-lg: 16px;
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.6);
+            --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        html, body { height: 100%; }
+
+        body {
+            font-family: var(--sans);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image:
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 212, 255, 0.06) 0%, transparent 60%),
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.012'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        /* ── Login screen ────────────────────────────── */
+        #login-screen {
+            display: none;
+            min-height: 100vh;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        #login-screen.active { display: flex; }
+
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            background: var(--bg-1);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 36px 32px 32px;
+            box-shadow: var(--shadow-lg), 0 0 60px rgba(0, 212, 255, 0.04);
+            animation: fadeIn 220ms ease;
+        }
+
+        .login-brand {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            margin-bottom: 28px;
+        }
+        .login-brand-icon {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .login-brand-icon svg { width: 19px; height: 19px; fill: #fff; }
+        .login-brand-text { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+        .login-brand-sub { font-size: 12px; color: var(--text-3); margin-top: 1px; }
+
+        .login-title {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.4px;
+            margin-bottom: 4px;
+        }
+        .login-subtitle {
+            font-size: 13px;
+            color: var(--text-2);
+            margin-bottom: 28px;
+            line-height: 1.5;
+        }
+
+        .login-error {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            background: var(--danger-dim);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 13px;
+            color: var(--danger);
+            margin-bottom: 18px;
+        }
+        .login-error.visible { display: flex; }
+        .login-error svg { width: 14px; height: 14px; stroke: currentColor; fill: none; flex-shrink: 0; }
+
+        .login-btn {
+            width: 100%;
+            padding: 11px;
+            border-radius: 9px;
+            border: none;
+            background: var(--accent);
+            color: #000;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: var(--sans);
+            cursor: pointer;
+            transition: all var(--transition);
+            box-shadow: 0 0 20px var(--accent-glow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .login-btn:hover { background: #33dcff; box-shadow: 0 0 28px rgba(0, 212, 255, 0.4); }
+        .login-btn:disabled { opacity: 0.5; pointer-events: none; }
+        .login-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; flex-shrink: 0; }
+        .login-btn.loading svg { animation: spin 0.7s linear infinite; }
+
+        /* ── App shell ───────────────────────────────── */
+        #app-shell { display: none; }
+        #app-shell.active { display: block; }
+
+        /* ── Header ─────────────────────────────────── */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 28px;
+            height: 60px;
+            background: rgba(7, 9, 14, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            color: var(--text);
+            text-decoration: none;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .logo-icon {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .logo-icon svg { width: 16px; height: 16px; fill: #fff; }
+
+        .breadcrumbs {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--text-2);
+            flex: 1;
+            min-width: 0;
+        }
+        .breadcrumbs .sep { color: var(--text-3); }
+        .breadcrumbs .crumb {
+            color: var(--text-2);
+            cursor: pointer;
+            transition: color var(--transition);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .breadcrumbs .crumb:hover { color: var(--accent); }
+        .breadcrumbs .crumb.active { color: var(--text); font-weight: 500; cursor: default; }
+
+        .header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+        /* ── Buttons ─────────────────────────────────── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all var(--transition);
+            white-space: nowrap;
+            font-family: var(--sans);
+            line-height: 1;
+        }
+        .btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+        .btn:disabled { opacity: 0.4; pointer-events: none; }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-2);
+            border: 1px solid var(--border);
+        }
+        .btn-ghost:hover { background: var(--bg-2); color: var(--text); border-color: rgba(255, 255, 255, 0.14); }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #000;
+            font-weight: 600;
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+        .btn-primary:hover { background: #33dcff; box-shadow: 0 0 28px rgba(0, 212, 255, 0.4); }
+
+        .btn-danger {
+            background: var(--danger-dim);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        .btn-danger:hover { background: rgba(239, 68, 68, 0.22); border-color: rgba(239, 68, 68, 0.4); }
+
+        .btn-icon {
+            padding: 7px;
+            border-radius: 7px;
+            background: transparent;
+            color: var(--text-2);
+            border: 1px solid var(--border);
+            transition: all var(--transition);
+            cursor: pointer;
+        }
+        .btn-icon:hover { background: var(--bg-2); color: var(--text); border-color: rgba(255, 255, 255, 0.14); }
+        .btn-icon svg { width: 15px; height: 15px; display: block; }
+        .btn-icon.spinning svg { animation: spin 0.7s linear infinite; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Main layout ─────────────────────────────── */
+        main {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 36px 28px 60px;
+        }
+
+        .page { display: none; }
+        .page.active { display: block; animation: fadeIn 180ms ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 28px;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .page-title { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; line-height: 1.2; }
+        .page-subtitle { font-size: 13px; color: var(--text-2); margin-top: 4px; }
+        .page-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+
+        /* ── Table cards grid ────────────────────────── */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
+        .table-card {
+            position: relative;
+            border-radius: var(--radius-lg);
+            background: var(--bg-1);
+            border: 1px solid var(--border);
+            padding: 20px 18px 18px;
+            cursor: pointer;
+            transition: all var(--transition);
+            overflow: hidden;
+        }
+        .table-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--accent-dim), transparent);
+            opacity: 0;
+            transition: opacity var(--transition);
+        }
+        .table-card:hover { border-color: var(--border-h); transform: translateY(-2px); box-shadow: var(--shadow), 0 0 0 1px var(--border-h); }
+        .table-card:hover::before { opacity: 1; }
+
+        .table-card-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 9px;
+            background: var(--accent-dim);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+        }
+        .table-card-icon svg { width: 17px; height: 17px; stroke: var(--accent); fill: none; }
+        .table-card-name { font-size: 14px; font-weight: 600; color: var(--text); word-break: break-word; margin-bottom: 6px; }
+        .table-card-meta { font-size: 12px; color: var(--text-3); }
+
+        .table-card-delete {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-3);
+            transition: all var(--transition);
+            opacity: 0;
+        }
+        .table-card:hover .table-card-delete { opacity: 1; }
+        .table-card-delete:hover { background: var(--danger-dim); color: var(--danger); }
+        .table-card-delete svg { width: 13px; height: 13px; stroke: currentColor; fill: none; }
+
+        /* ── Secrets table ───────────────────────────── */
+        .secrets-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .secrets-count { font-size: 13px; color: var(--text-2); flex: 1; }
+        .secrets-count span { color: var(--text); font-weight: 600; }
+
+        .secrets-table-wrap {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+
+        .secrets-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            table-layout: fixed;
+        }
+
+        .secrets-table thead tr {
+            background: var(--bg-2);
+            border-bottom: 1px solid var(--border);
+        }
+        .secrets-table th {
+            padding: 11px 16px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--text-3);
+            white-space: nowrap;
+        }
+        .secrets-table th.col-key { width: 32%; }
+        .secrets-table th.col-actions { width: 52px; }
+
+        .secrets-table tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background var(--transition);
+        }
+        .secrets-table tbody tr:last-child { border-bottom: none; }
+        .secrets-table tbody tr:hover { background: rgba(255, 255, 255, 0.025); }
+        .secrets-table td { padding: 12px 16px; vertical-align: middle; }
+
+        .key-cell {
+            font-family: var(--mono);
+            font-size: 12.5px;
+            font-weight: 500;
+            color: var(--accent);
+            word-break: break-all;
+        }
+
+        .value-cell { max-width: 340px; }
+        .value-wrap { display: flex; align-items: center; gap: 8px; }
+        .value-text {
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--text-2);
+            word-break: break-all;
+            flex: 1;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        .value-text.revealed { color: var(--text); white-space: pre-wrap; word-break: break-all; }
+
+        .btn-reveal {
+            flex-shrink: 0;
+            width: 26px;
+            height: 26px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            cursor: pointer;
+            color: var(--text-3);
+            transition: all var(--transition);
+        }
+        .btn-reveal:hover { border-color: rgba(255, 255, 255, 0.14); color: var(--text); }
+        .btn-reveal svg { width: 13px; height: 13px; stroke: currentColor; fill: none; }
+
+        .row-actions { display: flex; justify-content: flex-end; gap: 6px; }
+        .btn-row-delete {
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text-3);
+            transition: all var(--transition);
+            opacity: 0;
+        }
+        tr:hover .btn-row-delete { opacity: 1; }
+        .btn-row-delete:hover { background: var(--danger-dim); color: var(--danger); border-color: rgba(239, 68, 68, 0.2); }
+        .btn-row-delete svg { width: 13px; height: 13px; stroke: currentColor; fill: none; }
+
+        /* ── Empty states ────────────────────────────── */
+        .empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 72px 24px;
+            text-align: center;
+            border: 1px dashed var(--border);
+            border-radius: var(--radius-lg);
+        }
+        .empty-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            background: var(--bg-2);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 18px;
+        }
+        .empty-icon svg { width: 24px; height: 24px; stroke: var(--text-3); fill: none; }
+        .empty h3 { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+        .empty p { font-size: 13px; color: var(--text-2); max-width: 300px; line-height: 1.6; }
+
+        /* ── Skeleton ────────────────────────────────── */
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-2) 25%, rgba(255, 255, 255, 0.05) 50%, var(--bg-2) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+            border-radius: 6px;
+        }
+        @keyframes shimmer { to { background-position: -200% 0; } }
+        .skeleton-card { height: 120px; border-radius: var(--radius-lg); border: 1px solid var(--border); }
+
+        /* ── Modals ──────────────────────────────────── */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--transition);
+        }
+        .overlay.open { opacity: 1; pointer-events: all; }
+
+        .modal {
+            background: var(--bg-1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: var(--shadow-lg);
+            transform: scale(0.96) translateY(8px);
+            transition: transform var(--transition);
+        }
+        .overlay.open .modal { transform: scale(1) translateY(0); }
+
+        .modal-header { margin-bottom: 22px; }
+        .modal-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+        .modal-subtitle { font-size: 13px; color: var(--text-2); }
+
+        .form-field { margin-bottom: 16px; }
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-2);
+            margin-bottom: 7px;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+        .form-input {
+            width: 100%;
+            background: var(--bg-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 13px;
+            font-size: 13px;
+            color: var(--text);
+            font-family: var(--sans);
+            outline: none;
+            transition: border-color var(--transition), box-shadow var(--transition);
+        }
+        .form-input.mono { font-family: var(--mono); font-size: 12.5px; }
+        .form-input:focus {
+            border-color: rgba(0, 212, 255, 0.45);
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+        }
+        .form-input::placeholder { color: var(--text-3); }
+        textarea.form-input { resize: vertical; min-height: 90px; line-height: 1.5; }
+
+        .modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 22px; }
+
+        .confirm-danger-text { font-size: 13px; color: var(--text-2); line-height: 1.6; margin-top: 10px; }
+        .confirm-danger-text strong { color: var(--danger); font-family: var(--mono); font-size: 12px; }
+
+        /* ── Toasts ──────────────────────────────────── */
+        #toast-root {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .toast {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text);
+            background: var(--bg-2);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            animation: toastIn 220ms ease forwards;
+            pointer-events: all;
+            max-width: 340px;
+        }
+        .toast.out { animation: toastOut 180ms ease forwards; }
+        .toast-icon {
+            width: 18px; height: 18px; flex-shrink: 0;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        }
+        .toast.success .toast-icon { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .toast.error   .toast-icon { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+        .toast.info    .toast-icon { background: var(--accent-dim); color: var(--accent); }
+        .toast-icon svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 2.5; }
+
+        @keyframes toastIn  { from { opacity: 0; transform: translateX(16px) scale(0.97); } to { opacity: 1; transform: translateX(0) scale(1); } }
+        @keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(16px); } }
+
+        /* ── Badge ───────────────────────────────────── */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            background: var(--accent-dim);
+            color: var(--accent);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        /* ── Scrollbar ───────────────────────────────── */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.18); }
+    </style>
+</head>
+<body>
+
+<!-- ── Login screen ──────────────────────────── -->
+<div id="login-screen">
+    <div class="login-card">
+        <div class="login-brand">
+            <div class="login-brand-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3"/>
+                </svg>
+            </div>
+            <div>
+                <div class="login-brand-text">VaultAPI</div>
+                <div class="login-brand-sub">Encrypted secret store</div>
+            </div>
+        </div>
+
+        <div class="login-title">Sign in</div>
+        <div class="login-subtitle">Enter your credentials to access the vault.</div>
+
+        <div class="login-error" id="login-error">
+            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span id="login-error-text">Invalid credentials</span>
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="login-apikey">API Key</label>
+            <input class="form-input mono" id="login-apikey" type="password" placeholder="your-api-key"
+                   autocomplete="current-password" spellcheck="false">
+        </div>
+        <div class="form-field">
+            <label class="form-label" for="login-secret">Secret</label>
+            <input class="form-input mono" id="login-secret" type="password" placeholder="your-fernet-secret"
+                   autocomplete="off" spellcheck="false">
+        </div>
+        <div class="form-field" id="totp-field" style="display:none">
+            <label class="form-label" for="login-totp">Authenticator Code</label>
+            <input class="form-input mono" id="login-totp" type="text" placeholder="000000"
+                   autocomplete="one-time-code" inputmode="numeric" maxlength="6" spellcheck="false"
+                   onkeydown="if(event.key==='Enter') submitLogin()">
+        </div>
+
+        <button class="login-btn" id="login-btn" onclick="submitLogin()">
+            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                <polyline points="10 17 15 12 10 7"/>
+                <line x1="15" y1="12" x2="3" y2="12"/>
+            </svg>
+            Sign in
+        </button>
+    </div>
+</div>
+
+<!-- ── App shell ─────────────────────────────── -->
+<div id="app-shell">
+    <header>
+        <div class="logo" onclick="navigateTo('tables')">
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3"/>
+                </svg>
+            </div>
+            VaultAPI
+        </div>
+
+        <div class="breadcrumbs" id="breadcrumbs">
+            <span class="crumb active">Tables</span>
+        </div>
+
+        <div class="header-actions">
+            <button class="btn-icon" id="btn-refresh" title="Refresh" onclick="refresh()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                     stroke-linejoin="round">
+                    <polyline points="23 4 23 10 17 10"/>
+                    <polyline points="1 20 1 14 7 14"/>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                </svg>
+            </button>
+            <button class="btn-icon" id="btn-signout" title="Sign out" onclick="logout()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                     stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Tables view -->
+        <div class="page active" id="page-tables">
+            <div class="page-header">
+                <div>
+                    <div class="page-title">Secret Stores</div>
+                    <div class="page-subtitle" id="tables-subtitle">Manage your encrypted table vaults</div>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-primary" onclick="openModal('modal-create-table')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                             stroke-linecap="round">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        New Table
+                    </button>
+                </div>
+            </div>
+            <div id="tables-content"></div>
+        </div>
+
+        <!-- Secrets view -->
+        <div class="page" id="page-secrets">
+            <div class="page-header">
+                <div>
+                    <div class="page-title" id="secrets-title">Secrets</div>
+                    <div class="page-subtitle">Encrypted at rest · Decrypted on read</div>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-primary" onclick="openAddSecret()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                             stroke-linecap="round">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        Add Secret
+                    </button>
+                </div>
+            </div>
+            <div class="secrets-toolbar">
+                <div class="secrets-count" id="secrets-count"></div>
+            </div>
+            <div id="secrets-content"></div>
+        </div>
+    </main>
+</div>
+
+<!-- Modal: Create Table -->
+<div class="overlay" id="modal-create-table" onclick="overlayClick(event, 'modal-create-table')">
+    <div class="modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+            <div class="modal-title">Create New Table</div>
+            <div class="modal-subtitle">A table is an isolated vault for a set of secrets.</div>
+        </div>
+        <div class="form-field">
+            <label class="form-label" for="input-table-name">Table Name</label>
+            <input class="form-input mono" id="input-table-name" type="text" placeholder="e.g. production"
+                   autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter') confirmCreateTable()">
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('modal-create-table')">Cancel</button>
+            <button class="btn btn-primary" onclick="confirmCreateTable()">Create Table</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add Secret -->
+<div class="overlay" id="modal-add-secret" onclick="overlayClick(event, 'modal-add-secret')">
+    <div class="modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+            <div class="modal-title">Add Secret</div>
+            <div class="modal-subtitle" id="add-secret-subtitle">Add a new encrypted key-value pair.</div>
+        </div>
+        <div class="form-field">
+            <label class="form-label" for="input-secret-key">Key</label>
+            <input class="form-input mono" id="input-secret-key" type="text" placeholder="SECRET_NAME"
+                   autocomplete="off" spellcheck="false">
+        </div>
+        <div class="form-field">
+            <label class="form-label" for="input-secret-value">Value</label>
+            <textarea class="form-input mono" id="input-secret-value" placeholder="secret value..."
+                      spellcheck="false"></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('modal-add-secret')">Cancel</button>
+            <button class="btn btn-primary" onclick="confirmAddSecret()">Save Secret</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Confirm Delete -->
+<div class="overlay" id="modal-confirm-delete" onclick="overlayClick(event, 'modal-confirm-delete')">
+    <div class="modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+            <div class="modal-title" id="confirm-title">Confirm Deletion</div>
+            <div class="confirm-danger-text" id="confirm-body"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('modal-confirm-delete')">Cancel</button>
+            <button class="btn btn-danger" id="btn-confirm-ok">Delete</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast-root"></div>
+
+<script>
+    (function () {
+        'use strict';
+
+        // ── State ──────────────────────────────────────
+        const state = {
+            apikey: null,
+            view: 'tables',
+            currentTable: null,
+            tables: [],
+            secrets: {},
+        };
+
+        // ── SVG icons ──────────────────────────────────
+        const ICONS = {
+            eye: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`,
+            eyeOff: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`,
+            trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`,
+            table: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>`,
+            key: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>`,
+            check: `<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+            x: `<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+            info: `<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+            lock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
+            spinner: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`,
+        };
+
+        // ── Toast ──────────────────────────────────────
+        function toast(msg, type = 'info') {
+            const root = document.getElementById('toast-root');
+            const el = document.createElement('div');
+            el.className = `toast ${type}`;
+            const iconMap = {success: ICONS.check, error: ICONS.x, info: ICONS.info};
+            el.innerHTML = `<span class="toast-icon">${iconMap[type] || ICONS.info}</span><span>${msg}</span>`;
+            root.appendChild(el);
+            setTimeout(() => {
+                el.classList.add('out');
+                el.addEventListener('animationend', () => el.remove(), {once: true});
+            }, 3200);
+        }
+
+        // ── API helper — injects Bearer, handles 401 ──
+        async function api(method, path, body = null) {
+            const headers = {'Content-Type': 'application/json'};
+            if (state.apikey) headers['Authorization'] = `Bearer ${state.apikey}`;
+            const opts = {method, headers};
+            if (body) opts.body = JSON.stringify(body);
+            const res = await fetch(path, opts);
+            if (res.status === 401 || res.status === 403) {
+                logout();
+                return {ok: false, status: res.status, data: {detail: 'Session expired'}};
+            }
+            const data = await res.json().catch(() => ({}));
+            return {ok: res.ok, status: res.status, data};
+        }
+
+        // ── Login / logout ─────────────────────────────
+        function showLogin() {
+            document.getElementById('login-screen').classList.add('active');
+            document.getElementById('app-shell').classList.remove('active');
+            document.getElementById('login-error').classList.remove('visible');
+            document.getElementById('login-apikey').value = '';
+            document.getElementById('login-secret').value = '';
+            document.getElementById('login-totp').value = '';
+            setTimeout(() => document.getElementById('login-apikey').focus(), 60);
+        }
+
+        function showApp() {
+            document.getElementById('login-screen').classList.remove('active');
+            document.getElementById('app-shell').classList.add('active');
+        }
+
+        function logout() {
+            state.apikey = null;
+            showLogin();
+        }
+
+        async function submitLogin() {
+            const btn = document.getElementById('login-btn');
+            const errEl = document.getElementById('login-error');
+            const errText = document.getElementById('login-error-text');
+            const apikey = document.getElementById('login-apikey').value.trim();
+            const secret = document.getElementById('login-secret').value.trim();
+            const totp_code = document.getElementById('login-totp').value.trim();
+
+            if (!apikey || !secret) {
+                errText.textContent = 'API Key and Secret are required.';
+                errEl.classList.add('visible');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.classList.add('loading');
+            btn.innerHTML = `${ICONS.spinner} Signing in…`;
+            errEl.classList.remove('visible');
+
+            const {ok, data} = await fetch('/ui/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({apikey, secret, totp_code}),
+            }).then(r => r.json().then(d => ({ok: r.ok, data: d}))).catch(() => ({ok: false, data: {}}));
+
+            btn.disabled = false;
+            btn.classList.remove('loading');
+            btn.innerHTML = `${ICONS.spinner.replace('spinner', '')}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                    <polyline points="10 17 15 12 10 7"/>
+                    <line x1="15" y1="12" x2="3" y2="12"/>
+                </svg>
+                Sign in`;
+
+            if (ok) {
+                state.apikey = apikey;
+                showApp();
+                navigateTo('tables');
+            } else {
+                errText.textContent = data.detail || 'Login failed.';
+                errEl.classList.add('visible');
+                document.getElementById('login-apikey').focus();
+            }
+        }
+
+        // ── Navigation ─────────────────────────────────
+        function navigateTo(view, table = null) {
+            state.view = view;
+            state.currentTable = table;
+            updateBreadcrumbs();
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            if (view === 'tables') {
+                document.getElementById('page-tables').classList.add('active');
+                loadTables();
+            } else {
+                document.getElementById('page-secrets').classList.add('active');
+                document.getElementById('secrets-title').textContent = table;
+                document.getElementById('add-secret-subtitle').textContent =
+                    `Adding secret to table "${table}"`;
+                loadSecrets(table);
+            }
+        }
+
+        function updateBreadcrumbs() {
+            const bc = document.getElementById('breadcrumbs');
+            if (state.view === 'tables') {
+                bc.innerHTML = `<span class="crumb active">Tables</span>`;
+            } else {
+                bc.innerHTML = `
+                    <span class="crumb" onclick="navigateTo('tables')">Tables</span>
+                    <span class="sep">›</span>
+                    <span class="crumb active">${esc(state.currentTable)}</span>`;
+            }
+        }
+
+        function refresh() {
+            const btn = document.getElementById('btn-refresh');
+            btn.classList.add('spinning');
+            const done = () => btn.classList.remove('spinning');
+            if (state.view === 'tables') loadTables().finally(done);
+            else loadSecrets(state.currentTable).finally(done);
+        }
+
+        // ── Tables view ────────────────────────────────
+        async function loadTables() {
+            const el = document.getElementById('tables-content');
+            el.innerHTML = renderSkeletonCards(6);
+            const {ok, data} = await api('GET', '/ui/tables');
+            if (!ok) {
+                if (data.detail !== 'Session expired') toast('Failed to load tables', 'error');
+                el.innerHTML = renderEmpty('tables');
+                return;
+            }
+            state.tables = data.tables || [];
+            const sub = document.getElementById('tables-subtitle');
+            sub.innerHTML = state.tables.length
+                ? `<span class="badge">${state.tables.length}</span> table${state.tables.length !== 1 ? 's' : ''} available`
+                : 'No tables yet — create one to get started';
+            el.innerHTML = state.tables.length ? renderCards(state.tables) : renderEmpty('tables');
+        }
+
+        function renderSkeletonCards(n) {
+            return `<div class="cards-grid">${Array.from({length: n}, () =>
+                `<div class="skeleton skeleton-card"></div>`).join('')}</div>`;
+        }
+
+        function renderCards(tables) {
+            return `<div class="cards-grid">${tables.map(t => `
+                <div class="table-card" onclick="navigateTo('secrets', '${esc(t)}')">
+                    <button class="table-card-delete" title="Delete table"
+                            onclick="event.stopPropagation(); promptDeleteTable('${esc(t)}')">${ICONS.trash}</button>
+                    <div class="table-card-icon">${ICONS.table}</div>
+                    <div class="table-card-name">${esc(t)}</div>
+                    <div class="table-card-meta">Click to view secrets</div>
+                </div>`).join('')}</div>`;
+        }
+
+        function renderEmpty(ctx) {
+            if (ctx === 'tables') return `
+                <div class="empty">
+                    <div class="empty-icon">${ICONS.lock}</div>
+                    <h3>No tables found</h3>
+                    <p>Create your first secret store to start managing encrypted key-value pairs.</p>
+                </div>`;
+            return `
+                <div class="empty">
+                    <div class="empty-icon">${ICONS.key}</div>
+                    <h3>No secrets yet</h3>
+                    <p>Add your first secret to this table using the button above.</p>
+                </div>`;
+        }
+
+        // ── Secrets view ───────────────────────────────
+        async function loadSecrets(table) {
+            const el = document.getElementById('secrets-content');
+            el.innerHTML = `<div class="skeleton" style="height:200px;border-radius:12px"></div>`;
+            const {ok, data} = await api('GET', `/ui/table/${encodeURIComponent(table)}`);
+            if (!ok) {
+                if (data.detail !== 'Session expired') toast(data.detail || 'Failed to load secrets', 'error');
+                el.innerHTML = renderEmpty('secrets');
+                return;
+            }
+            state.secrets = data.secrets || {};
+            renderSecretsTable();
+        }
+
+        function renderSecretsTable() {
+            const keys = Object.keys(state.secrets);
+            const el = document.getElementById('secrets-content');
+            const countEl = document.getElementById('secrets-count');
+            countEl.innerHTML = keys.length
+                ? `<span>${keys.length}</span> secret${keys.length !== 1 ? 's' : ''} stored`
+                : '';
+
+            if (!keys.length) {
+                el.innerHTML = renderEmpty('secrets');
+                return;
+            }
+
+            const rows = keys.map(k => `
+                <tr id="row-${CSS.escape(k)}">
+                    <td><div class="key-cell">${esc(k)}</div></td>
+                    <td class="value-cell">
+                        <div class="value-wrap">
+                            <div class="value-text" id="val-${esc(k)}">••••••••••••••••</div>
+                            <button class="btn-reveal" title="Toggle visibility"
+                                    onclick="toggleReveal('${esc(k)}')" data-revealed="false">${ICONS.eye}</button>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="row-actions">
+                            <button class="btn-row-delete" title="Delete"
+                                    onclick="promptDeleteSecret('${esc(k)}')">${ICONS.trash}</button>
+                        </div>
+                    </td>
+                </tr>`).join('');
+
+            el.innerHTML = `
+                <div class="secrets-table-wrap">
+                    <table class="secrets-table">
+                        <thead><tr>
+                            <th class="col-key">Key</th><th>Value</th><th class="col-actions"></th>
+                        </tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>`;
+        }
+
+        function toggleReveal(key) {
+            const valEl = document.getElementById(`val-${key}`);
+            const btnEl = valEl?.nextElementSibling;
+            if (!valEl || !btnEl) return;
+            const revealed = btnEl.dataset.revealed === 'true';
+            if (revealed) {
+                valEl.textContent = '••••••••••••••••';
+                valEl.classList.remove('revealed');
+                btnEl.innerHTML = ICONS.eye;
+                btnEl.dataset.revealed = 'false';
+            } else {
+                valEl.textContent = state.secrets[key] ?? '';
+                valEl.classList.add('revealed');
+                btnEl.innerHTML = ICONS.eyeOff;
+                btnEl.dataset.revealed = 'true';
+            }
+        }
+
+        // ── Modals ─────────────────────────────────────
+        function openModal(id) {
+            document.getElementById(id).classList.add('open');
+            const first = document.getElementById(id).querySelector('input, textarea');
+            if (first) setTimeout(() => first.focus(), 50);
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('open');
+        }
+
+        function overlayClick(e, id) {
+            if (e.target.classList.contains('overlay')) closeModal(id);
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape')
+                document.querySelectorAll('.overlay.open').forEach(el => el.classList.remove('open'));
+        });
+
+        // ── Create table ───────────────────────────────
+        async function confirmCreateTable() {
+            const name = document.getElementById('input-table-name').value.trim();
+            if (!name) { toast('Table name cannot be empty', 'error'); return; }
+            closeModal('modal-create-table');
+            document.getElementById('input-table-name').value = '';
+            const {ok, data} = await api('POST', `/ui/table/${encodeURIComponent(name)}`);
+            if (ok) { toast(`Table "${name}" created`, 'success'); await loadTables(); }
+            else toast(data.detail || 'Failed to create table', 'error');
+        }
+
+        // ── Add secret ─────────────────────────────────
+        function openAddSecret() { openModal('modal-add-secret'); }
+
+        async function confirmAddSecret() {
+            const key = document.getElementById('input-secret-key').value.trim();
+            const value = document.getElementById('input-secret-value').value;
+            if (!key) { toast('Key cannot be empty', 'error'); return; }
+            closeModal('modal-add-secret');
+            document.getElementById('input-secret-key').value = '';
+            document.getElementById('input-secret-value').value = '';
+            const {ok, data} = await api('PUT', '/ui/secret', {table_name: state.currentTable, key, value});
+            if (ok) { toast(`Secret "${key}" saved`, 'success'); await loadSecrets(state.currentTable); }
+            else toast(data.detail || 'Failed to save secret', 'error');
+        }
+
+        // ── Delete table ───────────────────────────────
+        function promptDeleteTable(name) {
+            document.getElementById('confirm-title').textContent = 'Delete Table';
+            document.getElementById('confirm-body').innerHTML =
+                `This will permanently delete <strong>${esc(name)}</strong> and all its secrets. This action cannot be undone.`;
+            document.getElementById('btn-confirm-ok').onclick = async () => {
+                closeModal('modal-confirm-delete');
+                const {ok, data} = await api('DELETE', `/ui/table/${encodeURIComponent(name)}`);
+                if (ok) { toast(`Table "${name}" deleted`, 'success'); await loadTables(); }
+                else toast(data.detail || 'Failed to delete table', 'error');
+            };
+            openModal('modal-confirm-delete');
+        }
+
+        // ── Delete secret ──────────────────────────────
+        function promptDeleteSecret(key) {
+            document.getElementById('confirm-title').textContent = 'Delete Secret';
+            document.getElementById('confirm-body').innerHTML =
+                `Delete secret <strong>${esc(key)}</strong> from <strong>${esc(state.currentTable)}</strong>? This cannot be undone.`;
+            document.getElementById('btn-confirm-ok').onclick = async () => {
+                closeModal('modal-confirm-delete');
+                const {ok, data} = await api('DELETE', '/ui/secret', {table_name: state.currentTable, key});
+                if (ok) { toast(`Secret "${key}" deleted`, 'success'); await loadSecrets(state.currentTable); }
+                else toast(data.detail || 'Failed to delete secret', 'error');
+            };
+            openModal('modal-confirm-delete');
+        }
+
+        // ── Utilities ──────────────────────────────────
+        function esc(s) {
+            return String(s)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        // ── Bootstrap ─────────────────────────────────
+        (async function init() {
+            const res = await fetch('/ui/auth-config').then(r => r.json()).catch(() => ({}));
+            if (res.totp_required) {
+                document.getElementById('totp-field').style.display = 'block';
+            }
+            showLogin();
+            // Allow Enter from secret field to submit when TOTP is not shown
+            document.getElementById('login-secret').addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    const totpVisible = document.getElementById('totp-field').style.display !== 'none';
+                    if (!totpVisible) submitLogin();
+                    else document.getElementById('login-totp').focus();
+                }
+            });
+        })();
+
+        window.navigateTo = navigateTo;
+        window.refresh = refresh;
+        window.logout = logout;
+        window.submitLogin = submitLogin;
+        window.openModal = openModal;
+        window.closeModal = closeModal;
+        window.overlayClick = overlayClick;
+        window.confirmCreateTable = confirmCreateTable;
+        window.openAddSecret = openAddSecret;
+        window.confirmAddSecret = confirmAddSecret;
+        window.promptDeleteTable = promptDeleteTable;
+        window.promptDeleteSecret = promptDeleteSecret;
+        window.toggleReveal = toggleReveal;
+    })();
+</script>
+</body>
+</html>
