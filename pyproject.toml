@@ -25,11 +25,29 @@ version = {attr = "vaultapi.version.__version__"}
 dependencies = { file = ["requirements.txt"] }
 
 [project.optional-dependencies]
-dev = ["sphinx==5.1.1", "pre-commit", "recommonmark", "gitverse"]
+dev = { file = ["requirements-dev.txt"] }
+ui = ["pyotp==2.9.*"]
 
 [project.scripts]
 # sends all the args to commandline function, where the arbitary commands as processed accordingly
 vaultapi = "vaultapi:commandline"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "--cov=vaultapi --cov-report=term-missing --cov-report=html:htmlcov -q"
+
+[tool.coverage.run]
+source = ["vaultapi"]
+omit = ["vaultapi/server.py", "vaultapi/__init__.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "if __name__ == .__main__.:",
+    "pragma: no cover",
+]
 
 [build-system]
 requires      = ["setuptools", "wheel"]

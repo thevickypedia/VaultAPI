@@ -338,7 +338,7 @@ if env.enable_ui:
     ), "TOTP token must be provided if enable_ui is True"
     try:
         import pyotp
-    except (ImportError, ModuleNotFoundError):
+    except (ImportError, ModuleNotFoundError):  # pragma: no cover
         raise exceptions.StartupError(
             "Missing requirements. Please install 'vaultapi[ui]'"
         )

@@ -1,0 +1,117 @@
+"""Direct unit tests for UI endpoint handlers to cover auth-exception branches."""
+
+import time
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+from fastapi.security import HTTPAuthorizationCredentials
+
+from vaultapi import auth, database, exceptions, models, ui_endpoints
+from vaultapi.models import EnvConfig
+from cryptography.fernet import Fernet
+
+VALID_KEY = "TestApiKey1!SecurePass#Word99@XYZ"
+
+
+def _req(host="127.0.0.1", headers=None):
+    req = MagicMock()
+    req.client.host = host
+    req.headers = MagicMock()
+    req.headers.get = lambda k, d="": (headers or {}).get(k, d)
+    req.json = AsyncMock(return_value={})
+    return req
+
+
+def _creds(token="bad"):
+    c = MagicMock(spec=HTTPAuthorizationCredentials)
+    c.credentials = token
+    return c
+
+
+def _forbid_validate():
+    """Patch auth.validate to always raise 401."""
+    async def _raise(*a, **kw):
+        raise exceptions.APIResponse(status_code=401, detail="Unauthorized")
+    return patch("vaultapi.auth.validate", side_effect=_raise)
+
+
+@pytest.mark.asyncio
+class TestUiAuthExceptBranches:
+    """Exercise the except-APIResponse catch clauses in every UI handler."""
+
+    async def test_list_tables_auth_fail(self):
+        with _forbid_validate():
+            resp = await ui_endpoints.ui_list_tables(_req(), _creds())
+        assert resp.status_code == 401
+
+    async def test_get_table_auth_fail(self):
+        with _forbid_validate():
+            resp = await ui_endpoints.ui_get_table(_req(), "any_table", _creds())
+        assert resp.status_code == 401
+
+    async def test_create_table_auth_fail(self):
+        with _forbid_validate():
+            resp = await ui_endpoints.ui_create_table(_req(), "any_table", _creds())
+        assert resp.status_code == 401
+
+    async def test_delete_table_auth_fail(self):
+        with _forbid_validate():
+            resp = await ui_endpoints.ui_delete_table(_req(), "any_table", _creds())
+        assert resp.status_code == 401
+
+    async def test_put_secret_auth_fail(self):
+        req = _req()
+        req.json = AsyncMock(return_value={"table_name": "t", "key": "k", "value": "v"})
+        with _forbid_validate():
+            resp = await ui_endpoints.ui_put_secret(req, _creds())
+        assert resp.status_code == 401
+
+    async def test_delete_secret_auth_fail(self):
+        req = _req()
+        req.json = AsyncMock(return_value={"table_name": "t", "key": "k"})
+        with _forbid_validate():
+            resp = await ui_endpoints.ui_delete_secret(req, _creds())
+        assert resp.status_code == 401
+
+    async def test_import_secrets_auth_fail(self):
+        req = _req()
+        req.json = AsyncMock(return_value={
+            "table_name": "t", "payload": '{"k":"v"}', "payload_type": "json"
+        })
+        with _forbid_validate():
+            resp = await ui_endpoints.ui_import_secrets(req, _creds())
+        assert resp.status_code == 401
+
+
+@pytest.mark.asyncio
+class TestUiLoginNoTotp:
+    """Cover the warnings.warn + 401 path when totp_token is None."""
+
+    async def test_login_without_totp_returns_401(self):
+        req = _req()
+        req.json = AsyncMock(return_value={"apikey": VALID_KEY, "totp_code": "123456"})
+        with patch.object(models.env, "totp_token", None):
+            resp = await ui_endpoints.ui_login(req)
+        assert resp.status_code == 401
+
+
+@pytest.mark.asyncio
+class TestUiDeleteSecretRetrieveError:
+    """Cover the retrieve_secret APIResponse catch in ui_delete_secret."""
+
+    async def test_retrieve_error_propagated(self):
+        database.create_table("ds_rerr", ["key", "value"])
+        encrypted = models.session.fernet.encrypt(b"v")
+        database.put_secret("ERR_K", encrypted, "ds_rerr")
+
+        from tests.conftest import _set_valid_ui_session
+        token = _set_valid_ui_session()
+
+        req = _req(headers={"authenticator": "VaultAPI-UI"})
+        req.json = AsyncMock(return_value={"table_name": "ds_rerr", "key": "ERR_K"})
+        creds = _creds(token)
+
+        with patch("vaultapi.api_endpoints.retrieve_secret",
+                   side_effect=exceptions.APIResponse(status_code=400, detail="db error")):
+            resp = await ui_endpoints.ui_delete_secret(req, creds)
+        assert resp.status_code == 400

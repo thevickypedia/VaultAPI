@@ -53,7 +53,7 @@ def lifespan() -> None:
     VaultAPI.routes.extend(routes.api_routes())
     if models.env.enable_ui:
         VaultAPI.routes.extend(routes.ui_routes())
-    else:
+    else:  # pragma: no cover
         VaultAPI.routes.append(
             APIRoute(
                 path="/",
