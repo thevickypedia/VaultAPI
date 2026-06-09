@@ -1,6 +1,38 @@
 Release Notes
 =============
 
+v0.4.0 (06/08/2026)
+-------------------
+- `83eb494 <https://github.com/thevickypedia/VaultAPI/commit/83eb494b342a52fbe3a30d4313eb528e1ceb2da5>`_ chore: Release ``v0.4.0``
+- `342ab11 <https://github.com/thevickypedia/VaultAPI/commit/342ab11cd1f5fd2e10f0b24e072da83786197559>`_ test: Update unit tests to meet 100% code coverage
+- `6fae0ba <https://github.com/thevickypedia/VaultAPI/commit/6fae0ba6171826c2a6ea3a61e4d23bf4fd5c8268>`_ refactor: Add more logging for login errors
+- `fb5c77e <https://github.com/thevickypedia/VaultAPI/commit/fb5c77e5b3f1b8c4af0ee3b3d4ad5ba477102d50>`_ style: Fix background attachment and set focus to totp when login fails
+- `0cf99e6 <https://github.com/thevickypedia/VaultAPI/commit/0cf99e68415202dec66ec8cc2c7320d5fdb9393e>`_ perf: Monitor upstream ``url.hostname`` instead of ``client.host`` for rate limiting and IP based access controls
+- `be80a8b <https://github.com/thevickypedia/VaultAPI/commit/be80a8ba1bf048b667bbe4da2205c11b2eb16ca9>`_ fix: Add missing dependencies
+- `62ae30f <https://github.com/thevickypedia/VaultAPI/commit/62ae30f0bbc5be81adbe2139665d1d75a9c1e720>`_ test: Add unit tests for uncovered sections of otp.py
+- `20174c2 <https://github.com/thevickypedia/VaultAPI/commit/20174c22b3c4989dd0334dc55a512e545b6f59a4>`_ fix: Address an edge case scenario for missing QR filename and update unit tests
+- `81a10ec <https://github.com/thevickypedia/VaultAPI/commit/81a10ec38bdb980819ba83385b4cdd0e4a1d8f97>`_ feat: Include a util script to generate TOTP token and QR
+- `823959d <https://github.com/thevickypedia/VaultAPI/commit/823959d5d18ec53b29d24ab7a156e6fa55e60dd2>`_ fix: Fix invalid filepath and project name/description for GHA
+- `c9c2855 <https://github.com/thevickypedia/VaultAPI/commit/c9c2855a1a88626ab7a0b07866313f110979ca9e>`_ docs: Update GHA workflow reference links
+- `4b956a2 <https://github.com/thevickypedia/VaultAPI/commit/4b956a2105e8d854c89f596f129b3853241740c2>`_ ci: Create new / update all GHA workflows
+- `ef82cf7 <https://github.com/thevickypedia/VaultAPI/commit/ef82cf75953059839532934d7cb3363caf473ee0>`_ test: Limit the ignore list codes for flake8
+- `7c8ef80 <https://github.com/thevickypedia/VaultAPI/commit/7c8ef80e155bf9a0a8661d40c3fe3a6f0bf3d789>`_ test: Update tests and pre-commit run
+- `e555b1d <https://github.com/thevickypedia/VaultAPI/commit/e555b1da866bae2d9b927ffdbc9f841f8171db30>`_ test: Add unit tests with code coverage
+- `8645570 <https://github.com/thevickypedia/VaultAPI/commit/864557086c40d9ed1f515ff241365e8112b8796c>`_ chore: Raise a startup error when ``pyotp`` is not installed
+- `b6c03fa <https://github.com/thevickypedia/VaultAPI/commit/b6c03fa38c125c51c17780b52cb7f3e2fc023985>`_ docs: Run linter and update runbook
+- `e90d3d4 <https://github.com/thevickypedia/VaultAPI/commit/e90d3d426bc777135f31e6d430c02ff19d23016d>`_ feat: Include an option in the UI to import bulk secrets
+- `d531d51 <https://github.com/thevickypedia/VaultAPI/commit/d531d5107f882580feada7b9387136778fd19236>`_ perf: Handle session lifetime on client side
+- `b00fd98 <https://github.com/thevickypedia/VaultAPI/commit/b00fd983c7e04cf05f9dbd24c308107f06ff7f05>`_ perf: Handle session lifetime on server side
+- `79266fa <https://github.com/thevickypedia/VaultAPI/commit/79266fada32363b178c8cea9aef1fe0d815479dc>`_ fix: Show login screen only when session_token is invalid/expired
+- `caee0de <https://github.com/thevickypedia/VaultAPI/commit/caee0ded89dc0aeef88b3c19cf227ce51ff927b4>`_ perf: Replace in-memory token handling with session storage
+- `0041e09 <https://github.com/thevickypedia/VaultAPI/commit/0041e09e55342245c251b1ffd3607d7ff1161163>`_ perf: Change UI rendered to use Jinja templating
+- `cded83e <https://github.com/thevickypedia/VaultAPI/commit/cded83ec14f4cb016c384b45245d98c08f377664>`_ lint: Run linter
+- `d069fbf <https://github.com/thevickypedia/VaultAPI/commit/d069fbfb1245e2406145c9a13d4389122f504b56>`_ perf: Implement a dedicated session token for UI management
+- `8fc6e6d <https://github.com/thevickypedia/VaultAPI/commit/8fc6e6d684bbd6d7d4b3128770f44d7ec5367bd8>`_ feat: Implement a login based UI with in-house auth mechanism
+- `5e98d9a <https://github.com/thevickypedia/VaultAPI/commit/5e98d9a0ec959532517f8ec9c42c78ca585731a9>`_ feat: Create a base UI for VaultAPI
+- `a68faa5 <https://github.com/thevickypedia/VaultAPI/commit/a68faa56cb0bccd97c8204c4c067e6a96916f7e3>`_ chore: Update requirements
+- `0dff4a6 <https://github.com/thevickypedia/VaultAPI/commit/0dff4a6541dec21f8952a0727f7dfb306c84eaa0>`_ Update release notes
+
 v0.3.41a0 (06/07/2026)
 ----------------------
 - `754a7c3 <https://github.com/thevickypedia/VaultAPI/commit/754a7c373341c672d8258de703436853b0470da0>`_ chore: Release ``v0.3.41a0``
