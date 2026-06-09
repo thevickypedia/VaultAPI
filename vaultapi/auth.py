@@ -44,6 +44,7 @@ async def validate(
     else:
         auth = authorization.credentials
     if request.headers.get("authenticator", "") == UI_SESSION["authenticator"]:
+        LOGGER.debug("Assuming UI authenticator")
         authenticated = all(
             (
                 UI_SESSION["token"] != "",
@@ -53,10 +54,11 @@ async def validate(
             )
         )
     else:
+        LOGGER.debug("Assuming API authenticator")
         authenticated = secrets.compare_digest(auth, models.env.apikey)
     if authenticated:
         LOGGER.debug(
-            "Connection received from client-host: %s, host-header: %s, x-fwd-host: %s",
+            "Connection received from url-hostname: %s, host-header: %s, x-fwd-host: %s",
             request.url.hostname,
             request.headers.get("host"),
             request.headers.get("x-forwarded-host"),
@@ -64,6 +66,7 @@ async def validate(
         if user_agent := request.headers.get("user-agent"):
             LOGGER.debug("User agent: %s", user_agent)
         return
+    LOGGER.debug("Invalid apikey [OR] session token")
     raise exceptions.APIResponse(
         status_code=HTTPStatus.UNAUTHORIZED.real, detail=HTTPStatus.UNAUTHORIZED.phrase
     )

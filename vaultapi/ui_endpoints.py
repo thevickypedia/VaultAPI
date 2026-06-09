@@ -7,6 +7,7 @@ import secrets
 import sqlite3
 import time
 import warnings
+from datetime import datetime
 from http import HTTPStatus
 
 import yaml
@@ -83,6 +84,7 @@ async def ui_login(request: Request):
         apikey = bytes(apikey, "utf-8").decode(encoding="unicode_escape")
 
     if not secrets.compare_digest(apikey, models.env.apikey):
+        LOGGER.debug("Invalid api key received")
         return JSONResponse(
             status_code=HTTPStatus.UNAUTHORIZED.real,
             content={"detail": "Invalid credentials"},
@@ -93,6 +95,7 @@ async def ui_login(request: Request):
             import pyotp
 
             if not pyotp.TOTP(models.env.totp_token).verify(totp_code):
+                LOGGER.debug("Invalid totp token received")
                 return JSONResponse(
                     status_code=HTTPStatus.UNAUTHORIZED.real,
                     content={"detail": "Invalid credentials"},
@@ -107,6 +110,7 @@ async def ui_login(request: Request):
         warnings.warn(
             "TOTP not enabled but UI login attempt has been made.", UserWarning
         )
+        LOGGER.warning("TOTP not enabled but UI login attempt has been made.")
         return JSONResponse(
             status_code=HTTPStatus.UNAUTHORIZED.real,
             content={"detail": "Invalid credentials"},
@@ -114,6 +118,13 @@ async def ui_login(request: Request):
 
     auth.UI_SESSION["token"] = base64.urlsafe_b64encode(os.urandom(32)).decode("utf-8")
     auth.UI_SESSION["expires"] = int(time.time()) + models.env.ui_lifetime
+    LOGGER.info(
+        "Connection received from url-hostname: %s, host-header: %s, x-fwd-host: %s",
+        request.url.hostname,
+        request.headers.get("host"),
+        request.headers.get("x-forwarded-host"),
+    )
+    LOGGER.info("UI login will expire at: %s", datetime.fromtimestamp(auth.UI_SESSION["expires"]))
     return JSONResponse(
         content={
             "token": auth.UI_SESSION["token"],
