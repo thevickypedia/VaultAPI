@@ -148,16 +148,39 @@ class TestUiCreateDeleteTable:
         assert r.status_code == 200
         assert database.table_exists("brand_new")
 
+    async def _delete_table(self, client, name, totp_code, headers):
+        import json as _json
+
+        return await client.request(
+            "DELETE",
+            f"/ui/table/{name}",
+            content=_json.dumps({"totp_code": totp_code}),
+            headers={**headers, "Content-Type": "application/json"},
+        )
+
     async def test_delete_existing_table(self, client):
         database.create_table("to_delete", ["key", "value"])
         token = _set_valid_ui_session()
-        r = await client.delete("/ui/table/to_delete", headers=_ui_headers(token))
+        r = await self._delete_table(
+            client, "to_delete", make_totp(), _ui_headers(token)
+        )
         assert r.status_code == 200
         assert not database.table_exists("to_delete")
 
+    async def test_delete_table_wrong_totp_returns_401(self, client):
+        database.create_table("totp_guard_tbl", ["key", "value"])
+        token = _set_valid_ui_session()
+        r = await self._delete_table(
+            client, "totp_guard_tbl", "000000", _ui_headers(token)
+        )
+        assert r.status_code == 401
+        assert database.table_exists("totp_guard_tbl")
+
     async def test_delete_missing_table_returns_404(self, client):
         token = _set_valid_ui_session()
-        r = await client.delete("/ui/table/ghost_table", headers=_ui_headers(token))
+        r = await self._delete_table(
+            client, "ghost_table", make_totp(), _ui_headers(token)
+        )
         assert r.status_code == 404
 
 
@@ -212,16 +235,33 @@ class TestUiDeleteSecret:
         r = await self._delete(
             client,
             "/ui/secret",
-            {"table_name": "del_tbl", "key": "DEL_KEY"},
+            {"table_name": "del_tbl", "key": "DEL_KEY", "totp_code": make_totp()},
             _ui_headers(token),
         )
         assert r.status_code == 200
         assert database.get_secret("DEL_KEY", "del_tbl") is None
 
+    async def test_delete_secret_wrong_totp_returns_401(self, client):
+        database.create_table("del_totp_tbl", ["key", "value"])
+        encrypted = models.session.fernet.encrypt(b"v")
+        database.put_secret("GUARDED_KEY", encrypted, "del_totp_tbl")
+        token = _set_valid_ui_session()
+        r = await self._delete(
+            client,
+            "/ui/secret",
+            {"table_name": "del_totp_tbl", "key": "GUARDED_KEY", "totp_code": "000000"},
+            _ui_headers(token),
+        )
+        assert r.status_code == 401
+        assert database.get_secret("GUARDED_KEY", "del_totp_tbl") is not None
+
     async def test_delete_empty_key_returns_400(self, client):
         token = _set_valid_ui_session()
         r = await self._delete(
-            client, "/ui/secret", {"table_name": "any", "key": ""}, _ui_headers(token)
+            client,
+            "/ui/secret",
+            {"table_name": "any", "key": "", "totp_code": make_totp()},
+            _ui_headers(token),
         )
         assert r.status_code == 400
 
@@ -231,7 +271,7 @@ class TestUiDeleteSecret:
         r = await self._delete(
             client,
             "/ui/secret",
-            {"table_name": "del_tbl2", "key": "GHOST"},
+            {"table_name": "del_tbl2", "key": "GHOST", "totp_code": make_totp()},
             _ui_headers(token),
         )
         assert r.status_code == 404

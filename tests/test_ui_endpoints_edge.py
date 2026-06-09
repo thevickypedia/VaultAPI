@@ -1,11 +1,12 @@
 """Edge-case tests for UI endpoints — sqlite errors, auth paths."""
 
+import json as _json
 import sqlite3
 from unittest.mock import patch
 
 import pytest
 
-from tests.conftest import _set_valid_ui_session, ui_session_headers
+from tests.conftest import _set_valid_ui_session, make_totp, ui_session_headers
 from vaultapi import database, models
 
 
@@ -32,15 +33,18 @@ class TestUiDeleteTableDbError:
         with patch.object(
             database, "drop_table", side_effect=sqlite3.OperationalError("locked")
         ):
-            r = await client.delete("/ui/table/del_err_ui", headers=_h(token))
+            r = await client.request(
+                "DELETE",
+                "/ui/table/del_err_ui",
+                content=_json.dumps({"totp_code": make_totp()}),
+                headers={**_h(token), "Content-Type": "application/json"},
+            )
         assert r.status_code == 400
 
 
 @pytest.mark.asyncio
 class TestUiDeleteSecretDbError:
     async def test_sqlite_error_returns_400(self, client):
-        import json as _json
-
         database.create_table("del_s_err", ["key", "value"])
         encrypted = models.session.fernet.encrypt(b"val")
         database.put_secret("ERR_KEY", encrypted, "del_s_err")
@@ -51,7 +55,13 @@ class TestUiDeleteSecretDbError:
             r = await client.request(
                 "DELETE",
                 "/ui/secret",
-                content=_json.dumps({"table_name": "del_s_err", "key": "ERR_KEY"}),
+                content=_json.dumps(
+                    {
+                        "table_name": "del_s_err",
+                        "key": "ERR_KEY",
+                        "totp_code": make_totp(),
+                    }
+                ),
                 headers={**_h(token), "Content-Type": "application/json"},
             )
         assert r.status_code == 400

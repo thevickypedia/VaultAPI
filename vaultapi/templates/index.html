@@ -1096,6 +1096,16 @@
             <div class="modal-title" id="confirm-title">Confirm Deletion</div>
             <div class="confirm-danger-text" id="confirm-body"></div>
         </div>
+        <div class="form-field" style="margin-top:18px;margin-bottom:0;">
+            <label class="form-label" for="confirm-totp">Authenticator Code</label>
+            <input class="form-input mono" id="confirm-totp" type="text" inputmode="numeric"
+                   maxlength="6" placeholder="000000" autocomplete="one-time-code"
+                   onkeydown="if(event.key==='Enter')document.getElementById('btn-confirm-ok').click()">
+            <div class="login-error" id="confirm-totp-error" style="margin-top:8px;">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span id="confirm-totp-error-text">Invalid authenticator code</span>
+            </div>
+        </div>
         <div class="modal-footer">
             <button class="btn btn-ghost" onclick="closeModal('modal-confirm-delete')">Cancel</button>
             <button class="btn btn-danger" id="btn-confirm-ok">Delete</button>
@@ -1190,19 +1200,20 @@
         }
 
         // ── API helper — injects Bearer, handles 401 ──
-        async function api(method, path, body = null) {
+        // opts.noAutoLogout: if true, 401 is returned to caller instead of triggering logout
+        async function api(method, path, body = null, {noAutoLogout = false} = {}) {
             const headers = {'Content-Type': 'application/json'};
             const session_token = sessionStorage.getItem("session_token");
             if (session_token) headers['Authorization'] = `Bearer ${session_token}`;
             headers['Authenticator'] = '{{ authenticator }}';
-            const opts = {method, headers};
-            if (body) opts.body = JSON.stringify(body);
-            const res = await fetch(path, opts);
-            if (res.status === 401 || res.status === 403) {
+            const fetchOpts = {method, headers};
+            if (body) fetchOpts.body = JSON.stringify(body);
+            const res = await fetch(path, fetchOpts);
+            const data = await res.json().catch(() => ({}));
+            if (!noAutoLogout && (res.status === 401 || res.status === 403)) {
                 logout('Session expired. Please sign in again.', 'error');
                 return {ok: false, status: res.status, data: {detail: 'Session expired'}};
             }
-            const data = await res.json().catch(() => ({}));
             return {ok: res.ok, status: res.status, data};
         }
 
@@ -1632,32 +1643,63 @@
             }
         }
 
-        // ── Delete table ───────────────────────────────
-        function promptDeleteTable(name) {
-            document.getElementById('confirm-title').textContent = 'Delete Table';
-            document.getElementById('confirm-body').innerHTML =
-                `This will permanently delete <strong>${esc(name)}</strong> and all its secrets. This action cannot be undone.`;
+        // ── Delete helpers ─────────────────────────────
+        function _openDeleteModal(title, bodyHtml, onConfirm) {
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-body').innerHTML = bodyHtml;
+            const totpInput = document.getElementById('confirm-totp');
+            const errEl = document.getElementById('confirm-totp-error');
+            totpInput.value = '';
+            errEl.className = 'login-error';
             document.getElementById('btn-confirm-ok').onclick = async () => {
-                closeModal('modal-confirm-delete');
-                const {ok, data} = await api('DELETE', `/ui/table/${encodeURIComponent(name)}`);
-                if (ok) { toast(`Table "${name}" deleted`, 'success'); await loadTables(); }
-                else toast(data.detail || 'Failed to delete table', 'error');
+                const totp_code = totpInput.value.trim();
+                if (!totp_code) {
+                    document.getElementById('confirm-totp-error-text').textContent = 'Authenticator code is required.';
+                    errEl.className = 'login-error visible';
+                    totpInput.focus();
+                    return;
+                }
+                errEl.className = 'login-error';
+                const {ok, data, status} = await onConfirm(totp_code);
+                if (ok) return;
+                if (status === 401) {
+                    document.getElementById('confirm-totp-error-text').textContent = data.detail || 'Invalid authenticator code';
+                    errEl.className = 'login-error visible';
+                    totpInput.value = '';
+                    totpInput.focus();
+                } else {
+                    closeModal('modal-confirm-delete');
+                    toast(data.detail || 'Delete failed', 'error');
+                }
             };
             openModal('modal-confirm-delete');
+            setTimeout(() => totpInput.focus(), 120);
+        }
+
+        // ── Delete table ───────────────────────────────
+        function promptDeleteTable(name) {
+            _openDeleteModal(
+                'Delete Table',
+                `This will permanently delete <strong>${esc(name)}</strong> and all its secrets. This action cannot be undone.`,
+                async (totp_code) => {
+                    const result = await api('DELETE', `/ui/table/${encodeURIComponent(name)}`, {totp_code}, {noAutoLogout: true});
+                    if (result.ok) { closeModal('modal-confirm-delete'); toast(`Table "${name}" deleted`, 'success'); await loadTables(); }
+                    return result;
+                }
+            );
         }
 
         // ── Delete secret ──────────────────────────────
         function promptDeleteSecret(key) {
-            document.getElementById('confirm-title').textContent = 'Delete Secret';
-            document.getElementById('confirm-body').innerHTML =
-                `Delete secret <strong>${esc(key)}</strong> from <strong>${esc(state.currentTable)}</strong>? This cannot be undone.`;
-            document.getElementById('btn-confirm-ok').onclick = async () => {
-                closeModal('modal-confirm-delete');
-                const {ok, data} = await api('DELETE', '/ui/secret', {table_name: state.currentTable, key});
-                if (ok) { toast(`Secret "${key}" deleted`, 'success'); await loadSecrets(state.currentTable); }
-                else toast(data.detail || 'Failed to delete secret', 'error');
-            };
-            openModal('modal-confirm-delete');
+            _openDeleteModal(
+                'Delete Secret',
+                `Delete secret <strong>${esc(key)}</strong> from <strong>${esc(state.currentTable)}</strong>? This cannot be undone.`,
+                async (totp_code) => {
+                    const result = await api('DELETE', '/ui/secret', {table_name: state.currentTable, key, totp_code}, {noAutoLogout: true});
+                    if (result.ok) { closeModal('modal-confirm-delete'); toast(`Secret "${key}" deleted`, 'success'); await loadSecrets(state.currentTable); }
+                    return result;
+                }
+            );
         }
 
         // ── Utilities ──────────────────────────────────

@@ -243,6 +243,22 @@ async def ui_delete_table(
         await auth.validate(request, session_token)
     except exceptions.APIResponse as exc:
         return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+    body = await request.json()
+    totp_code = str(body.get("totp_code", "")).strip()
+    try:
+        import pyotp
+
+        if not pyotp.TOTP(models.env.totp_token).verify(totp_code):
+            return JSONResponse(
+                status_code=HTTPStatus.UNAUTHORIZED.real,
+                content={"detail": "Invalid authenticator code"},
+            )
+    except Exception as error:
+        LOGGER.error("TOTP validation error: %s", error)
+        return JSONResponse(
+            status_code=HTTPStatus.UNAUTHORIZED.real,
+            content={"detail": "Invalid authenticator code"},
+        )
     if not database.table_exists(table_name):
         return JSONResponse(
             status_code=HTTPStatus.NOT_FOUND.real,
@@ -409,6 +425,21 @@ async def ui_delete_secret(
     except exceptions.APIResponse as exc:
         return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
     body = await request.json()
+    totp_code = str(body.get("totp_code", "")).strip()
+    try:
+        import pyotp
+
+        if not pyotp.TOTP(models.env.totp_token).verify(totp_code):
+            return JSONResponse(
+                status_code=HTTPStatus.UNAUTHORIZED.real,
+                content={"detail": "Invalid authenticator code"},
+            )
+    except Exception as error:
+        LOGGER.error("TOTP validation error: %s", error)
+        return JSONResponse(
+            status_code=HTTPStatus.UNAUTHORIZED.real,
+            content={"detail": "Invalid authenticator code"},
+        )
     table_name = body.get("table_name", "default")
     key = body.get("key", "").strip()
     if not key:

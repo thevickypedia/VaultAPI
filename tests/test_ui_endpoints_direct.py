@@ -99,6 +99,43 @@ class TestUiLoginNoTotp:
 
 
 @pytest.mark.asyncio
+class TestUiDeleteTotpException:
+    """Cover the except-Exception TOTP path in ui_delete_table and ui_delete_secret."""
+
+    async def test_delete_table_totp_exception_returns_401(self):
+        database.create_table("totp_exc_tbl", ["key", "value"])
+        from tests.conftest import _set_valid_ui_session
+
+        token = _set_valid_ui_session()
+        req = _req(headers={"authenticator": "VaultAPI-UI"})
+        req.json = AsyncMock(return_value={"totp_code": "123456"})
+        creds = _creds(token)
+        with patch("pyotp.TOTP") as mock_totp:
+            mock_totp.return_value.verify.side_effect = Exception("otp boom")
+            resp = await ui_endpoints.ui_delete_table(req, "totp_exc_tbl", creds)
+        assert resp.status_code == 401
+
+    async def test_delete_secret_totp_exception_returns_401(self):
+        database.create_table("totp_exc_sec", ["key", "value"])
+        from tests.conftest import _set_valid_ui_session
+
+        token = _set_valid_ui_session()
+        req = _req(headers={"authenticator": "VaultAPI-UI"})
+        req.json = AsyncMock(
+            return_value={
+                "table_name": "totp_exc_sec",
+                "key": "K",
+                "totp_code": "123456",
+            }
+        )
+        creds = _creds(token)
+        with patch("pyotp.TOTP") as mock_totp:
+            mock_totp.return_value.verify.side_effect = Exception("otp boom")
+            resp = await ui_endpoints.ui_delete_secret(req, creds)
+        assert resp.status_code == 401
+
+
+@pytest.mark.asyncio
 class TestUiDeleteSecretRetrieveError:
     """Cover the retrieve_secret APIResponse catch in ui_delete_secret."""
 
@@ -111,8 +148,16 @@ class TestUiDeleteSecretRetrieveError:
 
         token = _set_valid_ui_session()
 
+        from tests.conftest import make_totp
+
         req = _req(headers={"authenticator": "VaultAPI-UI"})
-        req.json = AsyncMock(return_value={"table_name": "ds_rerr", "key": "ERR_K"})
+        req.json = AsyncMock(
+            return_value={
+                "table_name": "ds_rerr",
+                "key": "ERR_K",
+                "totp_code": make_totp(),
+            }
+        )
         creds = _creds(token)
 
         with patch(
