@@ -21,6 +21,28 @@ LOGGER = logging.getLogger("uvicorn.default")
 templates = Jinja2Templates(directory=pathlib.Path(__file__).parent / "templates")
 
 
+def blocked(request: Request) -> JSONResponse | None:
+    """Function to check if the upstream server is blocked.
+
+    Args:
+        request: Reference to the FastAPI request object.
+
+    Returns:
+        JSONResponse:
+        Returns a JSON response if the upstream server is allowed. Otherwise, returns None.
+    """
+    if request.url.hostname not in models.session.allowed_origins:
+        LOGGER.info(
+            "Host: %s has been blocked since it is not added to allowed list",
+            request.url.hostname,
+        )
+        return JSONResponse(
+            status_code=HTTPStatus.FORBIDDEN.real,
+            content={"detail": HTTPStatus.FORBIDDEN.phrase},
+        )
+    return None
+
+
 async def index(request: Request):
     """Endpoint for the UI of the API server.
 
@@ -28,6 +50,8 @@ async def index(request: Request):
         HTMLResponse:
         Returns the HTML content for the UI.
     """
+    if response := blocked(request):
+        return response
     return templates.TemplateResponse(
         name="index.html",
         request=request,
@@ -49,11 +73,8 @@ async def ui_login(request: Request):
         JSONResponse:
         Returns 200 on success, 401/403 on failure.
     """
-    if request.client.host not in models.session.allowed_origins:
-        return JSONResponse(
-            status_code=HTTPStatus.FORBIDDEN.real,
-            content={"detail": HTTPStatus.FORBIDDEN.phrase},
-        )
+    if response := blocked(request):
+        return response
     body = await request.json()
     apikey = str(body.get("apikey", ""))
     totp_code = str(body.get("totp_code", "")).strip()

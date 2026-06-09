@@ -28,10 +28,10 @@ async def validate(
         - 401: If authorization is invalid.
         - 403: If host address is forbidden.
     """
-    if request.client.host not in models.session.allowed_origins:
+    if request.url.hostname not in models.session.allowed_origins:
         LOGGER.info(
             "Host: %s has been blocked since it is not added to allowed list",
-            request.client.host,
+            request.url.hostname,
         )
         LOGGER.debug(models.session.allowed_origins)
         raise exceptions.APIResponse(
@@ -57,7 +57,7 @@ async def validate(
     if authenticated:
         LOGGER.debug(
             "Connection received from client-host: %s, host-header: %s, x-fwd-host: %s",
-            request.client.host,
+            request.url.hostname,
             request.headers.get("host"),
             request.headers.get("x-forwarded-host"),
         )
