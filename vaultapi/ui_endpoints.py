@@ -1,7 +1,5 @@
-import base64
 import json
 import logging
-import os
 import pathlib
 import secrets
 import sqlite3
@@ -116,8 +114,8 @@ async def ui_login(request: Request):
             content={"detail": "Invalid credentials"},
         )
 
-    auth.UI_SESSION["token"] = base64.urlsafe_b64encode(os.urandom(32)).decode("utf-8")
-    auth.UI_SESSION["expires"] = int(time.time()) + models.env.ui_lifetime
+    token = auth.create_ui_token(request.url.hostname)
+    expires = int(time.time()) + models.env.ui_lifetime
     LOGGER.info(
         "Connection received from url-hostname: %s, host-header: %s, x-fwd-host: %s",
         request.url.hostname,
@@ -126,14 +124,9 @@ async def ui_login(request: Request):
     )
     LOGGER.info(
         "UI login will expire at: %s",
-        datetime.fromtimestamp(auth.UI_SESSION["expires"]),
+        datetime.fromtimestamp(expires),
     )
-    return JSONResponse(
-        content={
-            "token": auth.UI_SESSION["token"],
-            "expires": auth.UI_SESSION["expires"],
-        }
-    )
+    return JSONResponse(content={"token": token, "expires": expires})
 
 
 async def ui_list_tables(
