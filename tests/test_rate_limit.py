@@ -12,7 +12,7 @@ from vaultapi.rate_limit import RateLimiter, _get_identifier
 
 def _req(host="127.0.0.1", path="/test", forwarded=None):
     req = MagicMock()
-    req.client.host = host
+    req.url.hostname = host
     req.url.path = path
     headers = {}
     if forwarded:
@@ -22,7 +22,7 @@ def _req(host="127.0.0.1", path="/test", forwarded=None):
 
 
 class TestGetIdentifier:
-    def test_uses_client_host(self):
+    def test_uses_url_hostname(self):
         assert _get_identifier(_req()) == "127.0.0.1:/test"
 
     def test_uses_forwarded_header(self):

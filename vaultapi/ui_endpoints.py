@@ -124,7 +124,10 @@ async def ui_login(request: Request):
         request.headers.get("host"),
         request.headers.get("x-forwarded-host"),
     )
-    LOGGER.info("UI login will expire at: %s", datetime.fromtimestamp(auth.UI_SESSION["expires"]))
+    LOGGER.info(
+        "UI login will expire at: %s",
+        datetime.fromtimestamp(auth.UI_SESSION["expires"]),
+    )
     return JSONResponse(
         content={
             "token": auth.UI_SESSION["token"],

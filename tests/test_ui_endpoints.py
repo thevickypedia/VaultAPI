@@ -23,6 +23,12 @@ class TestIndex:
         assert "text/html" in r.headers["content-type"]
         assert b"VaultAPI" in r.content
 
+    async def test_blocked_host_returns_403(self, client):
+        with patch("vaultapi.ui_endpoints.models.session") as mock_session:
+            mock_session.allowed_origins = set()
+            r = await client.get("/")
+        assert r.status_code == 403
+
 
 # ---------------------------------------------------------------------------
 # /ui/login

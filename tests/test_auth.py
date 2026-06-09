@@ -12,7 +12,7 @@ from vaultapi.exceptions import APIResponse
 
 def _make_request(host: str = "127.0.0.1", headers: dict = None):
     req = MagicMock()
-    req.client.host = host
+    req.url.hostname = host
     req.headers = MagicMock()
     req.headers.get = lambda key, default="": (headers or {}).get(key, default)
     return req
