@@ -16,6 +16,15 @@ UI_AUTHENTICATOR = "VaultAPI-UI"
 
 
 async def ui_login(request: Request) -> bool:
+    """Validate the login credentials from the request body.
+
+    Args:
+        request: Reference to the FastAPI request object (body must contain apikey, secret, totp_code).
+
+    Returns:
+        bool:
+        ``True`` if all credentials are valid, ``False`` otherwise.
+    """
     body = await request.json()
     apikey = str(body.get("apikey", ""))
     secret = str(body.get("secret", ""))
@@ -55,15 +64,15 @@ async def ui_login(request: Request) -> bool:
     return True
 
 
-def blocked(host: str):
-    """Function to check if the upstream server is blocked.
+def blocked(host: str) -> None:
+    """Raise a 403 APIResponse if the host is within an active cooloff window.
 
     Args:
         host: Hostname or IP address of the client.
 
-    Returns:
-        JSONResponse:
-        Returns a JSON response if the upstream server is allowed. Otherwise, returns None.
+    Raises:
+        APIResponse:
+        - 403: If the host has a non-expired ``blocked_until`` entry.
     """
     blocked_until = database.get_blocked_until(host)
     if blocked_until is not None:

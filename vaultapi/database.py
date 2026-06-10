@@ -1,5 +1,6 @@
 import json
 import time
+from collections import OrderedDict
 from typing import List, Tuple
 
 from cryptography.fernet import Fernet
@@ -10,8 +11,9 @@ UI_SESSION_TABLE = "ui_session"
 BLOCKED_HOSTS_TABLE = "blocked_hosts"
 FAILED_AUTH_LIMIT = 3
 
-# (min_failures, block_duration_seconds) — checked highest-first
-COOLOFF_THRESHOLDS = {10: 86400, 5: 900, 3: 300}
+COOLOFF_THRESHOLDS: OrderedDict[int, int] = OrderedDict(
+    [(10, 86400), (5, 900), (3, 300)]
+)
 
 
 def create_auth_tables() -> None:

@@ -80,8 +80,8 @@ async def ui_login(request: Request):
 
 
 async def ui_logout(
-        request: Request,
-        session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
+    request: Request,
+    session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
 ):
     """Invalidate the active UI session server-side.
 
@@ -103,8 +103,8 @@ async def ui_logout(
 
 
 async def ui_list_tables(
-        request: Request,
-        session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
+    request: Request,
+    session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
 ):
     """List all tables for the UI.
 
@@ -124,9 +124,9 @@ async def ui_list_tables(
 
 
 async def ui_get_table(
-        request: Request,
-        table_name: str,
-        session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
+    request: Request,
+    table_name: str,
+    session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
 ):
     """Get all secrets in a table, decrypted, for the UI.
 
@@ -160,9 +160,9 @@ async def ui_get_table(
 
 
 async def ui_create_table(
-        request: Request,
-        table_name: str,
-        session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
+    request: Request,
+    table_name: str,
+    session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
 ):
     """Create a new table for the UI.
 
@@ -190,9 +190,9 @@ async def ui_create_table(
 
 
 async def ui_delete_table(
-        request: Request,
-        table_name: str,
-        session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
+    request: Request,
+    table_name: str,
+    session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
 ):
     """Delete a table for the UI.
 
@@ -241,8 +241,8 @@ async def ui_delete_table(
 
 
 async def ui_put_secret(
-        request: Request,
-        session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
+    request: Request,
+    session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
 ):
     """Add or update a secret for the UI.
 
@@ -278,8 +278,8 @@ async def ui_put_secret(
 
 
 async def ui_import_secrets(
-        request: Request,
-        session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
+    request: Request,
+    session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
 ):
     """Import multiple secrets into a table from a JSON, YAML, or .env payload.
 
@@ -373,8 +373,8 @@ async def ui_import_secrets(
 
 
 async def ui_delete_secret(
-        request: Request,
-        session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
+    request: Request,
+    session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
 ):
     """Delete a secret for the UI.
 
