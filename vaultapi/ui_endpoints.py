@@ -3,10 +3,8 @@ import json
 import logging
 import os
 import pathlib
-import secrets
 import sqlite3
 import time
-import warnings
 from datetime import datetime
 from http import HTTPStatus
 
@@ -22,26 +20,6 @@ LOGGER = logging.getLogger("uvicorn.default")
 templates = Jinja2Templates(directory=pathlib.Path(__file__).parent / "templates")
 
 
-def blocked(request: Request) -> JSONResponse | None:
-    """Function to check if the upstream server is blocked.
-
-    Args:
-        request: Reference to the FastAPI request object.
-
-    Returns:
-        JSONResponse:
-        Returns a JSON response if the upstream server is allowed. Otherwise, returns None.
-    """
-    blocked_until = database.get_blocked_until(request.client.host)
-    if blocked_until is not None:
-        LOGGER.info("Host: %s has been blocked", request.client.host)
-        return JSONResponse(
-            status_code=HTTPStatus.FORBIDDEN.real,
-            content={"detail": f"Blocked until {blocked_until}"},
-        )
-    return None
-
-
 async def index(request: Request):
     """Endpoint for the UI of the API server.
 
@@ -49,8 +27,10 @@ async def index(request: Request):
         HTMLResponse:
         Returns the HTML content for the UI.
     """
-    if response := blocked(request):
-        return response
+    try:
+        auth.blocked(request.client.host)
+    except exceptions.APIResponse as exc:
+        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
     return templates.TemplateResponse(
         name="index.html",
         request=request,
@@ -72,57 +52,13 @@ async def ui_login(request: Request):
         JSONResponse:
         Returns 200 on success, 401/403 on failure.
     """
-    if response := blocked(request):
-        return response
-    body = await request.json()
-    apikey = str(body.get("apikey", ""))
-    secret = str(body.get("secret", ""))
-    totp_code = str(body.get("totp_code", "")).strip()
+    try:
+        auth.blocked(request.client.host)
+    except exceptions.APIResponse as exc:
+        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
-    if apikey.startswith("\\"):
-        apikey = bytes(apikey, "utf-8").decode(encoding="unicode_escape")
-
-    if secret.startswith("\\"):
-        secret = bytes(secret, "utf-8").decode(encoding="unicode_escape")
-
-    if not secrets.compare_digest(apikey, models.env.apikey):
-        LOGGER.debug("Invalid api key received")
+    if not await auth.ui_login(request):
         database.increment_failed_auth(request.client.host)
-        return JSONResponse(
-            status_code=HTTPStatus.UNAUTHORIZED.real,
-            content={"detail": "Invalid credentials"},
-        )
-
-    if not secrets.compare_digest(secret, models.env.secret):
-        LOGGER.debug("Invalid secret received")
-        database.increment_failed_auth(request.client.host)
-        return JSONResponse(
-            status_code=HTTPStatus.UNAUTHORIZED.real,
-            content={"detail": "Invalid credentials"},
-        )
-
-    if models.env.totp_token:
-        try:
-            import pyotp
-
-            if not pyotp.TOTP(models.env.totp_token).verify(totp_code):
-                LOGGER.debug("Invalid totp token received")
-                database.increment_failed_auth(request.client.host)
-                return JSONResponse(
-                    status_code=HTTPStatus.UNAUTHORIZED.real,
-                    content={"detail": "Invalid credentials"},
-                )
-        except Exception as error:
-            LOGGER.error("TOTP validation error: %s", error)
-            return JSONResponse(
-                status_code=HTTPStatus.UNAUTHORIZED.real,
-                content={"detail": "Invalid credentials"},
-            )
-    else:
-        warnings.warn(
-            "TOTP not enabled but UI login attempt has been made.", UserWarning
-        )
-        LOGGER.warning("TOTP not enabled but UI login attempt has been made.")
         return JSONResponse(
             status_code=HTTPStatus.UNAUTHORIZED.real,
             content={"detail": "Invalid credentials"},
@@ -144,8 +80,8 @@ async def ui_login(request: Request):
 
 
 async def ui_logout(
-    request: Request,
-    session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
+        request: Request,
+        session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
 ):
     """Invalidate the active UI session server-side.
 
@@ -167,8 +103,8 @@ async def ui_logout(
 
 
 async def ui_list_tables(
-    request: Request,
-    session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
+        request: Request,
+        session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
 ):
     """List all tables for the UI.
 
@@ -188,9 +124,9 @@ async def ui_list_tables(
 
 
 async def ui_get_table(
-    request: Request,
-    table_name: str,
-    session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
+        request: Request,
+        table_name: str,
+        session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
 ):
     """Get all secrets in a table, decrypted, for the UI.
 
@@ -224,9 +160,9 @@ async def ui_get_table(
 
 
 async def ui_create_table(
-    request: Request,
-    table_name: str,
-    session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
+        request: Request,
+        table_name: str,
+        session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
 ):
     """Create a new table for the UI.
 
@@ -254,9 +190,9 @@ async def ui_create_table(
 
 
 async def ui_delete_table(
-    request: Request,
-    table_name: str,
-    session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
+        request: Request,
+        table_name: str,
+        session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
 ):
     """Delete a table for the UI.
 
@@ -305,8 +241,8 @@ async def ui_delete_table(
 
 
 async def ui_put_secret(
-    request: Request,
-    session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
+        request: Request,
+        session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
 ):
     """Add or update a secret for the UI.
 
@@ -342,8 +278,8 @@ async def ui_put_secret(
 
 
 async def ui_import_secrets(
-    request: Request,
-    session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
+        request: Request,
+        session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
 ):
     """Import multiple secrets into a table from a JSON, YAML, or .env payload.
 
@@ -437,8 +373,8 @@ async def ui_import_secrets(
 
 
 async def ui_delete_secret(
-    request: Request,
-    session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
+        request: Request,
+        session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
 ):
     """Delete a secret for the UI.
 

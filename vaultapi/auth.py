@@ -1,6 +1,7 @@
 import logging
 import secrets
 import time
+import warnings
 from http import HTTPStatus
 
 from fastapi import Request
@@ -12,6 +13,67 @@ LOGGER = logging.getLogger("uvicorn.default")
 SECURITY = HTTPBearer()
 
 UI_AUTHENTICATOR = "VaultAPI-UI"
+
+
+async def ui_login(request: Request) -> bool:
+    body = await request.json()
+    apikey = str(body.get("apikey", ""))
+    secret = str(body.get("secret", ""))
+    totp_code = str(body.get("totp_code", "")).strip()
+
+    if apikey.startswith("\\"):
+        apikey = bytes(apikey, "utf-8").decode(encoding="unicode_escape")
+
+    if secret.startswith("\\"):
+        secret = bytes(secret, "utf-8").decode(encoding="unicode_escape")
+
+    if not secrets.compare_digest(apikey, models.env.apikey):
+        LOGGER.debug("Invalid api key received")
+        return False
+
+    if not secrets.compare_digest(secret, models.env.secret):
+        LOGGER.debug("Invalid secret received")
+        return False
+
+    if models.env.totp_token:
+        try:
+            import pyotp
+
+            if not pyotp.TOTP(models.env.totp_token).verify(totp_code):
+                LOGGER.debug("Invalid totp token received")
+                return False
+        except Exception as error:
+            LOGGER.error("TOTP validation error: %s", error)
+            return False
+    else:
+        warnings.warn(
+            "TOTP not enabled but UI login attempt has been made.", UserWarning
+        )
+        LOGGER.warning("TOTP not enabled but UI login attempt has been made.")
+        return False
+
+    return True
+
+
+def blocked(host: str):
+    """Function to check if the upstream server is blocked.
+
+    Args:
+        host: Hostname or IP address of the client.
+
+    Returns:
+        JSONResponse:
+        Returns a JSON response if the upstream server is allowed. Otherwise, returns None.
+    """
+    blocked_until = database.get_blocked_until(host)
+    if blocked_until is not None:
+        LOGGER.info(
+            "Host: %s has been blocked after repeated failed auth attempts", host
+        )
+        raise exceptions.APIResponse(
+            status_code=HTTPStatus.FORBIDDEN.real,
+            detail=f"Blocked until {blocked_until}",
+        )
 
 
 async def validate(
@@ -29,15 +91,7 @@ async def validate(
         - 403: If host address is forbidden (blocked after repeated failures).
     """
     host = request.client.host
-    blocked_until = database.get_blocked_until(host)
-    if blocked_until is not None:
-        LOGGER.info(
-            "Host: %s has been blocked after repeated failed auth attempts", host
-        )
-        raise exceptions.APIResponse(
-            status_code=HTTPStatus.FORBIDDEN.real,
-            detail=f"Blocked until {blocked_until}",
-        )
+    blocked(host)
     if authorization.credentials.startswith("\\"):
         auth = bytes(authorization.credentials, "utf-8").decode(
             encoding="unicode_escape"
