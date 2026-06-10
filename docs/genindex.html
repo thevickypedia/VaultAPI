@@ -44,7 +44,6 @@
 <div class="genindex-jumpbox">
  <a href="#_"><strong>_</strong></a>
  | <a href="#A"><strong>A</strong></a>
- | <a href="#B"><strong>B</strong></a>
  | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
  | <a href="#E"><strong>E</strong></a>
@@ -94,14 +93,6 @@
   </ul></td>
 </tr></table>
 
-<h2 id="B">B</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#vaultapi.models.Session.blocked_hosts">blocked_hosts (vaultapi.models.Session attribute)</a>
-</li>
-  </ul></td>
-</tr></table>
-
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -109,9 +100,9 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#vaultapi.database.create_table">create_table() (in module vaultapi.database)</a>
+      <li><a href="index.html#vaultapi.database.create_auth_tables">create_auth_tables() (in module vaultapi.database)</a>
 </li>
-      <li><a href="index.html#vaultapi.database.create_ui_session_table">create_ui_session_table() (in module vaultapi.database)</a>
+      <li><a href="index.html#vaultapi.database.create_table">create_table() (in module vaultapi.database)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -173,6 +164,8 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#vaultapi.database.get_blocked_until">get_blocked_until() (in module vaultapi.database)</a>
+</li>
       <li><a href="index.html#vaultapi.database.get_secret">get_secret() (in module vaultapi.database)</a>
 </li>
   </ul></td>
@@ -199,11 +192,15 @@
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#vaultapi.database.increment_failed_auth">increment_failed_auth() (in module vaultapi.database)</a>
+</li>
       <li><a href="index.html#vaultapi.models.Session.info">info (vaultapi.models.Session attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="index.html#vaultapi.rate_limit.RateLimiter.init">init() (vaultapi.rate_limit.RateLimiter method)</a>
+</li>
+      <li><a href="index.html#vaultapi.database.is_host_blocked">is_host_blocked() (in module vaultapi.database)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -286,11 +283,15 @@
 </li>
       <li><a href="index.html#vaultapi.models.RateLimit">RateLimit (class in vaultapi.models)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="index.html#vaultapi.rate_limit.RateLimiter">RateLimiter (class in vaultapi.rate_limit)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#vaultapi.database.remove_blocked_host">remove_blocked_host() (in module vaultapi.database)</a>
+</li>
       <li><a href="index.html#vaultapi.database.remove_secret">remove_secret() (in module vaultapi.database)</a>
+</li>
+      <li><a href="index.html#vaultapi.database.reset_failed_auth">reset_failed_auth() (in module vaultapi.database)</a>
 </li>
       <li><a href="index.html#vaultapi.models.Session.rps">rps (vaultapi.models.Session attribute)</a>
 </li>

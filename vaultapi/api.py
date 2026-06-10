@@ -34,7 +34,7 @@ def lifespan() -> None:
 
     VaultAPI.routes.extend(routes.api_routes())
     if models.env.enable_ui:
-        database.create_ui_session_table()
+        database.create_auth_tables()
         VaultAPI.routes.extend(routes.ui_routes())
     else:  # pragma: no cover
         VaultAPI.routes.append(

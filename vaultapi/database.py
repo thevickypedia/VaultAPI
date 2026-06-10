@@ -1,4 +1,5 @@
 import json
+import time
 from typing import List, Tuple
 
 from cryptography.fernet import Fernet
@@ -6,19 +7,24 @@ from cryptography.fernet import Fernet
 from . import models
 
 UI_SESSION_TABLE = "ui_session"
+BLOCKED_HOSTS_TABLE = "blocked_hosts"
+FAILED_AUTH_LIMIT = 3
+
+# (min_failures, block_duration_seconds) — checked highest-first
+COOLOFF_THRESHOLDS = {10: 86400, 5: 900, 3: 300}
 
 
-def create_ui_session_table() -> None:
-    """Create the ui_session table if it does not already exist.
-
-    The table holds a single row with a Fernet-encrypted blob that encodes the
-    active session token, the bound hostname, and the expiry timestamp.
-    """
-    with models.database.connection:
-        models.database.connection.execute(
-            f'CREATE TABLE IF NOT EXISTS "{UI_SESSION_TABLE}" (payload BLOB)'
+def create_auth_tables() -> None:
+    """Create auth-specific tables in auth.db if they do not already exist."""
+    conn = models.auth_database.connection
+    with conn:
+        conn.execute(f'CREATE TABLE IF NOT EXISTS "{UI_SESSION_TABLE}" (payload BLOB)')
+        conn.execute(
+            f'CREATE TABLE IF NOT EXISTS "{BLOCKED_HOSTS_TABLE}" '
+            f"(host TEXT PRIMARY KEY, failed_auth INTEGER NOT NULL DEFAULT 0, "
+            f"blocked_until INTEGER)"
         )
-        models.database.connection.commit()
+        conn.commit()
 
 
 def upsert_ui_session(token: str, hostname: str, expires: int, fernet: Fernet) -> None:
@@ -37,12 +43,13 @@ def upsert_ui_session(token: str, hostname: str, expires: int, fernet: Fernet) -
     payload = fernet.encrypt(
         json.dumps({"token": token, "host": hostname, "exp": expires}).encode()
     )
-    with models.database.connection:
-        models.database.connection.execute(f'DELETE FROM "{UI_SESSION_TABLE}"')
-        models.database.connection.execute(
+    conn = models.auth_database.connection
+    with conn:
+        conn.execute(f'DELETE FROM "{UI_SESSION_TABLE}"')
+        conn.execute(
             f'INSERT INTO "{UI_SESSION_TABLE}" (payload) VALUES (?)', (payload,)
         )
-        models.database.connection.commit()
+        conn.commit()
 
 
 def get_ui_session(fernet: Fernet) -> dict | None:
@@ -55,8 +62,9 @@ def get_ui_session(fernet: Fernet) -> dict | None:
         dict:
         ``{"token": str, "host": str, "exp": int}`` on success, ``None`` otherwise.
     """
-    with models.database.connection:
-        cursor = models.database.connection.cursor()
+    conn = models.auth_database.connection
+    with conn:
+        cursor = conn.cursor()
         row = cursor.execute(f'SELECT payload FROM "{UI_SESSION_TABLE}"').fetchone()
     if not row:
         return None
@@ -68,9 +76,114 @@ def get_ui_session(fernet: Fernet) -> dict | None:
 
 def delete_ui_session() -> None:
     """Remove all rows from the ui_session table, invalidating any active session."""
-    with models.database.connection:
-        models.database.connection.execute(f'DELETE FROM "{UI_SESSION_TABLE}"')
-        models.database.connection.commit()
+    conn = models.auth_database.connection
+    with conn:
+        conn.execute(f'DELETE FROM "{UI_SESSION_TABLE}"')
+        conn.commit()
+
+
+def get_blocked_until(host: str) -> int | None:
+    """Return the ``blocked_until`` Unix timestamp for a host, or ``None`` if not blocked.
+
+    If the entry exists but its cooloff has expired, it is removed and ``None`` is returned.
+
+    Args:
+        host: Client IP address to check.
+    """
+    conn = models.auth_database.connection
+    with conn:
+        row = (
+            conn.cursor()
+            .execute(
+                f'SELECT failed_auth, blocked_until FROM "{BLOCKED_HOSTS_TABLE}" WHERE host = ?',
+                (host,),
+            )
+            .fetchone()
+        )
+    if not row:
+        return None
+    _, blocked_until = row
+    if blocked_until is None:
+        return None
+    if int(time.time()) >= blocked_until:
+        remove_blocked_host(host)
+        return None
+    return blocked_until
+
+
+def is_host_blocked(host: str) -> bool:
+    """Return True if the host is currently within a cooloff window.
+
+    Args:
+        host: Client IP address to check.
+    """
+    return get_blocked_until(host) is not None
+
+
+def remove_blocked_host(host: str) -> None:
+    """Delete a host's entry from the blocked_hosts table entirely.
+
+    Args:
+        host: Client IP address to remove.
+    """
+    conn = models.auth_database.connection
+    with conn:
+        conn.execute(f'DELETE FROM "{BLOCKED_HOSTS_TABLE}" WHERE host = ?', (host,))
+        conn.commit()
+
+
+def increment_failed_auth(host: str) -> None:
+    """Increment the failed authentication counter for a host and set cooloff if a threshold is crossed.
+
+    Inserts the host with count 1 if it does not exist yet. Sets ``blocked_until`` to
+    ``int(time.time()) + duration`` when the cumulative count reaches 3, 5, or 10.
+
+    Args:
+        host: Client IP address that failed authentication.
+    """
+    conn = models.auth_database.connection
+    with conn:
+        conn.execute(
+            f'INSERT INTO "{BLOCKED_HOSTS_TABLE}" (host, failed_auth) VALUES (?, 1) '
+            f"ON CONFLICT(host) DO UPDATE SET failed_auth = failed_auth + 1",
+            (host,),
+        )
+        conn.commit()
+        new_count = (
+            conn.cursor()
+            .execute(
+                f'SELECT failed_auth FROM "{BLOCKED_HOSTS_TABLE}" WHERE host = ?',
+                (host,),
+            )
+            .fetchone()[0]
+        )
+    blocked_until = None
+    for min_count, duration in COOLOFF_THRESHOLDS.items():
+        if new_count >= min_count:
+            blocked_until = int(time.time()) + duration
+            break
+    if blocked_until is not None:
+        with conn:
+            conn.execute(
+                f'UPDATE "{BLOCKED_HOSTS_TABLE}" SET blocked_until = ? WHERE host = ?',
+                (blocked_until, host),
+            )
+            conn.commit()
+
+
+def reset_failed_auth(host: str) -> None:
+    """Reset the failed authentication counter for a host after a successful login.
+
+    Args:
+        host: Client IP address to reset.
+    """
+    conn = models.auth_database.connection
+    with conn:
+        conn.execute(
+            f'UPDATE "{BLOCKED_HOSTS_TABLE}" SET failed_auth = 0, blocked_until = NULL WHERE host = ?',
+            (host,),
+        )
+        conn.commit()
 
 
 def table_exists(table_name: str) -> bool:
@@ -97,7 +210,7 @@ def list_tables() -> List[str]:
         cursor = models.database.connection.cursor()
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
         tables = cursor.fetchall()
-    return [table[0] for table in tables if table[0] != UI_SESSION_TABLE]
+    return [table[0] for table in tables]
 
 
 def create_table(table_name: str, columns: List[str] | Tuple[str]) -> None:

@@ -97,7 +97,7 @@
 <dd class="field-even"><ul class="simple">
 <li><p><a class="reference internal" href="#vaultapi.exceptions.APIResponse" title="vaultapi.exceptions.APIResponse"><strong>APIResponse</strong></a> – </p></li>
 <li><p><strong>- 401</strong> – If authorization is invalid.</p></li>
-<li><p><strong>- 403</strong> – If host address is forbidden.</p></li>
+<li><p><strong>- 403</strong> – If host address is forbidden (blocked after repeated failures).</p></li>
 </ul>
 </dd>
 </dl>
@@ -107,11 +107,9 @@
 <section id="module-vaultapi.database">
 <span id="database"></span><h1>Database<a class="headerlink" href="#module-vaultapi.database" title="Permalink to this heading">¶</a></h1>
 <dl class="py function">
-<dt class="sig sig-object py" id="vaultapi.database.create_ui_session_table">
-<span class="sig-prename descclassname"><span class="pre">vaultapi.database.</span></span><span class="sig-name descname"><span class="pre">create_ui_session_table</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#vaultapi.database.create_ui_session_table" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create the ui_session table if it does not already exist.</p>
-<p>The table holds a single row with a Fernet-encrypted blob that encodes the
-active session token, the bound hostname, and the expiry timestamp.</p>
+<dt class="sig sig-object py" id="vaultapi.database.create_auth_tables">
+<span class="sig-prename descclassname"><span class="pre">vaultapi.database.</span></span><span class="sig-name descname"><span class="pre">create_auth_tables</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#vaultapi.database.create_auth_tables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create auth-specific tables in auth.db if they do not already exist.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -154,6 +152,64 @@ decrypt and raises an exception, which <code class="docutils literal notranslate
 <dt class="sig sig-object py" id="vaultapi.database.delete_ui_session">
 <span class="sig-prename descclassname"><span class="pre">vaultapi.database.</span></span><span class="sig-name descname"><span class="pre">delete_ui_session</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#vaultapi.database.delete_ui_session" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove all rows from the ui_session table, invalidating any active session.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="vaultapi.database.get_blocked_until">
+<span class="sig-prename descclassname"><span class="pre">vaultapi.database.</span></span><span class="sig-name descname"><span class="pre">get_blocked_until</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#vaultapi.database.get_blocked_until" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the <code class="docutils literal notranslate"><span class="pre">blocked_until</span></code> Unix timestamp for a host, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if not blocked.</p>
+<p>If the entry exists but its cooloff has expired, it is removed and <code class="docutils literal notranslate"><span class="pre">None</span></code> is returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>host</strong> – Client IP address to check.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="vaultapi.database.is_host_blocked">
+<span class="sig-prename descclassname"><span class="pre">vaultapi.database.</span></span><span class="sig-name descname"><span class="pre">is_host_blocked</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#vaultapi.database.is_host_blocked" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if the host is currently within a cooloff window.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>host</strong> – Client IP address to check.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="vaultapi.database.remove_blocked_host">
+<span class="sig-prename descclassname"><span class="pre">vaultapi.database.</span></span><span class="sig-name descname"><span class="pre">remove_blocked_host</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#vaultapi.database.remove_blocked_host" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete a host’s entry from the blocked_hosts table entirely.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>host</strong> – Client IP address to remove.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="vaultapi.database.increment_failed_auth">
+<span class="sig-prename descclassname"><span class="pre">vaultapi.database.</span></span><span class="sig-name descname"><span class="pre">increment_failed_auth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#vaultapi.database.increment_failed_auth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increment the failed authentication counter for a host and set cooloff if a threshold is crossed.</p>
+<p>Inserts the host with count 1 if it does not exist yet. Sets <code class="docutils literal notranslate"><span class="pre">blocked_until</span></code> to
+<code class="docutils literal notranslate"><span class="pre">int(time.time())</span> <span class="pre">+</span> <span class="pre">duration</span></code> when the cumulative count reaches 3, 5, or 10.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>host</strong> – Client IP address that failed authentication.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="vaultapi.database.reset_failed_auth">
+<span class="sig-prename descclassname"><span class="pre">vaultapi.database.</span></span><span class="sig-name descname"><span class="pre">reset_failed_auth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#vaultapi.database.reset_failed_auth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset the failed authentication counter for a host after a successful login.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>host</strong> – Client IP address to reset.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -328,11 +384,6 @@ decrypt and raises an exception, which <code class="docutils literal notranslate
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vaultapi.models.Session.rps">
 <span class="sig-name descname"><span class="pre">rps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#vaultapi.models.Session.rps" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="vaultapi.models.Session.blocked_hosts">
-<span class="sig-name descname"><span class="pre">blocked_hosts</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#vaultapi.models.Session.blocked_hosts" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py class">

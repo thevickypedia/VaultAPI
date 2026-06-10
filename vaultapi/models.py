@@ -6,7 +6,7 @@ import re
 import socket
 import sqlite3
 from datetime import datetime
-from typing import Any, Dict, List, NoReturn, Set
+from typing import Any, Dict, List, NoReturn
 
 import yaml
 from cryptography.fernet import Fernet
@@ -121,7 +121,6 @@ class Session(BaseModel):
     fernet: Fernet | None = None
     info: Dict[str, str] = Field(default_factory=dict)
     rps: Dict[str, int] = Field(default_factory=dict)
-    blocked_hosts: Set[str] = Field(default_factory=set)
 
     class Config:
         """Config to allow arbitrary types."""
@@ -276,4 +275,5 @@ if env.enable_ui:
         )
     validate_totp_secret(env.totp_token)
 database: Database = Database(env.database)
+auth_database: Database = Database(str(env.database).replace(".db", "_auth.db"))
 session = Session()

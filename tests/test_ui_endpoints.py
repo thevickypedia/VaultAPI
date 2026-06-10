@@ -11,7 +11,7 @@ from tests.conftest import (
     make_totp,
     ui_session_headers,
 )
-from vaultapi import database, models
+from vaultapi import database, models  # noqa: F401
 
 
 def _ui_headers(token):
@@ -30,12 +30,10 @@ class TestIndex:
         assert b"VaultAPI" in r.content
 
     async def test_blocked_host_returns_403(self, client):
-        models.session.blocked_hosts.add("127.0.0.1")
-        try:
-            r = await client.get("/")
-            assert r.status_code == 403
-        finally:
-            models.session.blocked_hosts.discard("127.0.0.1")
+        for _ in range(database.FAILED_AUTH_LIMIT):
+            database.increment_failed_auth("127.0.0.1")
+        r = await client.get("/")
+        assert r.status_code == 403
 
 
 # ---------------------------------------------------------------------------
@@ -83,19 +81,13 @@ class TestUiLogin:
         assert r.status_code == 401
 
     async def test_forbidden_from_blocked_host(self, client):
-        models.session.blocked_hosts.add("127.0.0.1")
-        try:
-            r = await client.post(
-                "/ui/login",
-                json={
-                    "apikey": API_KEY,
-                    "secret": FERNET_KEY,
-                    "totp_code": make_totp(),
-                },
-            )
-            assert r.status_code == 403
-        finally:
-            models.session.blocked_hosts.discard("127.0.0.1")
+        for _ in range(database.FAILED_AUTH_LIMIT):
+            database.increment_failed_auth("127.0.0.1")
+        r = await client.post(
+            "/ui/login",
+            json={"apikey": API_KEY, "secret": FERNET_KEY, "totp_code": make_totp()},
+        )
+        assert r.status_code == 403
 
     async def test_totp_exception_returns_401(self, client):
         with patch("pyotp.TOTP.verify", side_effect=Exception("boom")):
@@ -109,6 +101,13 @@ class TestUiLogin:
         r = await client.post(
             "/ui/login",
             json={"apikey": "\\nwrong", "secret": FERNET_KEY, "totp_code": make_totp()},
+        )
+        assert r.status_code in (401, 429)
+
+    async def test_secret_with_backslash_prefix_decoded(self, client):
+        r = await client.post(
+            "/ui/login",
+            json={"apikey": API_KEY, "secret": "\\nwrong", "totp_code": make_totp()},
         )
         assert r.status_code in (401, 429)
 

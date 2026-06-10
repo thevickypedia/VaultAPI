@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 import pytest
 from fastapi.security import HTTPAuthorizationCredentials
 
+from tests.conftest import _IN_MEMORY_AUTH_CONN
 from vaultapi import auth, database, models
 from vaultapi.exceptions import APIResponse
 
@@ -29,14 +30,14 @@ def _make_creds(token: str) -> HTTPAuthorizationCredentials:
 @pytest.mark.asyncio
 class TestAuthValidate:
     async def test_forbidden_for_blocked_host(self):
-        models.session.blocked_hosts.add("10.99.99.99")
-        try:
-            req = _make_request(host="10.99.99.99")
-            with pytest.raises(APIResponse) as exc_info:
-                await auth.validate(req, _make_creds("anything"))
-            assert exc_info.value.status_code == 403
-        finally:
-            models.session.blocked_hosts.discard("10.99.99.99")
+        # Exceed the limit so the host is blocked
+        for _ in range(database.FAILED_AUTH_LIMIT):
+            database.increment_failed_auth("10.99.99.99")
+        req = _make_request(host="10.99.99.99")
+        with pytest.raises(APIResponse) as exc_info:
+            await auth.validate(req, _make_creds("anything"))
+        assert exc_info.value.status_code == 403
+        assert "Blocked until" in exc_info.value.detail
 
     async def test_valid_api_key_accepted(self):
         from tests.conftest import API_KEY
@@ -108,3 +109,39 @@ class TestAuthValidate:
         req = _make_request(headers={"user-agent": "pytest/1.0"})
         with caplog.at_level(logging.DEBUG, logger="uvicorn.default"):
             await auth.validate(req, _make_creds(API_KEY))
+
+    async def test_failed_auth_increments_counter(self):
+        req = _make_request(host="1.2.3.4")
+        with pytest.raises(APIResponse):
+            await auth.validate(req, _make_creds("wrong"))
+        row = _IN_MEMORY_AUTH_CONN.execute(
+            f'SELECT failed_auth, blocked_until FROM "{database.BLOCKED_HOSTS_TABLE}" WHERE host = ?',
+            ("1.2.3.4",),
+        ).fetchone()
+        assert row is not None and row[0] == 1
+        assert row[1] is None  # one failure — no cooloff yet
+
+    async def test_successful_auth_resets_counter(self):
+        from tests.conftest import API_KEY
+
+        database.increment_failed_auth("127.0.0.1")
+        req = _make_request(host="127.0.0.1")
+        await auth.validate(req, _make_creds(API_KEY))
+        row = _IN_MEMORY_AUTH_CONN.execute(
+            f'SELECT failed_auth FROM "{database.BLOCKED_HOSTS_TABLE}" WHERE host = ?',
+            ("127.0.0.1",),
+        ).fetchone()
+        assert row is not None and row[0] == 0
+
+    async def test_blocked_after_limit_failures(self):
+        host = "9.9.9.9"
+        req = _make_request(host=host)
+        for _ in range(database.FAILED_AUTH_LIMIT):
+            with pytest.raises(APIResponse) as exc_info:
+                await auth.validate(req, _make_creds("wrong"))
+            assert exc_info.value.status_code == 401
+        # Next attempt — host is now blocked
+        with pytest.raises(APIResponse) as exc_info:
+            await auth.validate(req, _make_creds("wrong"))
+        assert exc_info.value.status_code == 403
+        assert "Blocked until" in exc_info.value.detail

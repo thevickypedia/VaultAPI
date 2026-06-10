@@ -2,6 +2,7 @@
 
 import pytest
 
+from tests.conftest import _IN_MEMORY_AUTH_CONN
 from vaultapi import database, models
 
 
@@ -23,7 +24,6 @@ class TestTableExists:
 
 class TestListTables:
     def test_empty_by_default(self):
-        # ui_session is an internal table and must never appear in list_tables()
         assert database.list_tables() == []
 
     def test_lists_created_table(self, table):
@@ -145,13 +145,106 @@ class TestUiSession:
             "tok", "h", int(time.time()) + 900, models.session.fernet
         )
         # Overwrite the blob with garbage so Fernet raises on decrypt
-        with models.database.connection:
-            models.database.connection.execute(
+        with _IN_MEMORY_AUTH_CONN:
+            _IN_MEMORY_AUTH_CONN.execute(
                 f'UPDATE "{database.UI_SESSION_TABLE}" SET payload = ?',
                 (b"not-fernet",),
             )
-            models.database.connection.commit()
+            _IN_MEMORY_AUTH_CONN.commit()
         assert database.get_ui_session(models.session.fernet) is None
 
-    def test_ui_session_excluded_from_list_tables(self):
+    def test_ui_session_not_in_secrets_db(self):
         assert database.UI_SESSION_TABLE not in database.list_tables()
+
+
+class TestBlockedHosts:
+    def test_host_not_blocked_initially(self):
+        assert not database.is_host_blocked("1.2.3.4")
+        assert database.get_blocked_until("1.2.3.4") is None
+
+    def test_increment_creates_entry(self):
+        database.increment_failed_auth("1.2.3.4")
+        row = _IN_MEMORY_AUTH_CONN.execute(
+            f'SELECT failed_auth FROM "{database.BLOCKED_HOSTS_TABLE}" WHERE host = ?',
+            ("1.2.3.4",),
+        ).fetchone()
+        assert row is not None and row[0] == 1
+
+    def test_increment_accumulates(self):
+        for _ in range(2):
+            database.increment_failed_auth("2.3.4.5")
+        row = _IN_MEMORY_AUTH_CONN.execute(
+            f'SELECT failed_auth FROM "{database.BLOCKED_HOSTS_TABLE}" WHERE host = ?',
+            ("2.3.4.5",),
+        ).fetchone()
+        assert row[0] == 2
+
+    def test_not_blocked_below_limit(self):
+        for _ in range(database.FAILED_AUTH_LIMIT - 1):
+            database.increment_failed_auth("4.5.6.7")
+        assert not database.is_host_blocked("4.5.6.7")
+
+    def test_blocked_at_limit_sets_5min_cooloff(self):
+        import time as _time
+
+        before = int(_time.time())
+        for _ in range(3):
+            database.increment_failed_auth("3.4.5.6")
+        blocked_until = database.get_blocked_until("3.4.5.6")
+        assert blocked_until is not None
+        assert blocked_until >= before + 299
+        assert database.is_host_blocked("3.4.5.6")
+
+    def test_five_failures_sets_15min_cooloff(self):
+        import time as _time
+
+        before = int(_time.time())
+        for _ in range(5):
+            database.increment_failed_auth("5.6.7.8")
+        blocked_until = database.get_blocked_until("5.6.7.8")
+        assert blocked_until is not None
+        assert blocked_until >= before + 899
+
+    def test_ten_failures_sets_1day_cooloff(self):
+        import time as _time
+
+        before = int(_time.time())
+        for _ in range(10):
+            database.increment_failed_auth("6.7.8.9")
+        blocked_until = database.get_blocked_until("6.7.8.9")
+        assert blocked_until is not None
+        assert blocked_until >= before + 86399
+
+    def test_expired_cooloff_removes_entry_and_allows(self, monkeypatch):
+        import time as _time
+
+        database.increment_failed_auth("7.8.9.0")
+        database.increment_failed_auth("7.8.9.0")
+        database.increment_failed_auth("7.8.9.0")
+        # Wind clock past the block
+        monkeypatch.setattr(
+            "vaultapi.database.time",
+            type("_T", (), {"time": staticmethod(lambda: _time.time() + 400)})(),
+        )
+        assert database.get_blocked_until("7.8.9.0") is None
+        assert not database.is_host_blocked("7.8.9.0")
+
+    def test_remove_blocked_host(self):
+        for _ in range(3):
+            database.increment_failed_auth("8.9.0.1")
+        assert database.is_host_blocked("8.9.0.1")
+        database.remove_blocked_host("8.9.0.1")
+        assert not database.is_host_blocked("8.9.0.1")
+
+    def test_remove_nonexistent_host_no_error(self):
+        database.remove_blocked_host("0.0.0.0")  # should not raise
+
+    def test_reset_failed_auth_clears_cooloff(self):
+        for _ in range(3):
+            database.increment_failed_auth("9.0.1.2")
+        assert database.is_host_blocked("9.0.1.2")
+        database.reset_failed_auth("9.0.1.2")
+        assert not database.is_host_blocked("9.0.1.2")
+
+    def test_reset_nonexistent_host_no_error(self):
+        database.reset_failed_auth("9.9.9.9")  # should not raise

@@ -40,27 +40,33 @@ from vaultapi import api, models  # noqa: E402
 models.session.fernet = Fernet(FERNET_KEY)
 
 # ---------------------------------------------------------------------------
-# Patch the database to an in-memory SQLite that persists per test session
+# Patch the database to in-memory SQLite connections that persist per session
 # ---------------------------------------------------------------------------
 _IN_MEMORY_CONN = sqlite3.connect(":memory:", check_same_thread=False)
+_IN_MEMORY_AUTH_CONN = sqlite3.connect(":memory:", check_same_thread=False)
 
 
 @pytest.fixture(autouse=True)
 def _patch_db_connection(monkeypatch):
-    """Point every database call at the single in-memory connection."""
+    """Point every database call at the in-memory connections."""
     monkeypatch.setattr(models.database, "connection", _IN_MEMORY_CONN)
+    monkeypatch.setattr(models.auth_database, "connection", _IN_MEMORY_AUTH_CONN)
     yield
 
 
 @pytest.fixture(autouse=True)
-def _reset_ui_session():
-    """Clear the DB-backed ui_session table before and after every test."""
+def _reset_auth_tables():
+    """Create and clear auth tables (ui_session + blocked_hosts) around every test."""
     from vaultapi import database as _db
 
-    _db.create_ui_session_table()
+    _db.create_auth_tables()
     _db.delete_ui_session()
+    _IN_MEMORY_AUTH_CONN.execute(f'DELETE FROM "{_db.BLOCKED_HOSTS_TABLE}"')
+    _IN_MEMORY_AUTH_CONN.commit()
     yield
     _db.delete_ui_session()
+    _IN_MEMORY_AUTH_CONN.execute(f'DELETE FROM "{_db.BLOCKED_HOSTS_TABLE}"')
+    _IN_MEMORY_AUTH_CONN.commit()
 
 
 @pytest.fixture(autouse=True)

@@ -11,7 +11,7 @@ from . import database, exceptions, models
 LOGGER = logging.getLogger("uvicorn.default")
 SECURITY = HTTPBearer()
 
-UI_SESSION = {"authenticator": "VaultAPI-UI"}
+UI_AUTHENTICATOR = "VaultAPI-UI"
 
 
 async def validate(
@@ -26,16 +26,17 @@ async def validate(
     Raises:
         APIResponse:
         - 401: If authorization is invalid.
-        - 403: If host address is forbidden.
+        - 403: If host address is forbidden (blocked after repeated failures).
     """
-    if request.client.host in models.session.blocked_hosts:
+    host = request.client.host
+    blocked_until = database.get_blocked_until(host)
+    if blocked_until is not None:
         LOGGER.info(
-            "Host: %s has been blocked. Blocked hosts: %s",
-            request.client.host,
-            models.session.blocked_hosts,
+            "Host: %s has been blocked after repeated failed auth attempts", host
         )
         raise exceptions.APIResponse(
-            status_code=HTTPStatus.FORBIDDEN.real, detail=HTTPStatus.FORBIDDEN.phrase
+            status_code=HTTPStatus.FORBIDDEN.real,
+            detail=f"Blocked until {blocked_until}",
         )
     if authorization.credentials.startswith("\\"):
         auth = bytes(authorization.credentials, "utf-8").decode(
@@ -43,13 +44,13 @@ async def validate(
         )
     else:
         auth = authorization.credentials
-    if request.headers.get("authenticator", "") == UI_SESSION["authenticator"]:
+    if request.headers.get("authenticator", "") == UI_AUTHENTICATOR:
         LOGGER.debug("Assuming UI authenticator")
         session = database.get_ui_session(models.session.fernet)
         authenticated = bool(
             session
             and secrets.compare_digest(auth, session["token"])
-            and session["host"] == request.client.host
+            and session["host"] == host
             and int(session["exp"]) > int(time.time())
         )
     else:
@@ -58,15 +59,16 @@ async def validate(
     if authenticated:
         LOGGER.debug(
             "Connection received from host: %s, host-header: %s, x-fwd-host: %s",
-            request.client.host,
+            host,
             request.headers.get("host"),
             request.headers.get("x-forwarded-host"),
         )
         if user_agent := request.headers.get("user-agent"):
             LOGGER.debug("User agent: %s", user_agent)
+        database.reset_failed_auth(host)
         return
-    # TODO: Add a failed auth counter in the DB and add host to blocked list after multiple attempts
     LOGGER.debug("Invalid apikey [OR] session token")
+    database.increment_failed_auth(host)
     raise exceptions.APIResponse(
         status_code=HTTPStatus.UNAUTHORIZED.real, detail=HTTPStatus.UNAUTHORIZED.phrase
     )

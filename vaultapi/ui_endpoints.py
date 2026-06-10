@@ -32,14 +32,12 @@ def blocked(request: Request) -> JSONResponse | None:
         JSONResponse:
         Returns a JSON response if the upstream server is allowed. Otherwise, returns None.
     """
-    if request.client.host in models.session.blocked_hosts:
-        LOGGER.info(
-            "Host: %s has been blocked",
-            request.client.host,
-        )
+    blocked_until = database.get_blocked_until(request.client.host)
+    if blocked_until is not None:
+        LOGGER.info("Host: %s has been blocked", request.client.host)
         return JSONResponse(
             status_code=HTTPStatus.FORBIDDEN.real,
-            content={"detail": HTTPStatus.FORBIDDEN.phrase},
+            content={"detail": f"Blocked until {blocked_until}"},
         )
     return None
 
@@ -58,7 +56,7 @@ async def index(request: Request):
         request=request,
         context={
             "request": request,
-            "authenticator": auth.UI_SESSION["authenticator"],
+            "authenticator": auth.UI_AUTHENTICATOR,
             "version": version.__version__,
         },
     )
@@ -84,8 +82,12 @@ async def ui_login(request: Request):
     if apikey.startswith("\\"):
         apikey = bytes(apikey, "utf-8").decode(encoding="unicode_escape")
 
+    if secret.startswith("\\"):
+        secret = bytes(secret, "utf-8").decode(encoding="unicode_escape")
+
     if not secrets.compare_digest(apikey, models.env.apikey):
         LOGGER.debug("Invalid api key received")
+        database.increment_failed_auth(request.client.host)
         return JSONResponse(
             status_code=HTTPStatus.UNAUTHORIZED.real,
             content={"detail": "Invalid credentials"},
@@ -93,6 +95,7 @@ async def ui_login(request: Request):
 
     if not secrets.compare_digest(secret, models.env.secret):
         LOGGER.debug("Invalid secret received")
+        database.increment_failed_auth(request.client.host)
         return JSONResponse(
             status_code=HTTPStatus.UNAUTHORIZED.real,
             content={"detail": "Invalid credentials"},
@@ -104,6 +107,7 @@ async def ui_login(request: Request):
 
             if not pyotp.TOTP(models.env.totp_token).verify(totp_code):
                 LOGGER.debug("Invalid totp token received")
+                database.increment_failed_auth(request.client.host)
                 return JSONResponse(
                     status_code=HTTPStatus.UNAUTHORIZED.real,
                     content={"detail": "Invalid credentials"},

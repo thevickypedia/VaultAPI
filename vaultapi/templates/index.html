@@ -1834,7 +1834,13 @@
                 showApp();
                 navigateTo('tables');
             } else {
-                errText.textContent = data.detail || 'Login failed.';
+                let msg = data.detail || 'Login failed.';
+                const blockedMatch = typeof msg === 'string' && msg.match(/^Blocked until (\d+)$/);
+                if (blockedMatch) {
+                    const unblockDate = new Date(parseInt(blockedMatch[1], 10) * 1000);
+                    msg = `Too many failed attempts. Try again after ${unblockDate.toLocaleString()}.`;
+                }
+                errText.textContent = msg;
                 errEl.className = 'login-error visible';
                 document.getElementById('login-totp').focus();
             }

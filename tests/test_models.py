@@ -108,7 +108,6 @@ class TestSession:
         assert s.fernet is None
         assert s.info == {}
         assert s.rps == {}
-        assert s.blocked_hosts == set()
 
 
 # ---------------------------------------------------------------------------
