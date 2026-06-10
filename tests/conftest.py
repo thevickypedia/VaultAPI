@@ -1,7 +1,9 @@
 """Shared fixtures for VaultAPI tests."""
 
+import base64
 import os
 import sqlite3
+import time
 
 import pyotp
 import pytest
@@ -48,8 +50,12 @@ def _patch_db_connection(monkeypatch):
 
 @pytest.fixture(autouse=True)
 def _reset_ui_session():
-    """No server-side session state to reset; JWT validation is stateless."""
+    """Reset the UI session dict before every test."""
+    auth.UI_SESSION["token"] = ""
+    auth.UI_SESSION["expires"] = "0"
     yield
+    auth.UI_SESSION["token"] = ""
+    auth.UI_SESSION["expires"] = "0"
 
 
 @pytest.fixture(autouse=True)
@@ -104,6 +110,9 @@ def ui_session_headers(token: str) -> dict:
     }
 
 
-def _set_valid_ui_session(hostname: str = "127.0.0.1") -> str:
-    """Mint a valid signed JWT for the given hostname."""
-    return auth.create_ui_token(hostname)
+def _set_valid_ui_session() -> str:
+    """Inject a live session token directly into auth.UI_SESSION."""
+    token = base64.urlsafe_b64encode(os.urandom(32)).decode()
+    auth.UI_SESSION["token"] = token
+    auth.UI_SESSION["expires"] = int(time.time()) + models.env.ui_lifetime
+    return token
