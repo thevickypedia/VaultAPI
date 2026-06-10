@@ -30,7 +30,7 @@ def upsert_ui_session(token: str, hostname: str, expires: int, fernet: Fernet) -
 
     Args:
         token: The opaque session token returned to the browser.
-        hostname: ``request.url.hostname`` captured at login time.
+        hostname: ``request.client.host`` captured at login time.
         expires: Unix timestamp after which the session is invalid.
         fernet: Fernet instance from ``models.session.fernet``.
     """

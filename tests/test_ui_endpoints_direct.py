@@ -13,6 +13,7 @@ VALID_KEY = "TestApiKey1!SecurePass#Word99@XYZ"
 def _req(host="127.0.0.1", headers=None):
     req = MagicMock()
     req.url.hostname = host
+    req.client.host = host
     req.headers = MagicMock()
     req.headers.get = lambda k, d="": (headers or {}).get(k, d)
     req.json = AsyncMock(return_value={})

@@ -13,7 +13,7 @@ def _get_identifier(request: Request) -> str:
     """Generate a unique identifier for the request."""
     if forwarded := request.headers.get("x-forwarded-for"):
         return f"{forwarded.split(',')[0]}:{request.url.path}"
-    return f"{request.url.hostname}:{request.url.path}"
+    return f"{request.client.host}:{request.url.path}"
 
 
 class RateLimiter:

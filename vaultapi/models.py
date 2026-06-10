@@ -21,10 +21,9 @@ from pydantic import (
 )
 from pydantic_settings import BaseSettings
 
-from . import exceptions, ipaddress
+from . import exceptions
 
 LOGGER = logging.getLogger("uvicorn.default")
-DEFAULT_ALLOWED = ["0.0.0.0", "127.0.0.1", "localhost"]
 
 
 def complexity_checker(secret: str, max_len: int = 32) -> None:
@@ -122,7 +121,7 @@ class Session(BaseModel):
     fernet: Fernet | None = None
     info: Dict[str, str] = Field(default_factory=dict)
     rps: Dict[str, int] = Field(default_factory=dict)
-    allowed_origins: Set[str] = Field(default_factory=set)
+    blocked_hosts: Set[str] = Field(default_factory=set)
 
     class Config:
         """Config to allow arbitrary types."""
@@ -150,11 +149,7 @@ class EnvConfig(BaseSettings):
     totp_token: str | None = None
     ui_lifetime: PositiveInt = Field(900, ge=300, le=3_600)  # 5m to 1h
     log_config: FilePath | Dict[str, Any] | None = None
-    allow_public_ip: bool = False
-    allow_private_ip: bool = False
-    allow_private_ip_range: bool = False
     allowed_origins: HttpUrl | List[HttpUrl] = Field(default_factory=list)
-    allowed_ip_range: List[str] = Field(default_factory=list)
     # This is a base rate limit configuration
     rate_limit: RateLimit | List[RateLimit] = Field(
         default=[
@@ -177,29 +172,6 @@ class EnvConfig(BaseSettings):
         if value in (16, 24, 32):
             return value
         raise ValueError("Transit key length (AES) must be one of 16, 24, or 32 bytes.")
-
-    @field_validator("allowed_origins", mode="after", check_fields=True)
-    def validate_allowed_origins(cls, value: HttpUrl | List[HttpUrl]) -> List[HttpUrl]:
-        """Validate allowed origins to enable CORS policy."""
-        if isinstance(value, list):
-            return value
-        return [value]
-
-    @field_validator("allowed_ip_range", mode="after", check_fields=True)
-    def validate_allowed_ip_range(cls, value: List[str]) -> List[str]:
-        """Validate allowed IP range to whitelist."""
-        for ip_range in value:
-            try:
-                assert (
-                    len(ip_range.split(".")) > 1
-                ), f"Expected a valid IP address, received {ip_range}"
-                assert (
-                    len(ip_range.split(".")[-1].split("-")) == 2
-                ), f"Expected a valid IP range, received {ip_range}"
-            except AssertionError as error:
-                exc = f"{error}\n\tInput should be a list of IP range (eg: ['192.168.1.10-19', '10.120.1.5-35'])"
-                raise ValueError(exc)
-        return value
 
     @field_validator("apikey", mode="after")
     def validate_apikey(cls, value: str) -> str | None:
@@ -291,44 +263,6 @@ def load_env() -> EnvConfig:
     return EnvConfig()
 
 
-def __init__() -> None:
-    """Instantiates the env, session and database connections."""
-    session.fernet = Fernet(env.secret)
-    if env.host in DEFAULT_ALLOWED:
-        session.allowed_origins.update(DEFAULT_ALLOWED)
-    else:
-        session.allowed_origins.add(env.host)
-    for allowed in env.allowed_origins:
-        session.allowed_origins.add(allowed.host)
-
-    # Include private IP or private IP range to the allowed list
-    if env.allow_private_ip or env.allow_private_ip_range:
-        if private_ip := ipaddress.private():
-            if env.allow_private_ip_range:
-                network_id = ".".join(private_ip.split(".")[:3])
-                dockerized_ip_range = f"{network_id}.1-256"
-                LOGGER.warning("Allowing dockerized IP range: %s", dockerized_ip_range)
-                env.allowed_ip_range.append(dockerized_ip_range)
-            else:
-                session.allowed_origins.add(private_ip)
-        else:
-            LOGGER.error("Failed to retrieve private IP address of the host machine")
-
-    # Include public IP to the allowed list
-    if env.allow_public_ip:
-        if public_ip := ipaddress.public():
-            session.allowed_origins.add(public_ip)
-        else:
-            LOGGER.error("Failed to retrieve public IP address of the host machine")
-
-    for cidr_range in env.allowed_ip_range:
-        ip_notion = ".".join(cidr_range.split(".")[0:-1])
-        start_ip, end_ip = cidr_range.split(".")[-1].split("-")
-        start_ip, end_ip = int(start_ip), int(end_ip) + 1
-        for i in range(start_ip, end_ip):
-            session.allowed_origins.add(f"{ip_notion}.{i}")
-
-
 env: EnvConfig = load_env()
 if env.enable_ui:
     assert (
@@ -343,4 +277,3 @@ if env.enable_ui:
     validate_totp_secret(env.totp_token)
 database: Database = Database(env.database)
 session = Session()
-__init__()

@@ -14,6 +14,7 @@ def _req(host="127.0.0.1", path="/test", forwarded=None):
     req = MagicMock()
     req.url.hostname = host
     req.url.path = path
+    req.client.host = host
     headers = {}
     if forwarded:
         headers["x-forwarded-for"] = forwarded

@@ -30,10 +30,12 @@ class TestIndex:
         assert b"VaultAPI" in r.content
 
     async def test_blocked_host_returns_403(self, client):
-        with patch("vaultapi.ui_endpoints.models.session") as mock_session:
-            mock_session.allowed_origins = set()
+        models.session.blocked_hosts.add("127.0.0.1")
+        try:
             r = await client.get("/")
-        assert r.status_code == 403
+            assert r.status_code == 403
+        finally:
+            models.session.blocked_hosts.discard("127.0.0.1")
 
 
 # ---------------------------------------------------------------------------
@@ -80,10 +82,8 @@ class TestUiLogin:
         )
         assert r.status_code == 401
 
-    async def test_forbidden_from_unknown_host(self, client):
-        original = models.session.allowed_origins.copy()
-        models.session.allowed_origins.clear()
-        models.session.allowed_origins.add("10.99.99.99")
+    async def test_forbidden_from_blocked_host(self, client):
+        models.session.blocked_hosts.add("127.0.0.1")
         try:
             r = await client.post(
                 "/ui/login",
@@ -95,8 +95,7 @@ class TestUiLogin:
             )
             assert r.status_code == 403
         finally:
-            models.session.allowed_origins.clear()
-            models.session.allowed_origins.update(original)
+            models.session.blocked_hosts.discard("127.0.0.1")
 
     async def test_totp_exception_returns_401(self, client):
         with patch("pyotp.TOTP.verify", side_effect=Exception("boom")):

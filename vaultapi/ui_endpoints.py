@@ -32,10 +32,10 @@ def blocked(request: Request) -> JSONResponse | None:
         JSONResponse:
         Returns a JSON response if the upstream server is allowed. Otherwise, returns None.
     """
-    if request.url.hostname not in models.session.allowed_origins:
+    if request.client.host in models.session.blocked_hosts:
         LOGGER.info(
-            "Host: %s has been blocked since it is not added to allowed list",
-            request.url.hostname,
+            "Host: %s has been blocked",
+            request.client.host,
         )
         return JSONResponse(
             status_code=HTTPStatus.FORBIDDEN.real,
@@ -127,11 +127,11 @@ async def ui_login(request: Request):
     token = base64.urlsafe_b64encode(os.urandom(32)).decode("utf-8")
     expires = int(time.time()) + models.env.ui_lifetime
     database.upsert_ui_session(
-        token, request.url.hostname, expires, models.session.fernet
+        token, request.client.host, expires, models.session.fernet
     )
     LOGGER.info(
-        "Connection received from url-hostname: %s, host-header: %s, x-fwd-host: %s",
-        request.url.hostname,
+        "Connection received from host: %s, host-header: %s, x-fwd-host: %s",
+        request.client.host,
         request.headers.get("host"),
         request.headers.get("x-forwarded-host"),
     )

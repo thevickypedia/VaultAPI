@@ -33,10 +33,6 @@ Exceptions
 ==========
 .. automodule:: vaultapi.exceptions
 
-IP Address
-==========
-.. automodule:: vaultapi.ipaddress
-
 Models
 ======
 

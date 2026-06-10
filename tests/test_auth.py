@@ -14,6 +14,7 @@ from vaultapi.exceptions import APIResponse
 def _make_request(host: str = "127.0.0.1", headers: dict = None):
     req = MagicMock()
     req.url.hostname = host
+    req.client.host = host
     req.headers = MagicMock()
     req.headers.get = lambda key, default="": (headers or {}).get(key, default)
     return req
@@ -27,11 +28,15 @@ def _make_creds(token: str) -> HTTPAuthorizationCredentials:
 
 @pytest.mark.asyncio
 class TestAuthValidate:
-    async def test_forbidden_for_unknown_host(self):
-        req = _make_request(host="10.99.99.99")
-        with pytest.raises(APIResponse) as exc_info:
-            await auth.validate(req, _make_creds("anything"))
-        assert exc_info.value.status_code == 403
+    async def test_forbidden_for_blocked_host(self):
+        models.session.blocked_hosts.add("10.99.99.99")
+        try:
+            req = _make_request(host="10.99.99.99")
+            with pytest.raises(APIResponse) as exc_info:
+                await auth.validate(req, _make_creds("anything"))
+            assert exc_info.value.status_code == 403
+        finally:
+            models.session.blocked_hosts.discard("10.99.99.99")
 
     async def test_valid_api_key_accepted(self):
         from tests.conftest import API_KEY
@@ -79,7 +84,7 @@ class TestAuthValidate:
             await auth.validate(req, _make_creds(token))
         assert exc_info.value.status_code == 401
 
-    async def test_wrong_hostname_rejected(self):
+    async def test_wrong_host_rejected(self):
         """Session written for host-A must be rejected when request comes from host-B."""
         token = "host-bound-token"
         database.upsert_ui_session(

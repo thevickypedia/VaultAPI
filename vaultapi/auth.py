@@ -28,12 +28,12 @@ async def validate(
         - 401: If authorization is invalid.
         - 403: If host address is forbidden.
     """
-    if request.url.hostname not in models.session.allowed_origins:
+    if request.client.host in models.session.blocked_hosts:
         LOGGER.info(
-            "Host: %s has been blocked since it is not added to allowed list",
-            request.url.hostname,
+            "Host: %s has been blocked. Blocked hosts: %s",
+            request.client.host,
+            models.session.blocked_hosts,
         )
-        LOGGER.debug(models.session.allowed_origins)
         raise exceptions.APIResponse(
             status_code=HTTPStatus.FORBIDDEN.real, detail=HTTPStatus.FORBIDDEN.phrase
         )
@@ -49,7 +49,7 @@ async def validate(
         authenticated = bool(
             session
             and secrets.compare_digest(auth, session["token"])
-            and session["host"] == request.url.hostname
+            and session["host"] == request.client.host
             and int(session["exp"]) > int(time.time())
         )
     else:
@@ -57,14 +57,15 @@ async def validate(
         authenticated = secrets.compare_digest(auth, models.env.apikey)
     if authenticated:
         LOGGER.debug(
-            "Connection received from url-hostname: %s, host-header: %s, x-fwd-host: %s",
-            request.url.hostname,
+            "Connection received from host: %s, host-header: %s, x-fwd-host: %s",
+            request.client.host,
             request.headers.get("host"),
             request.headers.get("x-forwarded-host"),
         )
         if user_agent := request.headers.get("user-agent"):
             LOGGER.debug("User agent: %s", user_agent)
         return
+    # TODO: Add a failed auth counter in the DB and add host to blocked list after multiple attempts
     LOGGER.debug("Invalid apikey [OR] session token")
     raise exceptions.APIResponse(
         status_code=HTTPStatus.UNAUTHORIZED.real, detail=HTTPStatus.UNAUTHORIZED.phrase

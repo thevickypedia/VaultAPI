@@ -125,7 +125,7 @@ decrypt and raises an exception, which <code class="docutils literal notranslate
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>token</strong> – The opaque session token returned to the browser.</p></li>
-<li><p><strong>hostname</strong> – <code class="docutils literal notranslate"><span class="pre">request.url.hostname</span></code> captured at login time.</p></li>
+<li><p><strong>hostname</strong> – <code class="docutils literal notranslate"><span class="pre">request.client.host</span></code> captured at login time.</p></li>
 <li><p><strong>expires</strong> – Unix timestamp after which the session is invalid.</p></li>
 <li><p><strong>fernet</strong> – Fernet instance from <code class="docutils literal notranslate"><span class="pre">models.session.fernet</span></code>.</p></li>
 </ul>
@@ -286,47 +286,6 @@ decrypt and raises an exception, which <code class="docutils literal notranslate
 </dd></dl>
 
 </section>
-<section id="module-vaultapi.ipaddress">
-<span id="ip-address"></span><h1>IP Address<a class="headerlink" href="#module-vaultapi.ipaddress" title="Permalink to this heading">¶</a></h1>
-<dl class="py function">
-<dt class="sig sig-object py" id="vaultapi.ipaddress.private">
-<span class="sig-prename descclassname"><span class="pre">vaultapi.ipaddress.</span></span><span class="sig-name descname"><span class="pre">private</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#vaultapi.ipaddress.private" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get private IP address of the host using socket connection.</p>
-<div class="admonition seealso">
-<p class="admonition-title">See also</p>
-<p>Uses Google’s DNS endpoint to resolve the private IP address.</p>
-</div>
-<p class="rubric">References</p>
-<p><a class="reference external" href="https://dns.google/query?name=8.8.8.8">https://dns.google/query?name=8.8.8.8</a></p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Private IP address.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="vaultapi.ipaddress.public">
-<span class="sig-prename descclassname"><span class="pre">vaultapi.ipaddress.</span></span><span class="sig-name descname"><span class="pre">public</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#vaultapi.ipaddress.public" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets public IP address of the host using different endpoints.</p>
-<div class="admonition seealso">
-<p class="admonition-title">See also</p>
-<p>Uses 6 public IP retriever endpoints to get the public IP address.</p>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Public IP address.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
 <section id="models">
 <h1>Models<a class="headerlink" href="#models" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
@@ -372,8 +331,8 @@ decrypt and raises an exception, which <code class="docutils literal notranslate
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="vaultapi.models.Session.allowed_origins">
-<span class="sig-name descname"><span class="pre">allowed_origins</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#vaultapi.models.Session.allowed_origins" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="vaultapi.models.Session.blocked_hosts">
+<span class="sig-name descname"><span class="pre">blocked_hosts</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#vaultapi.models.Session.blocked_hosts" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py class">
@@ -458,28 +417,8 @@ decrypt and raises an exception, which <code class="docutils literal notranslate
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="vaultapi.models.EnvConfig.allow_public_ip">
-<span class="sig-name descname"><span class="pre">allow_public_ip</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#vaultapi.models.EnvConfig.allow_public_ip" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="vaultapi.models.EnvConfig.allow_private_ip">
-<span class="sig-name descname"><span class="pre">allow_private_ip</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#vaultapi.models.EnvConfig.allow_private_ip" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="vaultapi.models.EnvConfig.allow_private_ip_range">
-<span class="sig-name descname"><span class="pre">allow_private_ip_range</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#vaultapi.models.EnvConfig.allow_private_ip_range" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
 <dt class="sig sig-object py" id="vaultapi.models.EnvConfig.allowed_origins">
 <span class="sig-name descname"><span class="pre">allowed_origins</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">HttpUrl</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">HttpUrl</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#vaultapi.models.EnvConfig.allowed_origins" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="vaultapi.models.EnvConfig.allowed_ip_range">
-<span class="sig-name descname"><span class="pre">allowed_ip_range</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#vaultapi.models.EnvConfig.allowed_ip_range" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -491,18 +430,6 @@ decrypt and raises an exception, which <code class="docutils literal notranslate
 <dt class="sig sig-object py" id="vaultapi.models.EnvConfig.validate_transit_key_length">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_transit_key_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">NoReturn</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#vaultapi.models.EnvConfig.validate_transit_key_length" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate transit key length.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="vaultapi.models.EnvConfig.validate_allowed_origins">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_allowed_origins</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">HttpUrl</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">HttpUrl</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">HttpUrl</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#vaultapi.models.EnvConfig.validate_allowed_origins" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validate allowed origins to enable CORS policy.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="vaultapi.models.EnvConfig.validate_allowed_ip_range">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_allowed_ip_range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#vaultapi.models.EnvConfig.validate_allowed_ip_range" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validate allowed IP range to whitelist.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -878,7 +805,6 @@ decrypt and raises an exception, which <code class="docutils literal notranslate
 <li><a class="reference internal" href="#module-vaultapi.auth">Authenticator</a></li>
 <li><a class="reference internal" href="#module-vaultapi.database">Database</a></li>
 <li><a class="reference internal" href="#module-vaultapi.exceptions">Exceptions</a></li>
-<li><a class="reference internal" href="#module-vaultapi.ipaddress">IP Address</a></li>
 <li><a class="reference internal" href="#models">Models</a></li>
 <li><a class="reference internal" href="#payload">Payload</a></li>
 <li><a class="reference internal" href="#module-vaultapi.rate_limit">RateLimit</a></li>

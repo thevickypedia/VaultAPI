@@ -35,6 +35,10 @@ os.environ.update(
 # Import after env is set
 from vaultapi import api, models  # noqa: E402
 
+# Initialize fernet — previously done by models.__init__() which was removed
+# when IP-based access controls were stripped out.
+models.session.fernet = Fernet(FERNET_KEY)
+
 # ---------------------------------------------------------------------------
 # Patch the database to an in-memory SQLite that persists per test session
 # ---------------------------------------------------------------------------

@@ -108,7 +108,7 @@ class TestSession:
         assert s.fernet is None
         assert s.info == {}
         assert s.rps == {}
-        assert s.allowed_origins == set()
+        assert s.blocked_hosts == set()
 
 
 # ---------------------------------------------------------------------------
@@ -141,26 +141,13 @@ class TestEnvConfigValidators:
         with pytest.raises(ValidationError, match="16, 24, or 32"):
             EnvConfig(**self._base(transit_key_length=20))
 
-    def test_allowed_origins_scalar_becomes_list(self):
+    def test_allowed_origins_scalar_accepted(self):
         cfg = EnvConfig(**self._base(allowed_origins="http://example.com"))
-        assert isinstance(cfg.allowed_origins, list)
-        assert len(cfg.allowed_origins) == 1
+        assert cfg.allowed_origins is not None
 
     def test_allowed_origins_list(self):
         cfg = EnvConfig(**self._base(allowed_origins=["http://example.com"]))
         assert len(cfg.allowed_origins) == 1
-
-    def test_allowed_ip_range_valid(self):
-        cfg = EnvConfig(**self._base(allowed_ip_range=["192.168.1.10-20"]))
-        assert cfg.allowed_ip_range == ["192.168.1.10-20"]
-
-    def test_allowed_ip_range_missing_dash(self):
-        with pytest.raises(ValidationError, match="valid IP range"):
-            EnvConfig(**self._base(allowed_ip_range=["192.168.1.10"]))
-
-    def test_allowed_ip_range_single_octet(self):
-        with pytest.raises(ValidationError, match="valid IP address"):
-            EnvConfig(**self._base(allowed_ip_range=["10-20"]))
 
     def test_rate_limit_single_accepted(self):
         cfg = EnvConfig(**self._base(rate_limit={"max_requests": 5, "seconds": 10}))
