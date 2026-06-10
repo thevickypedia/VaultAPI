@@ -78,6 +78,7 @@ async def ui_login(request: Request):
         return response
     body = await request.json()
     apikey = str(body.get("apikey", ""))
+    secret = str(body.get("secret", ""))
     totp_code = str(body.get("totp_code", "")).strip()
 
     if apikey.startswith("\\"):
@@ -85,6 +86,13 @@ async def ui_login(request: Request):
 
     if not secrets.compare_digest(apikey, models.env.apikey):
         LOGGER.debug("Invalid api key received")
+        return JSONResponse(
+            status_code=HTTPStatus.UNAUTHORIZED.real,
+            content={"detail": "Invalid credentials"},
+        )
+
+    if not secrets.compare_digest(secret, models.env.secret):
+        LOGGER.debug("Invalid secret received")
         return JSONResponse(
             status_code=HTTPStatus.UNAUTHORIZED.real,
             content={"detail": "Invalid credentials"},

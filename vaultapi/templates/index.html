@@ -865,8 +865,13 @@
 
         <div class="form-field">
             <label class="form-label" for="login-apikey">API Key</label>
-            <input class="form-input mono" id="login-apikey" type="password" placeholder="your-api-key"
+            <input class="form-input mono" id="login-apikey" type="password" placeholder="apikey"
                    autocomplete="current-password" spellcheck="false">
+        </div>
+        <div class="form-field">
+            <label class="form-label" for="login-secret">Secret</label>
+            <input class="form-input mono" id="login-secret" type="password" placeholder="secret"
+                   autocomplete="off" spellcheck="false">
         </div>
         <div class="form-field" id="totp-field">
             <label class="form-label" for="login-totp">Authenticator Code</label>
@@ -1235,6 +1240,7 @@
                 errEl.className = 'login-error';
             }
             document.getElementById('login-apikey').value = '';
+            document.getElementById('login-secret').value = '';
             document.getElementById('login-totp').value = '';
             setTimeout(() => document.getElementById('login-apikey').focus(), 60);
         }
@@ -1270,11 +1276,15 @@
             const errEl = document.getElementById('login-error');
             const errText = document.getElementById('login-error-text');
             const apikey = document.getElementById('login-apikey').value.trim();
+            const secret = document.getElementById('login-secret').value.trim();
             const totp_code = document.getElementById('login-totp').value.trim();
 
-            if (!apikey || !totp_code) {
-                errText.textContent = 'API Key and OTP code are required.';
-                errEl.classList.add('visible');
+            if (!apikey || !secret || !totp_code) {
+                errText.textContent = 'API Key, Secret, and OTP code are required.';
+                errEl.className = 'login-error visible';
+                if (!apikey) document.getElementById('login-apikey').focus();
+                else if (!secret) document.getElementById('login-secret').focus();
+                else document.getElementById('login-totp').focus();
                 return;
             }
 
@@ -1286,7 +1296,7 @@
             const {ok, data} = await fetch('/ui/login', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({apikey, totp_code}),
+                body: JSON.stringify({apikey, secret, totp_code}),
             }).then(async (r) => ({ ok: r.ok, data: await r.json()})).catch(() => ({ok: false, data: {}}));
 
             btn.disabled = false;

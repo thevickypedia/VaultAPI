@@ -4,7 +4,13 @@ from unittest.mock import patch
 
 import pytest
 
-from tests.conftest import API_KEY, _set_valid_ui_session, make_totp, ui_session_headers
+from tests.conftest import (
+    API_KEY,
+    FERNET_KEY,
+    _set_valid_ui_session,
+    make_totp,
+    ui_session_headers,
+)
 from vaultapi import database, models
 
 
@@ -37,7 +43,8 @@ class TestIndex:
 class TestUiLogin:
     async def test_valid_credentials_returns_token(self, client):
         r = await client.post(
-            "/ui/login", json={"apikey": API_KEY, "totp_code": make_totp()}
+            "/ui/login",
+            json={"apikey": API_KEY, "secret": FERNET_KEY, "totp_code": make_totp()},
         )
         assert r.status_code == 200
         data = r.json()
@@ -46,25 +53,45 @@ class TestUiLogin:
 
     async def test_wrong_apikey_returns_401(self, client):
         r = await client.post(
-            "/ui/login", json={"apikey": "wrong-key", "totp_code": make_totp()}
+            "/ui/login",
+            json={
+                "apikey": "wrong-key",
+                "secret": FERNET_KEY,
+                "totp_code": make_totp(),
+            },
+        )
+        assert r.status_code == 401
+
+    async def test_wrong_secret_returns_401(self, client):
+        r = await client.post(
+            "/ui/login",
+            json={
+                "apikey": API_KEY,
+                "secret": "wrong-secret",
+                "totp_code": make_totp(),
+            },
         )
         assert r.status_code == 401
 
     async def test_wrong_totp_returns_401(self, client):
         r = await client.post(
-            "/ui/login", json={"apikey": API_KEY, "totp_code": "000000"}
+            "/ui/login",
+            json={"apikey": API_KEY, "secret": FERNET_KEY, "totp_code": "000000"},
         )
         assert r.status_code == 401
 
     async def test_forbidden_from_unknown_host(self, client):
-        # The client fixture uses 127.0.0.1 which is allowed.
-        # Simulate a forbidden host by patching allowed_origins
         original = models.session.allowed_origins.copy()
         models.session.allowed_origins.clear()
         models.session.allowed_origins.add("10.99.99.99")
         try:
             r = await client.post(
-                "/ui/login", json={"apikey": API_KEY, "totp_code": make_totp()}
+                "/ui/login",
+                json={
+                    "apikey": API_KEY,
+                    "secret": FERNET_KEY,
+                    "totp_code": make_totp(),
+                },
             )
             assert r.status_code == 403
         finally:
@@ -74,15 +101,15 @@ class TestUiLogin:
     async def test_totp_exception_returns_401(self, client):
         with patch("pyotp.TOTP.verify", side_effect=Exception("boom")):
             r = await client.post(
-                "/ui/login", json={"apikey": API_KEY, "totp_code": "123456"}
+                "/ui/login",
+                json={"apikey": API_KEY, "secret": FERNET_KEY, "totp_code": "123456"},
             )
         assert r.status_code == 401
 
     async def test_apikey_with_backslash_prefix_decoded(self, client):
-        # A key starting with \\ should be decoded; since the decoded version
-        # won't match the real key, it must 401 (not 500).
         r = await client.post(
-            "/ui/login", json={"apikey": "\\nwrong", "totp_code": make_totp()}
+            "/ui/login",
+            json={"apikey": "\\nwrong", "secret": FERNET_KEY, "totp_code": make_totp()},
         )
         assert r.status_code in (401, 429)
 

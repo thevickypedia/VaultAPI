@@ -92,7 +92,15 @@ class TestUiLoginNoTotp:
 
     async def test_login_without_totp_returns_401(self):
         req = _req()
-        req.json = AsyncMock(return_value={"apikey": VALID_KEY, "totp_code": "123456"})
+        from tests.conftest import FERNET_KEY
+
+        req.json = AsyncMock(
+            return_value={
+                "apikey": VALID_KEY,
+                "secret": FERNET_KEY,
+                "totp_code": "123456",
+            }
+        )
         with patch.object(models.env, "totp_token", None):
             resp = await ui_endpoints.ui_login(req)
         assert resp.status_code == 401
