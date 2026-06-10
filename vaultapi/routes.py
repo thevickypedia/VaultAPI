@@ -34,6 +34,13 @@ def ui_routes() -> List[APIRoute]:
             dependencies=DEPENDENCIES,
         ),
         APIRoute(
+            path="/ui/logout",
+            endpoint=ui_endpoints.ui_logout,
+            methods=["POST"],
+            include_in_schema=False,
+            dependencies=DEPENDENCIES,
+        ),
+        APIRoute(
             path="/ui/tables",
             endpoint=ui_endpoints.ui_list_tables,
             methods=["GET"],

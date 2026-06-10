@@ -88,6 +88,33 @@ class TestUiLogin:
 
 
 # ---------------------------------------------------------------------------
+# /ui/logout
+# ---------------------------------------------------------------------------
+@pytest.mark.asyncio
+class TestUiLogout:
+    async def test_logout_invalidates_session(self, client):
+        token = _set_valid_ui_session()
+        r = await client.post("/ui/logout", headers=_ui_headers(token))
+        assert r.status_code == 200
+        # Token must no longer be accepted after logout
+        r2 = await client.get("/ui/tables", headers=_ui_headers(token))
+        assert r2.status_code == 401
+
+    async def test_logout_requires_auth(self, client):
+        r = await client.post(
+            "/ui/logout",
+            headers={"Authorization": "Bearer bad", "Authenticator": "VaultAPI-UI"},
+        )
+        assert r.status_code == 401
+
+    async def test_logout_after_logout_returns_401(self, client):
+        token = _set_valid_ui_session()
+        await client.post("/ui/logout", headers=_ui_headers(token))
+        r = await client.post("/ui/logout", headers=_ui_headers(token))
+        assert r.status_code == 401
+
+
+# ---------------------------------------------------------------------------
 # /ui/tables
 # ---------------------------------------------------------------------------
 @pytest.mark.asyncio

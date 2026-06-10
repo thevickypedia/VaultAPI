@@ -128,6 +128,11 @@
             border-color: rgba(0, 212, 255, 0.2);
             color: var(--text-2);
         }
+        .login-error.warn {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.25);
+            color: var(--warn);
+        }
         .login-error svg { width: 14px; height: 14px; stroke: currentColor; fill: none; flex-shrink: 0; }
 
         .login-btn {
@@ -1149,7 +1154,7 @@
                 const remaining = expires - Math.floor(Date.now() / 1000);
                 if (remaining <= 0) {
                     stopTimer();
-                    logout('Session expired. Please sign in again.', 'error');
+                    logout('Session expired. Please sign in again.', 'error', {forceLocal: true});
                     return;
                 }
                 const mm = String(Math.floor(remaining / 60)).padStart(2, '0');
@@ -1211,7 +1216,7 @@
             const res = await fetch(path, fetchOpts);
             const data = await res.json().catch(() => ({}));
             if (!noAutoLogout && (res.status === 401 || res.status === 403)) {
-                logout('Session expired. Please sign in again.', 'error');
+                logout('Session expired. Please sign in again.', 'error', {forceLocal: true});
                 return {ok: false, status: res.status, data: {detail: 'Session expired'}};
             }
             return {ok: res.ok, status: res.status, data};
@@ -1223,7 +1228,8 @@
             document.getElementById('app-shell').classList.remove('active');
             const errEl = document.getElementById('login-error');
             if (message) {
-                errEl.className = `login-error visible${type === 'info' ? ' info' : ''}`;
+                const modifier = type === 'info' ? ' info' : type === 'warn' ? ' warn' : '';
+                errEl.className = `login-error visible${modifier}`;
                 document.getElementById('login-error-text').textContent = message;
             } else {
                 errEl.className = 'login-error';
@@ -1239,11 +1245,24 @@
             startTimer();
         }
 
-        function logout(message = 'Signed out successfully.', type = 'info') {
+        function _clearLocalSession(message, type) {
             stopTimer();
             sessionStorage.removeItem('session_token');
             sessionStorage.removeItem('expires');
             showLogin(message, type);
+        }
+
+        async function logout(message = null, type = 'info', {forceLocal = false} = {}) {
+            if (forceLocal) {
+                _clearLocalSession(message || 'Signed out successfully.', type);
+                return;
+            }
+            const {ok} = await api('POST', '/ui/logout', null, {noAutoLogout: true});
+            if (ok) {
+                _clearLocalSession(message || 'Signed out successfully.', 'info');
+            } else {
+                _clearLocalSession(message || 'Session could not be invalidated on the server. You have been signed out locally.', 'warn');
+            }
         }
 
         async function submitLogin() {

@@ -136,6 +136,30 @@ async def ui_login(request: Request):
     )
 
 
+async def ui_logout(
+    request: Request,
+    session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
+):
+    """Invalidate the active UI session server-side.
+
+    Args:
+        request: Reference to the FastAPI request object.
+        session_token: Session token required to authenticate the logout request.
+
+    Returns:
+        JSONResponse:
+        Returns 200 on success, 401/403 if the token is already invalid.
+    """
+    try:
+        await auth.validate(request, session_token)
+    except exceptions.APIResponse as exc:
+        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+    auth.UI_SESSION["token"] = ""
+    auth.UI_SESSION["expires"] = "0"
+    LOGGER.info("UI session invalidated by logout request")
+    return JSONResponse(content={"detail": "OK"})
+
+
 async def ui_list_tables(
     request: Request,
     session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
