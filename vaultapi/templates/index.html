@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VaultAPI</title>
-    <link rel="icon" href="https://img.icons8.com/?size=100&id=7156&format=png&color=000000" property="og:image" type="image/x-icon">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/?size=100&id=7156&format=png&color=000000" property="og:image" type="image/x-icon">
+    <link rel="icon" href="https://img.icons8.com/?size=100&id=7156&format=png&color=000000" property="og:image"
+          type="image/x-icon">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/?size=100&id=7156&format=png&color=000000"
+          property="og:image" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
@@ -44,7 +46,9 @@
             --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        html, body { height: 100%; }
+        html, body {
+            height: 100%;
+        }
 
         body {
             font-family: var(--sans);
@@ -52,9 +56,8 @@
             color: var(--text);
             min-height: 100vh;
             overflow-x: hidden;
-            background-image:
-                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 212, 255, 0.06) 0%, transparent 60%),
-                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.012'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            background-image: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 212, 255, 0.06) 0%, transparent 60%),
+            url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.012'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
             background-attachment: fixed;
         }
 
@@ -66,7 +69,10 @@
             justify-content: center;
             padding: 24px 24px 56px;
         }
-        #login-screen.active { display: flex; }
+
+        #login-screen.active {
+            display: flex;
+        }
 
         .login-card {
             width: 100%;
@@ -85,6 +91,7 @@
             gap: 11px;
             margin-bottom: 28px;
         }
+
         .login-brand-icon {
             width: 38px;
             height: 38px;
@@ -95,9 +102,27 @@
             justify-content: center;
             flex-shrink: 0;
         }
-        .login-brand-icon svg { width: 19px; height: 19px; fill: none; stroke: #fff; stroke-width: 1.75; stroke-linecap: round; }
-        .login-brand-text { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
-        .login-brand-sub { font-size: 12px; color: var(--text-3); margin-top: 1px; }
+
+        .login-brand-icon svg {
+            width: 19px;
+            height: 19px;
+            fill: none;
+            stroke: #fff;
+            stroke-width: 1.75;
+            stroke-linecap: round;
+        }
+
+        .login-brand-text {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .login-brand-sub {
+            font-size: 12px;
+            color: var(--text-3);
+            margin-top: 1px;
+        }
 
         .login-title {
             font-size: 20px;
@@ -105,6 +130,7 @@
             letter-spacing: -0.4px;
             margin-bottom: 4px;
         }
+
         .login-subtitle {
             font-size: 13px;
             color: var(--text-2);
@@ -124,18 +150,30 @@
             color: var(--danger);
             margin-bottom: 18px;
         }
-        .login-error.visible { display: flex; }
+
+        .login-error.visible {
+            display: flex;
+        }
+
         .login-error.info {
             background: var(--accent-dim);
             border-color: rgba(0, 212, 255, 0.2);
             color: var(--text-2);
         }
+
         .login-error.warn {
             background: rgba(245, 158, 11, 0.1);
             border-color: rgba(245, 158, 11, 0.25);
             color: var(--warn);
         }
-        .login-error svg { width: 14px; height: 14px; stroke: currentColor; fill: none; flex-shrink: 0; }
+
+        .login-error svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            fill: none;
+            flex-shrink: 0;
+        }
 
         .login-btn {
             width: 100%;
@@ -156,14 +194,37 @@
             gap: 8px;
             margin-top: 8px;
         }
-        .login-btn:hover { background: #33dcff; box-shadow: 0 0 28px rgba(0, 212, 255, 0.4); }
-        .login-btn:disabled { opacity: 0.5; pointer-events: none; }
-        .login-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; flex-shrink: 0; }
-        .login-btn.loading svg { animation: spin 0.7s linear infinite; }
+
+        .login-btn:hover {
+            background: #33dcff;
+            box-shadow: 0 0 28px rgba(0, 212, 255, 0.4);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .login-btn svg {
+            width: 15px;
+            height: 15px;
+            stroke: currentColor;
+            fill: none;
+            flex-shrink: 0;
+        }
+
+        .login-btn.loading svg {
+            animation: spin 0.7s linear infinite;
+        }
 
         /* ── App shell ───────────────────────────────── */
-        #app-shell { display: none; }
-        #app-shell.active { display: block; }
+        #app-shell {
+            display: none;
+        }
+
+        #app-shell.active {
+            display: block;
+        }
 
         /* ── Header ─────────────────────────────────── */
         header {
@@ -202,7 +263,15 @@
             align-items: center;
             justify-content: center;
         }
-        .logo-icon svg { width: 16px; height: 16px; fill: none; stroke: #fff; stroke-width: 1.75; stroke-linecap: round; }
+
+        .logo-icon svg {
+            width: 16px;
+            height: 16px;
+            fill: none;
+            stroke: #fff;
+            stroke-width: 1.75;
+            stroke-linecap: round;
+        }
 
         .breadcrumbs {
             display: flex;
@@ -213,7 +282,11 @@
             flex: 1;
             min-width: 0;
         }
-        .breadcrumbs .sep { color: var(--text-3); }
+
+        .breadcrumbs .sep {
+            color: var(--text-3);
+        }
+
         .breadcrumbs .crumb {
             color: var(--text-2);
             cursor: pointer;
@@ -222,10 +295,23 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        .breadcrumbs .crumb:hover { color: var(--accent); }
-        .breadcrumbs .crumb.active { color: var(--text); font-weight: 500; cursor: default; }
 
-        .header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .breadcrumbs .crumb:hover {
+            color: var(--accent);
+        }
+
+        .breadcrumbs .crumb.active {
+            color: var(--text);
+            font-weight: 500;
+            cursor: default;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
 
         /* ── Buttons ─────────────────────────────────── */
         .btn {
@@ -243,15 +329,29 @@
             font-family: var(--sans);
             line-height: 1;
         }
-        .btn svg { width: 14px; height: 14px; flex-shrink: 0; }
-        .btn:disabled { opacity: 0.4; pointer-events: none; }
+
+        .btn svg {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
 
         .btn-ghost {
             background: transparent;
             color: var(--text-2);
             border: 1px solid var(--border);
         }
-        .btn-ghost:hover { background: var(--bg-2); color: var(--text); border-color: rgba(255, 255, 255, 0.14); }
+
+        .btn-ghost:hover {
+            background: var(--bg-2);
+            color: var(--text);
+            border-color: rgba(255, 255, 255, 0.14);
+        }
 
         .btn-primary {
             background: var(--accent);
@@ -259,14 +359,22 @@
             font-weight: 600;
             box-shadow: 0 0 20px var(--accent-glow);
         }
-        .btn-primary:hover { background: #33dcff; box-shadow: 0 0 28px rgba(0, 212, 255, 0.4); }
+
+        .btn-primary:hover {
+            background: #33dcff;
+            box-shadow: 0 0 28px rgba(0, 212, 255, 0.4);
+        }
 
         .btn-danger {
             background: var(--danger-dim);
             color: var(--danger);
             border: 1px solid rgba(239, 68, 68, 0.2);
         }
-        .btn-danger:hover { background: rgba(239, 68, 68, 0.22); border-color: rgba(239, 68, 68, 0.4); }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.22);
+            border-color: rgba(239, 68, 68, 0.4);
+        }
 
         .btn-icon {
             padding: 7px;
@@ -277,11 +385,28 @@
             transition: all var(--transition);
             cursor: pointer;
         }
-        .btn-icon:hover { background: var(--bg-2); color: var(--text); border-color: rgba(255, 255, 255, 0.14); }
-        .btn-icon svg { width: 15px; height: 15px; display: block; }
-        .btn-icon.spinning svg { animation: spin 0.7s linear infinite; }
 
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .btn-icon:hover {
+            background: var(--bg-2);
+            color: var(--text);
+            border-color: rgba(255, 255, 255, 0.14);
+        }
+
+        .btn-icon svg {
+            width: 15px;
+            height: 15px;
+            display: block;
+        }
+
+        .btn-icon.spinning svg {
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
 
         /* ── Main layout ─────────────────────────────── */
         main {
@@ -290,12 +415,24 @@
             padding: 36px 28px 72px;
         }
 
-        .page { display: none; }
-        .page.active { display: block; animation: fadeIn 180ms ease; }
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 180ms ease;
+        }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(6px); }
-            to   { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .page-header {
@@ -306,9 +443,26 @@
             gap: 16px;
             flex-wrap: wrap;
         }
-        .page-title { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; line-height: 1.2; }
-        .page-subtitle { font-size: 13px; color: var(--text-2); margin-top: 4px; }
-        .page-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+
+        .page-title {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.4px;
+            line-height: 1.2;
+        }
+
+        .page-subtitle {
+            font-size: 13px;
+            color: var(--text-2);
+            margin-top: 4px;
+        }
+
+        .page-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-shrink: 0;
+        }
 
         /* ── Table cards grid ────────────────────────── */
         .cards-grid {
@@ -327,6 +481,7 @@
             transition: all var(--transition);
             overflow: hidden;
         }
+
         .table-card::before {
             content: '';
             position: absolute;
@@ -335,8 +490,16 @@
             opacity: 0;
             transition: opacity var(--transition);
         }
-        .table-card:hover { border-color: var(--border-h); transform: translateY(-2px); box-shadow: var(--shadow), 0 0 0 1px var(--border-h); }
-        .table-card:hover::before { opacity: 1; }
+
+        .table-card:hover {
+            border-color: var(--border-h);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow), 0 0 0 1px var(--border-h);
+        }
+
+        .table-card:hover::before {
+            opacity: 1;
+        }
 
         .table-card-icon {
             width: 36px;
@@ -349,9 +512,26 @@
             justify-content: center;
             margin-bottom: 14px;
         }
-        .table-card-icon svg { width: 17px; height: 17px; stroke: var(--accent); fill: none; }
-        .table-card-name { font-size: 14px; font-weight: 600; color: var(--text); word-break: break-word; margin-bottom: 6px; }
-        .table-card-meta { font-size: 12px; color: var(--text-3); }
+
+        .table-card-icon svg {
+            width: 17px;
+            height: 17px;
+            stroke: var(--accent);
+            fill: none;
+        }
+
+        .table-card-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            word-break: break-word;
+            margin-bottom: 6px;
+        }
+
+        .table-card-meta {
+            font-size: 12px;
+            color: var(--text-3);
+        }
 
         .table-card-delete {
             position: absolute;
@@ -370,9 +550,22 @@
             transition: all var(--transition);
             opacity: 0;
         }
-        .table-card:hover .table-card-delete { opacity: 1; }
-        .table-card-delete:hover { background: var(--danger-dim); color: var(--danger); }
-        .table-card-delete svg { width: 13px; height: 13px; stroke: currentColor; fill: none; }
+
+        .table-card:hover .table-card-delete {
+            opacity: 1;
+        }
+
+        .table-card-delete:hover {
+            background: var(--danger-dim);
+            color: var(--danger);
+        }
+
+        .table-card-delete svg {
+            width: 13px;
+            height: 13px;
+            stroke: currentColor;
+            fill: none;
+        }
 
         /* ── Secrets table ───────────────────────────── */
         .secrets-toolbar {
@@ -382,8 +575,17 @@
             margin-bottom: 16px;
             flex-wrap: wrap;
         }
-        .secrets-count { font-size: 13px; color: var(--text-2); flex: 1; }
-        .secrets-count span { color: var(--text); font-weight: 600; }
+
+        .secrets-count {
+            font-size: 13px;
+            color: var(--text-2);
+            flex: 1;
+        }
+
+        .secrets-count span {
+            color: var(--text);
+            font-weight: 600;
+        }
 
         .secrets-table-wrap {
             border: 1px solid var(--border);
@@ -402,6 +604,7 @@
             background: var(--bg-2);
             border-bottom: 1px solid var(--border);
         }
+
         .secrets-table th {
             padding: 11px 16px;
             text-align: left;
@@ -412,16 +615,32 @@
             color: var(--text-3);
             white-space: nowrap;
         }
-        .secrets-table th.col-key { width: 32%; }
-        .secrets-table th.col-actions { width: 52px; }
+
+        .secrets-table th.col-key {
+            width: 32%;
+        }
+
+        .secrets-table th.col-actions {
+            width: 52px;
+        }
 
         .secrets-table tbody tr {
             border-bottom: 1px solid var(--border);
             transition: background var(--transition);
         }
-        .secrets-table tbody tr:last-child { border-bottom: none; }
-        .secrets-table tbody tr:hover { background: rgba(255, 255, 255, 0.025); }
-        .secrets-table td { padding: 12px 16px; vertical-align: middle; }
+
+        .secrets-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .secrets-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.025);
+        }
+
+        .secrets-table td {
+            padding: 12px 16px;
+            vertical-align: middle;
+        }
 
         .key-cell {
             font-family: var(--mono);
@@ -431,8 +650,16 @@
             word-break: break-all;
         }
 
-        .value-cell { max-width: 340px; }
-        .value-wrap { display: flex; align-items: center; gap: 8px; }
+        .value-cell {
+            max-width: 340px;
+        }
+
+        .value-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         .value-text {
             font-family: var(--mono);
             font-size: 12px;
@@ -443,7 +670,12 @@
             white-space: nowrap;
             text-overflow: ellipsis;
         }
-        .value-text.revealed { color: var(--text); white-space: pre-wrap; word-break: break-all; }
+
+        .value-text.revealed {
+            color: var(--text);
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
 
         .btn-reveal {
             flex-shrink: 0;
@@ -460,10 +692,25 @@
             color: var(--text-3);
             transition: all var(--transition);
         }
-        .btn-reveal:hover { border-color: rgba(255, 255, 255, 0.14); color: var(--text); }
-        .btn-reveal svg { width: 13px; height: 13px; stroke: currentColor; fill: none; }
 
-        .row-actions { display: flex; justify-content: flex-end; gap: 6px; }
+        .btn-reveal:hover {
+            border-color: rgba(255, 255, 255, 0.14);
+            color: var(--text);
+        }
+
+        .btn-reveal svg {
+            width: 13px;
+            height: 13px;
+            stroke: currentColor;
+            fill: none;
+        }
+
+        .row-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 6px;
+        }
+
         .btn-row-delete {
             width: 28px;
             height: 28px;
@@ -479,9 +726,23 @@
             transition: all var(--transition);
             opacity: 0;
         }
-        tr:hover .btn-row-delete { opacity: 1; }
-        .btn-row-delete:hover { background: var(--danger-dim); color: var(--danger); border-color: rgba(239, 68, 68, 0.2); }
-        .btn-row-delete svg { width: 13px; height: 13px; stroke: currentColor; fill: none; }
+
+        tr:hover .btn-row-delete {
+            opacity: 1;
+        }
+
+        .btn-row-delete:hover {
+            background: var(--danger-dim);
+            color: var(--danger);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-row-delete svg {
+            width: 13px;
+            height: 13px;
+            stroke: currentColor;
+            fill: none;
+        }
 
         /* ── Empty states ────────────────────────────── */
         .empty {
@@ -494,6 +755,7 @@
             border: 1px dashed var(--border);
             border-radius: var(--radius-lg);
         }
+
         .empty-icon {
             width: 52px;
             height: 52px;
@@ -505,9 +767,27 @@
             justify-content: center;
             margin-bottom: 18px;
         }
-        .empty-icon svg { width: 24px; height: 24px; stroke: var(--text-3); fill: none; }
-        .empty h3 { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
-        .empty p { font-size: 13px; color: var(--text-2); max-width: 300px; line-height: 1.6; }
+
+        .empty-icon svg {
+            width: 24px;
+            height: 24px;
+            stroke: var(--text-3);
+            fill: none;
+        }
+
+        .empty h3 {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .empty p {
+            font-size: 13px;
+            color: var(--text-2);
+            max-width: 300px;
+            line-height: 1.6;
+        }
 
         /* ── Skeleton ────────────────────────────────── */
         .skeleton {
@@ -516,8 +796,18 @@
             animation: shimmer 1.4s infinite;
             border-radius: 6px;
         }
-        @keyframes shimmer { to { background-position: -200% 0; } }
-        .skeleton-card { height: 120px; border-radius: var(--radius-lg); border: 1px solid var(--border); }
+
+        @keyframes shimmer {
+            to {
+                background-position: -200% 0;
+            }
+        }
+
+        .skeleton-card {
+            height: 120px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+        }
 
         /* ── Modals ──────────────────────────────────── */
         .overlay {
@@ -534,7 +824,11 @@
             pointer-events: none;
             transition: opacity var(--transition);
         }
-        .overlay.open { opacity: 1; pointer-events: all; }
+
+        .overlay.open {
+            opacity: 1;
+            pointer-events: all;
+        }
 
         .modal {
             background: var(--bg-1);
@@ -547,13 +841,31 @@
             transform: scale(0.96) translateY(8px);
             transition: transform var(--transition);
         }
-        .overlay.open .modal { transform: scale(1) translateY(0); }
 
-        .modal-header { margin-bottom: 22px; }
-        .modal-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
-        .modal-subtitle { font-size: 13px; color: var(--text-2); }
+        .overlay.open .modal {
+            transform: scale(1) translateY(0);
+        }
 
-        .form-field { margin-bottom: 16px; }
+        .modal-header {
+            margin-bottom: 22px;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .modal-subtitle {
+            font-size: 13px;
+            color: var(--text-2);
+        }
+
+        .form-field {
+            margin-bottom: 16px;
+        }
+
         .form-label {
             display: block;
             font-size: 12px;
@@ -563,6 +875,7 @@
             letter-spacing: 0.03em;
             text-transform: uppercase;
         }
+
         .form-input {
             width: 100%;
             background: var(--bg-2);
@@ -575,18 +888,46 @@
             outline: none;
             transition: border-color var(--transition), box-shadow var(--transition);
         }
-        .form-input.mono { font-family: var(--mono); font-size: 12.5px; }
+
+        .form-input.mono {
+            font-family: var(--mono);
+            font-size: 12.5px;
+        }
+
         .form-input:focus {
             border-color: rgba(0, 212, 255, 0.45);
             box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
         }
-        .form-input::placeholder { color: var(--text-3); }
-        textarea.form-input { resize: vertical; min-height: 90px; line-height: 1.5; }
 
-        .modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 22px; }
+        .form-input::placeholder {
+            color: var(--text-3);
+        }
 
-        .confirm-danger-text { font-size: 13px; color: var(--text-2); line-height: 1.6; margin-top: 10px; }
-        .confirm-danger-text strong { color: var(--danger); font-family: var(--mono); font-size: 12px; }
+        textarea.form-input {
+            resize: vertical;
+            min-height: 90px;
+            line-height: 1.5;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 22px;
+        }
+
+        .confirm-danger-text {
+            font-size: 13px;
+            color: var(--text-2);
+            line-height: 1.6;
+            margin-top: 10px;
+        }
+
+        .confirm-danger-text strong {
+            color: var(--danger);
+            font-family: var(--mono);
+            font-size: 12px;
+        }
 
         /* ── Toasts ──────────────────────────────────── */
         #toast-root {
@@ -599,6 +940,7 @@
             gap: 10px;
             pointer-events: none;
         }
+
         .toast {
             display: flex;
             align-items: center;
@@ -615,18 +957,65 @@
             pointer-events: all;
             max-width: 340px;
         }
-        .toast.out { animation: toastOut 180ms ease forwards; }
-        .toast-icon {
-            width: 18px; height: 18px; flex-shrink: 0;
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-        }
-        .toast.success .toast-icon { background: rgba(16, 185, 129, 0.2); color: var(--success); }
-        .toast.error   .toast-icon { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
-        .toast.info    .toast-icon { background: var(--accent-dim); color: var(--accent); }
-        .toast-icon svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 2.5; }
 
-        @keyframes toastIn  { from { opacity: 0; transform: translateX(16px) scale(0.97); } to { opacity: 1; transform: translateX(0) scale(1); } }
-        @keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(16px); } }
+        .toast.out {
+            animation: toastOut 180ms ease forwards;
+        }
+
+        .toast-icon {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toast.success .toast-icon {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .toast.error .toast-icon {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        .toast.info .toast-icon {
+            background: var(--accent-dim);
+            color: var(--accent);
+        }
+
+        .toast-icon svg {
+            width: 11px;
+            height: 11px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.5;
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(16px) scale(0.97);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        @keyframes toastOut {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(16px);
+            }
+        }
 
         /* ── Badge ───────────────────────────────────── */
         .badge {
@@ -655,6 +1044,7 @@
             border-radius: 9px;
             padding: 4px;
         }
+
         .import-tab {
             flex: 1;
             padding: 7px 10px;
@@ -669,7 +1059,11 @@
             transition: all var(--transition);
             letter-spacing: 0.04em;
         }
-        .import-tab:hover { color: var(--text-2); }
+
+        .import-tab:hover {
+            color: var(--text-2);
+        }
+
         .import-tab.active {
             background: var(--bg-1);
             color: var(--accent);
@@ -681,6 +1075,7 @@
             gap: 6px;
             margin-bottom: 12px;
         }
+
         .import-source-tab {
             padding: 5px 12px;
             border-radius: 6px;
@@ -693,7 +1088,12 @@
             cursor: pointer;
             transition: all var(--transition);
         }
-        .import-source-tab:hover { color: var(--text-2); border-color: rgba(255,255,255,0.14); }
+
+        .import-source-tab:hover {
+            color: var(--text-2);
+            border-color: rgba(255, 255, 255, 0.14);
+        }
+
         .import-source-tab.active {
             background: var(--accent-dim);
             color: var(--accent);
@@ -709,11 +1109,13 @@
             transition: all var(--transition);
             background: var(--bg-2);
         }
+
         .import-drop-zone:hover,
         .import-drop-zone.drag-over {
             border-color: var(--accent);
             background: var(--accent-dim);
         }
+
         .import-drop-zone-icon {
             width: 40px;
             height: 40px;
@@ -725,10 +1127,33 @@
             justify-content: center;
             margin: 0 auto 14px;
         }
-        .import-drop-zone-icon svg { width: 20px; height: 20px; stroke: var(--text-3); fill: none; }
-        .import-drop-zone h4 { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
-        .import-drop-zone p { font-size: 12px; color: var(--text-3); line-height: 1.5; }
-        .import-drop-zone .drop-accepted { font-size: 11px; color: var(--text-3); margin-top: 8px; font-family: var(--mono); }
+
+        .import-drop-zone-icon svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--text-3);
+            fill: none;
+        }
+
+        .import-drop-zone h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .import-drop-zone p {
+            font-size: 12px;
+            color: var(--text-3);
+            line-height: 1.5;
+        }
+
+        .import-drop-zone .drop-accepted {
+            font-size: 11px;
+            color: var(--text-3);
+            margin-top: 8px;
+            font-family: var(--mono);
+        }
 
         .import-file-name {
             display: none;
@@ -743,8 +1168,18 @@
             color: var(--accent);
             margin-top: 10px;
         }
-        .import-file-name.visible { display: flex; }
-        .import-file-name svg { width: 13px; height: 13px; stroke: currentColor; fill: none; flex-shrink: 0; }
+
+        .import-file-name.visible {
+            display: flex;
+        }
+
+        .import-file-name svg {
+            width: 13px;
+            height: 13px;
+            stroke: currentColor;
+            fill: none;
+            flex-shrink: 0;
+        }
 
         .import-paste-area {
             width: 100%;
@@ -762,11 +1197,15 @@
             transition: border-color var(--transition), box-shadow var(--transition);
             tab-size: 2;
         }
+
         .import-paste-area:focus {
             border-color: rgba(0, 212, 255, 0.45);
             box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
         }
-        .import-paste-area::placeholder { color: var(--text-3); }
+
+        .import-paste-area::placeholder {
+            color: var(--text-3);
+        }
 
         .import-detected {
             display: none;
@@ -777,7 +1216,11 @@
             margin-top: 7px;
             font-family: var(--mono);
         }
-        .import-detected.visible { display: flex; }
+
+        .import-detected.visible {
+            display: flex;
+        }
+
         .import-detected-badge {
             padding: 2px 8px;
             border-radius: 20px;
@@ -803,12 +1246,14 @@
             pointer-events: none;
             z-index: 50;
         }
+
         .footer-version {
             font-size: 11px;
             color: var(--text-3);
             font-family: var(--mono);
             letter-spacing: 0.04em;
         }
+
         .footer-timer {
             position: absolute;
             right: 20px;
@@ -820,9 +1265,19 @@
             color: var(--text-3);
             letter-spacing: 0.03em;
         }
-        .footer-timer.visible { display: flex; }
-        .footer-timer.warn { color: var(--warn); }
-        .footer-timer.urgent { color: var(--danger); }
+
+        .footer-timer.visible {
+            display: flex;
+        }
+
+        .footer-timer.warn {
+            color: var(--warn);
+        }
+
+        .footer-timer.urgent {
+            color: var(--danger);
+        }
+
         .footer-timer-dot {
             width: 5px;
             height: 5px;
@@ -830,14 +1285,38 @@
             background: currentColor;
             opacity: 0.7;
         }
-        .footer-timer.urgent .footer-timer-dot { animation: pulse 1s ease-in-out infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 0.7; } 50% { opacity: 0.2; } }
+
+        .footer-timer.urgent .footer-timer-dot {
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.7;
+            }
+            50% {
+                opacity: 0.2;
+            }
+        }
 
         /* ── Scrollbar ───────────────────────────────── */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.18); }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.18);
+        }
     </style>
 </head>
 <body>
@@ -872,7 +1351,11 @@
         <div class="login-subtitle">Enter your credentials to access the vault.</div>
 
         <div class="login-error" id="login-error">
-            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
             <span id="login-error-text">Invalid credentials</span>
         </div>
 
@@ -982,7 +1465,8 @@
                 </div>
                 <div class="page-actions">
                     <button class="btn btn-ghost" onclick="openImport()">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                             <polyline points="17 8 12 3 7 8"/>
                             <line x1="12" y1="3" x2="12" y2="15"/>
@@ -1136,7 +1620,11 @@
                    maxlength="6" placeholder="000000" autocomplete="one-time-code"
                    onkeydown="if(event.key==='Enter')document.getElementById('btn-confirm-ok').click()">
             <div class="login-error" id="confirm-totp-error" style="margin-top:8px;">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
                 <span id="confirm-totp-error-text">Invalid authenticator code</span>
             </div>
         </div>
@@ -1199,7 +1687,10 @@
         }
 
         function stopTimer() {
-            if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
             const timerEl = document.getElementById('session-timer');
             timerEl.classList.remove('visible', 'warn', 'urgent');
             document.getElementById('timer-display').textContent = '--:--';
@@ -1321,7 +1812,7 @@
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({apikey, secret, totp_code}),
-            }).then(async (r) => ({ ok: r.ok, data: await r.json()})).catch(() => ({ok: false, data: {}}));
+            }).then(async (r) => ({ok: r.ok, data: await r.json()})).catch(() => ({ok: false, data: {}}));
 
             btn.disabled = false;
             btn.classList.remove('loading');
@@ -1533,31 +2024,43 @@
         // ── Create table ───────────────────────────────
         async function confirmCreateTable() {
             const name = document.getElementById('input-table-name').value.trim();
-            if (!name) { toast('Table name cannot be empty', 'error'); return; }
+            if (!name) {
+                toast('Table name cannot be empty', 'error');
+                return;
+            }
             closeModal('modal-create-table');
             document.getElementById('input-table-name').value = '';
             const {ok, data} = await api('POST', `/ui/table/${encodeURIComponent(name)}`);
-            if (ok) { toast(`Table "${name}" created`, 'success'); await loadTables(); }
-            else toast(data.detail || 'Failed to create table', 'error');
+            if (ok) {
+                toast(`Table "${name}" created`, 'success');
+                await loadTables();
+            } else toast(data.detail || 'Failed to create table', 'error');
         }
 
         // ── Add secret ─────────────────────────────────
-        function openAddSecret() { openModal('modal-add-secret'); }
+        function openAddSecret() {
+            openModal('modal-add-secret');
+        }
 
         async function confirmAddSecret() {
             const key = document.getElementById('input-secret-key').value.trim();
             const value = document.getElementById('input-secret-value').value;
-            if (!key) { toast('Key cannot be empty', 'error'); return; }
+            if (!key) {
+                toast('Key cannot be empty', 'error');
+                return;
+            }
             closeModal('modal-add-secret');
             document.getElementById('input-secret-key').value = '';
             document.getElementById('input-secret-value').value = '';
             const {ok, data} = await api('PUT', '/ui/secret', {table_name: state.currentTable, key, value});
-            if (ok) { toast(`Secret "${key}" saved`, 'success'); await loadSecrets(state.currentTable); }
-            else toast(data.detail || 'Failed to save secret', 'error');
+            if (ok) {
+                toast(`Secret "${key}" saved`, 'success');
+                await loadSecrets(state.currentTable);
+            } else toast(data.detail || 'Failed to save secret', 'error');
         }
 
         // ── Import secrets ─────────────────────────────
-        const importState = { format: 'json', source: 'file', fileContent: null, fileName: null };
+        const importState = {format: 'json', source: 'file', fileContent: null, fileName: null};
 
         function openImport() {
             document.getElementById('import-modal-subtitle').textContent =
@@ -1596,7 +2099,11 @@
         function detectFormat(text) {
             const t = text.trim();
             if (!t) return null;
-            try { const p = JSON.parse(t); if (typeof p === 'object' && !Array.isArray(p)) return 'json'; } catch (_) {}
+            try {
+                const p = JSON.parse(t);
+                if (typeof p === 'object' && !Array.isArray(p)) return 'json';
+            } catch (_) {
+            }
             if (/^[A-Z_][A-Z0-9_]*\s*=/im.test(t) && !t.startsWith('{') && !t.startsWith('-')) return 'env';
             if (t.includes(':') && !t.startsWith('{')) return 'yaml';
             return null;
@@ -1657,7 +2164,10 @@
             let payload, payloadType;
 
             if (importState.source === 'file') {
-                if (!importState.fileContent) { toast('No file selected', 'error'); return; }
+                if (!importState.fileContent) {
+                    toast('No file selected', 'error');
+                    return;
+                }
                 payload = importState.fileContent;
                 if (importState.format === 'auto') {
                     const ext = importState.fileName?.split('.').pop().toLowerCase() || '';
@@ -1667,10 +2177,16 @@
                 }
             } else {
                 payload = document.getElementById('import-paste-content').value.trim();
-                if (!payload) { toast('Nothing to import', 'error'); return; }
+                if (!payload) {
+                    toast('Nothing to import', 'error');
+                    return;
+                }
                 if (importState.format === 'auto') {
                     payloadType = detectFormat(payload);
-                    if (!payloadType) { toast('Could not detect format — please select one manually', 'error'); return; }
+                    if (!payloadType) {
+                        toast('Could not detect format — please select one manually', 'error');
+                        return;
+                    }
                 } else {
                     payloadType = importState.format;
                 }
@@ -1736,7 +2252,11 @@
                 `This will permanently delete <strong>${esc(name)}</strong> and all its secrets. This action cannot be undone.`,
                 async (totp_code) => {
                     const result = await api('DELETE', `/ui/table/${encodeURIComponent(name)}`, {totp_code}, {noAutoLogout: true});
-                    if (result.ok) { closeModal('modal-confirm-delete'); toast(`Table "${name}" deleted`, 'success'); await loadTables(); }
+                    if (result.ok) {
+                        closeModal('modal-confirm-delete');
+                        toast(`Table "${name}" deleted`, 'success');
+                        await loadTables();
+                    }
                     return result;
                 }
             );
@@ -1748,8 +2268,16 @@
                 'Delete Secret',
                 `Delete secret <strong>${esc(key)}</strong> from <strong>${esc(state.currentTable)}</strong>? This cannot be undone.`,
                 async (totp_code) => {
-                    const result = await api('DELETE', '/ui/secret', {table_name: state.currentTable, key, totp_code}, {noAutoLogout: true});
-                    if (result.ok) { closeModal('modal-confirm-delete'); toast(`Secret "${key}" deleted`, 'success'); await loadSecrets(state.currentTable); }
+                    const result = await api('DELETE', '/ui/secret', {
+                        table_name: state.currentTable,
+                        key,
+                        totp_code
+                    }, {noAutoLogout: true});
+                    if (result.ok) {
+                        closeModal('modal-confirm-delete');
+                        toast(`Secret "${key}" deleted`, 'success');
+                        await loadSecrets(state.currentTable);
+                    }
                     return result;
                 }
             );
