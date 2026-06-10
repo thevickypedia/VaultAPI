@@ -6,12 +6,12 @@ from http import HTTPStatus
 from fastapi import Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from . import exceptions, models
+from . import database, exceptions, models
 
 LOGGER = logging.getLogger("uvicorn.default")
 SECURITY = HTTPBearer()
 
-UI_SESSION = {"token": "", "authenticator": "VaultAPI-UI", "expires": "0"}
+UI_SESSION = {"authenticator": "VaultAPI-UI"}
 
 
 async def validate(
@@ -45,13 +45,12 @@ async def validate(
         auth = authorization.credentials
     if request.headers.get("authenticator", "") == UI_SESSION["authenticator"]:
         LOGGER.debug("Assuming UI authenticator")
-        authenticated = all(
-            (
-                UI_SESSION["token"] != "",
-                UI_SESSION["expires"] != "0",
-                secrets.compare_digest(auth, UI_SESSION["token"]),
-                int(UI_SESSION["expires"]) + models.env.ui_lifetime > time.time(),
-            )
+        session = database.get_ui_session(models.session.fernet)
+        authenticated = bool(
+            session
+            and secrets.compare_digest(auth, session["token"])
+            and session["host"] == request.url.hostname
+            and int(session["exp"]) > int(time.time())
         )
     else:
         LOGGER.debug("Assuming API authenticator")

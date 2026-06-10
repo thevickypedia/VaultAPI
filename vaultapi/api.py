@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
 
-from . import api_endpoints, models, routes, version
+from . import api_endpoints, database, models, routes, version
 
 VaultAPI = FastAPI(
     title="VaultAPI",
@@ -52,6 +52,7 @@ def lifespan() -> None:
 
     VaultAPI.routes.extend(routes.api_routes())
     if models.env.enable_ui:
+        database.create_ui_session_table()
         VaultAPI.routes.extend(routes.ui_routes())
     else:  # pragma: no cover
         VaultAPI.routes.append(

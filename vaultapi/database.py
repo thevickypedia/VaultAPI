@@ -1,6 +1,76 @@
+import json
 from typing import List, Tuple
 
+from cryptography.fernet import Fernet
+
 from . import models
+
+UI_SESSION_TABLE = "ui_session"
+
+
+def create_ui_session_table() -> None:
+    """Create the ui_session table if it does not already exist.
+
+    The table holds a single row with a Fernet-encrypted blob that encodes the
+    active session token, the bound hostname, and the expiry timestamp.
+    """
+    with models.database.connection:
+        models.database.connection.execute(
+            f'CREATE TABLE IF NOT EXISTS "{UI_SESSION_TABLE}" (payload BLOB)'
+        )
+        models.database.connection.commit()
+
+
+def upsert_ui_session(token: str, hostname: str, expires: int, fernet: Fernet) -> None:
+    """Persist an active UI session, replacing any previous one.
+
+    The stored blob is ``fernet.encrypt(json({"token": ..., "host": ..., "exp": ...}))``.
+    Fernet provides authenticated encryption — tampering with the blob is detected on
+    decrypt and raises an exception, which ``get_ui_session`` treats as "no valid session".
+
+    Args:
+        token: The opaque session token returned to the browser.
+        hostname: ``request.url.hostname`` captured at login time.
+        expires: Unix timestamp after which the session is invalid.
+        fernet: Fernet instance from ``models.session.fernet``.
+    """
+    payload = fernet.encrypt(
+        json.dumps({"token": token, "host": hostname, "exp": expires}).encode()
+    )
+    with models.database.connection:
+        models.database.connection.execute(f'DELETE FROM "{UI_SESSION_TABLE}"')
+        models.database.connection.execute(
+            f'INSERT INTO "{UI_SESSION_TABLE}" (payload) VALUES (?)', (payload,)
+        )
+        models.database.connection.commit()
+
+
+def get_ui_session(fernet: Fernet) -> dict | None:
+    """Return the decrypted session record, or ``None`` if absent or tampered.
+
+    Args:
+        fernet: Fernet instance from ``models.session.fernet``.
+
+    Returns:
+        dict:
+        ``{"token": str, "host": str, "exp": int}`` on success, ``None`` otherwise.
+    """
+    with models.database.connection:
+        cursor = models.database.connection.cursor()
+        row = cursor.execute(f'SELECT payload FROM "{UI_SESSION_TABLE}"').fetchone()
+    if not row:
+        return None
+    try:
+        return json.loads(fernet.decrypt(row[0]).decode())
+    except Exception:
+        return None
+
+
+def delete_ui_session() -> None:
+    """Remove all rows from the ui_session table, invalidating any active session."""
+    with models.database.connection:
+        models.database.connection.execute(f'DELETE FROM "{UI_SESSION_TABLE}"')
+        models.database.connection.commit()
 
 
 def table_exists(table_name: str) -> bool:
@@ -18,6 +88,7 @@ def table_exists(table_name: str) -> bool:
         result = cursor.fetchone()
     if result:
         return True
+    return False
 
 
 def list_tables() -> List[str]:
@@ -26,7 +97,7 @@ def list_tables() -> List[str]:
         cursor = models.database.connection.cursor()
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
         tables = cursor.fetchall()
-    return [table[0] for table in tables]
+    return [table[0] for table in tables if table[0] != UI_SESSION_TABLE]
 
 
 def create_table(table_name: str, columns: List[str] | Tuple[str]) -> None:
@@ -62,6 +133,7 @@ def get_secret(key: str, table_name: str) -> str | None:
         ).fetchone()
     if state and state[0]:
         return state[0]
+    return None
 
 
 def get_table(table_name: str) -> List[Tuple[str, str]]:

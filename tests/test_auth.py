@@ -1,12 +1,13 @@
 """Tests for vaultapi/auth.py — validate() function."""
 
+import logging
 import time
 from unittest.mock import MagicMock
 
 import pytest
 from fastapi.security import HTTPAuthorizationCredentials
 
-from vaultapi import auth, models
+from vaultapi import auth, database, models
 from vaultapi.exceptions import APIResponse
 
 
@@ -47,7 +48,6 @@ class TestAuthValidate:
     async def test_api_key_with_backslash_escape(self):
         r"""Credentials starting with \\ should be unicode-escape decoded."""
         req = _make_request()
-        # Encode then try an escaped version that doesn't match
         with pytest.raises(APIResponse) as exc_info:
             await auth.validate(req, _make_creds("\\wrong"))
         assert exc_info.value.status_code == 401
@@ -69,18 +69,29 @@ class TestAuthValidate:
         assert exc_info.value.status_code == 401
 
     async def test_expired_ui_session_rejected(self):
-        from tests.conftest import _set_valid_ui_session
-
-        _set_valid_ui_session()
-        # Wind the expiry into the past
-        auth.UI_SESSION["expires"] = int(time.time()) - models.env.ui_lifetime - 1
+        """Session written with a past expiry must be rejected."""
+        token = "expired-test-token"
+        database.upsert_ui_session(
+            token, "127.0.0.1", int(time.time()) - 1, models.session.fernet
+        )
         req = _make_request(headers={"authenticator": "VaultAPI-UI"})
         with pytest.raises(APIResponse) as exc_info:
-            await auth.validate(req, _make_creds(auth.UI_SESSION["token"]))
+            await auth.validate(req, _make_creds(token))
+        assert exc_info.value.status_code == 401
+
+    async def test_wrong_hostname_rejected(self):
+        """Session written for host-A must be rejected when request comes from host-B."""
+        token = "host-bound-token"
+        database.upsert_ui_session(
+            token, "192.168.1.100", int(time.time()) + 900, models.session.fernet
+        )
+        req = _make_request(host="127.0.0.1", headers={"authenticator": "VaultAPI-UI"})
+        with pytest.raises(APIResponse) as exc_info:
+            await auth.validate(req, _make_creds(token))
         assert exc_info.value.status_code == 401
 
     async def test_empty_ui_session_rejected(self):
-        """UI_SESSION with default empty values must fail."""
+        """No session in DB must fail."""
         req = _make_request(headers={"authenticator": "VaultAPI-UI"})
         with pytest.raises(APIResponse) as exc_info:
             await auth.validate(req, _make_creds(""))
@@ -90,7 +101,5 @@ class TestAuthValidate:
         from tests.conftest import API_KEY
 
         req = _make_request(headers={"user-agent": "pytest/1.0"})
-        import logging
-
         with caplog.at_level(logging.DEBUG, logger="uvicorn.default"):
             await auth.validate(req, _make_creds(API_KEY))

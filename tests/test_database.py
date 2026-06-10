@@ -2,7 +2,7 @@
 
 import pytest
 
-from vaultapi import database
+from vaultapi import database, models
 
 
 @pytest.fixture
@@ -23,6 +23,7 @@ class TestTableExists:
 
 class TestListTables:
     def test_empty_by_default(self):
+        # ui_session is an internal table and must never appear in list_tables()
         assert database.list_tables() == []
 
     def test_lists_created_table(self, table):
@@ -98,3 +99,59 @@ class TestRemoveSecret:
     def test_remove_nonexistent_key_no_error(self, table):
         # Should not raise
         database.remove_secret("ghost_key", table)
+
+
+class TestUiSession:
+    def test_get_returns_none_when_empty(self):
+        database.delete_ui_session()
+        assert database.get_ui_session(models.session.fernet) is None
+
+    def test_upsert_and_get_roundtrip(self):
+        import time
+
+        expires = int(time.time()) + 900
+        database.upsert_ui_session("tok123", "myhost", expires, models.session.fernet)
+        result = database.get_ui_session(models.session.fernet)
+        assert result["token"] == "tok123"
+        assert result["host"] == "myhost"
+        assert result["exp"] == expires
+
+    def test_upsert_replaces_previous_session(self):
+        import time
+
+        database.upsert_ui_session(
+            "old-tok", "h1", int(time.time()) + 900, models.session.fernet
+        )
+        database.upsert_ui_session(
+            "new-tok", "h2", int(time.time()) + 900, models.session.fernet
+        )
+        result = database.get_ui_session(models.session.fernet)
+        assert result["token"] == "new-tok"
+        assert result["host"] == "h2"
+
+    def test_delete_clears_session(self):
+        import time
+
+        database.upsert_ui_session(
+            "tok", "h", int(time.time()) + 900, models.session.fernet
+        )
+        database.delete_ui_session()
+        assert database.get_ui_session(models.session.fernet) is None
+
+    def test_tampered_blob_returns_none(self):
+        import time
+
+        database.upsert_ui_session(
+            "tok", "h", int(time.time()) + 900, models.session.fernet
+        )
+        # Overwrite the blob with garbage so Fernet raises on decrypt
+        with models.database.connection:
+            models.database.connection.execute(
+                f'UPDATE "{database.UI_SESSION_TABLE}" SET payload = ?',
+                (b"not-fernet",),
+            )
+            models.database.connection.commit()
+        assert database.get_ui_session(models.session.fernet) is None
+
+    def test_ui_session_excluded_from_list_tables(self):
+        assert database.UI_SESSION_TABLE not in database.list_tables()

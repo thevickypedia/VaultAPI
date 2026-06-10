@@ -107,6 +107,56 @@
 <section id="module-vaultapi.database">
 <span id="database"></span><h1>Database<a class="headerlink" href="#module-vaultapi.database" title="Permalink to this heading">¶</a></h1>
 <dl class="py function">
+<dt class="sig sig-object py" id="vaultapi.database.create_ui_session_table">
+<span class="sig-prename descclassname"><span class="pre">vaultapi.database.</span></span><span class="sig-name descname"><span class="pre">create_ui_session_table</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#vaultapi.database.create_ui_session_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the ui_session table if it does not already exist.</p>
+<p>The table holds a single row with a Fernet-encrypted blob that encodes the
+active session token, the bound hostname, and the expiry timestamp.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="vaultapi.database.upsert_ui_session">
+<span class="sig-prename descclassname"><span class="pre">vaultapi.database.</span></span><span class="sig-name descname"><span class="pre">upsert_ui_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hostname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expires</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fernet</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fernet</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#vaultapi.database.upsert_ui_session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Persist an active UI session, replacing any previous one.</p>
+<p>The stored blob is <code class="docutils literal notranslate"><span class="pre">fernet.encrypt(json({&quot;token&quot;:</span> <span class="pre">...,</span> <span class="pre">&quot;host&quot;:</span> <span class="pre">...,</span> <span class="pre">&quot;exp&quot;:</span> <span class="pre">...}))</span></code>.
+Fernet provides authenticated encryption — tampering with the blob is detected on
+decrypt and raises an exception, which <code class="docutils literal notranslate"><span class="pre">get_ui_session</span></code> treats as “no valid session”.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>token</strong> – The opaque session token returned to the browser.</p></li>
+<li><p><strong>hostname</strong> – <code class="docutils literal notranslate"><span class="pre">request.url.hostname</span></code> captured at login time.</p></li>
+<li><p><strong>expires</strong> – Unix timestamp after which the session is invalid.</p></li>
+<li><p><strong>fernet</strong> – Fernet instance from <code class="docutils literal notranslate"><span class="pre">models.session.fernet</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="vaultapi.database.get_ui_session">
+<span class="sig-prename descclassname"><span class="pre">vaultapi.database.</span></span><span class="sig-name descname"><span class="pre">get_ui_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fernet</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fernet</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#vaultapi.database.get_ui_session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the decrypted session record, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if absent or tampered.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fernet</strong> – Fernet instance from <code class="docutils literal notranslate"><span class="pre">models.session.fernet</span></code>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">{&quot;token&quot;:</span> <span class="pre">str,</span> <span class="pre">&quot;host&quot;:</span> <span class="pre">str,</span> <span class="pre">&quot;exp&quot;:</span> <span class="pre">int}</span></code> on success, <code class="docutils literal notranslate"><span class="pre">None</span></code> otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="vaultapi.database.delete_ui_session">
+<span class="sig-prename descclassname"><span class="pre">vaultapi.database.</span></span><span class="sig-name descname"><span class="pre">delete_ui_session</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#vaultapi.database.delete_ui_session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove all rows from the ui_session table, invalidating any active session.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="vaultapi.database.table_exists">
 <span class="sig-prename descclassname"><span class="pre">vaultapi.database.</span></span><span class="sig-name descname"><span class="pre">table_exists</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#vaultapi.database.table_exists" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function to check if a table exists in the database.</p>

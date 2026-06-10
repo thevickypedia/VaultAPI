@@ -33,7 +33,7 @@ os.environ.update(
 )
 
 # Import after env is set
-from vaultapi import api, auth, models  # noqa: E402
+from vaultapi import api, models  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Patch the database to an in-memory SQLite that persists per test session
@@ -50,12 +50,13 @@ def _patch_db_connection(monkeypatch):
 
 @pytest.fixture(autouse=True)
 def _reset_ui_session():
-    """Reset the UI session dict before every test."""
-    auth.UI_SESSION["token"] = ""
-    auth.UI_SESSION["expires"] = "0"
+    """Clear the DB-backed ui_session table before and after every test."""
+    from vaultapi import database as _db
+
+    _db.create_ui_session_table()
+    _db.delete_ui_session()
     yield
-    auth.UI_SESSION["token"] = ""
-    auth.UI_SESSION["expires"] = "0"
+    _db.delete_ui_session()
 
 
 @pytest.fixture(autouse=True)
@@ -110,9 +111,11 @@ def ui_session_headers(token: str) -> dict:
     }
 
 
-def _set_valid_ui_session() -> str:
-    """Inject a live session token directly into auth.UI_SESSION."""
+def _set_valid_ui_session(hostname: str = "127.0.0.1") -> str:
+    """Write a live session into the DB-backed ui_session table and return the token."""
+    from vaultapi import database as _db
+
     token = base64.urlsafe_b64encode(os.urandom(32)).decode()
-    auth.UI_SESSION["token"] = token
-    auth.UI_SESSION["expires"] = int(time.time()) + models.env.ui_lifetime
+    expires = int(time.time()) + models.env.ui_lifetime
+    _db.upsert_ui_session(token, hostname, expires, models.session.fernet)
     return token

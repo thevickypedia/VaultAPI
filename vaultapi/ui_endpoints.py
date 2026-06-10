@@ -116,24 +116,19 @@ async def ui_login(request: Request):
             content={"detail": "Invalid credentials"},
         )
 
-    auth.UI_SESSION["token"] = base64.urlsafe_b64encode(os.urandom(32)).decode("utf-8")
-    auth.UI_SESSION["expires"] = int(time.time()) + models.env.ui_lifetime
+    token = base64.urlsafe_b64encode(os.urandom(32)).decode("utf-8")
+    expires = int(time.time()) + models.env.ui_lifetime
+    database.upsert_ui_session(
+        token, request.url.hostname, expires, models.session.fernet
+    )
     LOGGER.info(
         "Connection received from url-hostname: %s, host-header: %s, x-fwd-host: %s",
         request.url.hostname,
         request.headers.get("host"),
         request.headers.get("x-forwarded-host"),
     )
-    LOGGER.info(
-        "UI login will expire at: %s",
-        datetime.fromtimestamp(auth.UI_SESSION["expires"]),
-    )
-    return JSONResponse(
-        content={
-            "token": auth.UI_SESSION["token"],
-            "expires": auth.UI_SESSION["expires"],
-        }
-    )
+    LOGGER.info("UI login will expire at: %s", datetime.fromtimestamp(expires))
+    return JSONResponse(content={"token": token, "expires": expires})
 
 
 async def ui_logout(
@@ -154,8 +149,7 @@ async def ui_logout(
         await auth.validate(request, session_token)
     except exceptions.APIResponse as exc:
         return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
-    auth.UI_SESSION["token"] = ""
-    auth.UI_SESSION["expires"] = "0"
+    database.delete_ui_session()
     LOGGER.info("UI session invalidated by logout request")
     return JSONResponse(content={"detail": "OK"})
 
