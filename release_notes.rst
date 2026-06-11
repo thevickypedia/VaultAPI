@@ -1,6 +1,27 @@
 Release Notes
 =============
 
+v0.5.0 (06/10/2026)
+-------------------
+- `3cb27da <https://github.com/thevickypedia/VaultAPI/commit/3cb27dabafae6a78cb49a1afc4260b74811210d4>`_ chore: Release ``v0.5.0``
+- `868fbfc <https://github.com/thevickypedia/VaultAPI/commit/868fbfc4dbe517695f040252981ee1a76711eb2d>`_ lint: Run linter and update docstrings
+- `6e68ba0 <https://github.com/thevickypedia/VaultAPI/commit/6e68ba06f6179a35f0830e161f5d2ea0916f4f74>`_ fix: Reinstate accidentally removed fernet object during instantiation
+- `46a55fe <https://github.com/thevickypedia/VaultAPI/commit/46a55fee03fd76d788afa9dd391e73f999d39ad8>`_ refactor: Remove cursor object for all DB operations
+- `1c58eaa <https://github.com/thevickypedia/VaultAPI/commit/1c58eaa0c8b918514aa2b848a12b0effe3f8b730>`_ refactor: Change ``COOLOFF_THRESHOLDS`` to ``OrderedDict`` and update docstrings
+- `a04495e <https://github.com/thevickypedia/VaultAPI/commit/a04495ee8050e4fd0d1a7115f144e3a1afc71f90>`_ refactor: Move all authentication/authorization functions to ``auth`` module
+- `c72bb45 <https://github.com/thevickypedia/VaultAPI/commit/c72bb457b1559db5652196741dfbfc77155d16fd>`_ feat: Add brute-force protection using ``auth.db``
+- `0117ce9 <https://github.com/thevickypedia/VaultAPI/commit/0117ce99e44554aaabd0ae982832fe30231dcf90>`_ perf: Remove IP based access controls and restricted allow listing protocol
+- `e340b42 <https://github.com/thevickypedia/VaultAPI/commit/e340b425484486c035295d03724edeed2f9a560a>`_ lint: Refactor UI template
+- `40a74af <https://github.com/thevickypedia/VaultAPI/commit/40a74afddb0b18f99b52e5efdf3b25b6e681fe93>`_ style: Add ``favicon.ico`` and ``apple-touch-icon``
+- `f6e0efb <https://github.com/thevickypedia/VaultAPI/commit/f6e0efbfb986ce74db7323630daf32205d39c4df>`_ style: Update SVG logo in the UI login page
+- `4eeeba7 <https://github.com/thevickypedia/VaultAPI/commit/4eeeba7599bf34de45da13ced4feea7ea3129fdc>`_ perf: Require ``secret`` value to login to the UI
+- `e9ef7c3 <https://github.com/thevickypedia/VaultAPI/commit/e9ef7c357078f56862b35f8ea3bce750bda5a036>`_ perf: Replace in-memory session handler with a database table to solve secondary uvicorn workers missing auth tokens in-memory
+- `2c3a59e <https://github.com/thevickypedia/VaultAPI/commit/2c3a59efb74dfaa3b2ecd5d891d12a07f913f249>`_ feat: Logout clears the token at server side to prevent unauthorized access
+- `2d7f34e <https://github.com/thevickypedia/VaultAPI/commit/2d7f34ee5f8bfc82222f5b222d7c5af20c35e7c9>`_ revert: JWT implementation for UI authorization since the tokens can't be tracked without extra overhead
+- `d297dd7 <https://github.com/thevickypedia/VaultAPI/commit/d297dd7b57b1be9e3ef3fe996ffbc79023e00a40>`_ feat: Implement JWT authorization for the UI
+- `96d7c46 <https://github.com/thevickypedia/VaultAPI/commit/96d7c46efff08ca5379dbf2e7d47bb9ece935d57>`_ feat: Implement a TOTP check for `DELETE /ui/*` requests
+- `9395935 <https://github.com/thevickypedia/VaultAPI/commit/939593531a72c6b3bac66e34619522353a1796c4>`_ chore: Update release notes for v0.4.0
+
 v0.4.0 (06/08/2026)
 -------------------
 - `83eb494 <https://github.com/thevickypedia/VaultAPI/commit/83eb494b342a52fbe3a30d4313eb528e1ceb2da5>`_ chore: Release ``v0.4.0``
