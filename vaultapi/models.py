@@ -141,6 +141,7 @@ class EnvConfig(BaseSettings):
     transit_key_length: PositiveInt = 32
     transit_time_bucket: PositiveInt = Field(60, ge=30, le=300)  # 30s to 5m
     database: FilePath | NewPath | str = Field("secrets.db", pattern=".*.db$")
+    auth_database: FilePath | NewPath | str = Field("auth.db", pattern=".*.db$")
     host: str = socket.gethostbyname("localhost") or "0.0.0.0"
     port: PositiveInt = 9010
     workers: PositiveInt = 1
@@ -275,5 +276,6 @@ if env.enable_ui:
         )
     validate_totp_secret(env.totp_token)
 database: Database = Database(env.database)
-auth_database: Database = Database(str(env.database).replace(".db", "_auth.db"))
+auth_database: Database = Database(env.auth_database)
 session = Session()
+session.fernet = Fernet(env.secret)
