@@ -1,3 +1,4 @@
+import logging
 import json
 import time
 from collections import OrderedDict
@@ -7,6 +8,7 @@ from cryptography.fernet import Fernet
 
 from . import models
 
+LOGGER = logging.getLogger("uvicorn.default")
 UI_SESSION_TABLE = "ui_session"
 BLOCKED_HOSTS_TABLE = "blocked_hosts"
 FAILED_AUTH_LIMIT = 3
@@ -18,8 +20,7 @@ COOLOFF_THRESHOLDS: OrderedDict[int, int] = OrderedDict(
 
 def create_auth_tables() -> None:
     """Create auth-specific tables in auth.db if they do not already exist."""
-    conn = models.auth_database.connection
-    with conn:
+    with models.auth_database.connection as conn:
         conn.execute(f'CREATE TABLE IF NOT EXISTS "{UI_SESSION_TABLE}" (payload BLOB)')
         conn.execute(
             f'CREATE TABLE IF NOT EXISTS "{BLOCKED_HOSTS_TABLE}" '
@@ -45,8 +46,7 @@ def upsert_ui_session(token: str, hostname: str, expires: int, fernet: Fernet) -
     payload = fernet.encrypt(
         json.dumps({"token": token, "host": hostname, "exp": expires}).encode()
     )
-    conn = models.auth_database.connection
-    with conn:
+    with models.auth_database.connection as conn:
         conn.execute(f'DELETE FROM "{UI_SESSION_TABLE}"')
         conn.execute(
             f'INSERT INTO "{UI_SESSION_TABLE}" (payload) VALUES (?)', (payload,)
@@ -64,22 +64,21 @@ def get_ui_session(fernet: Fernet) -> dict | None:
         dict:
         ``{"token": str, "host": str, "exp": int}`` on success, ``None`` otherwise.
     """
-    conn = models.auth_database.connection
-    with conn:
+    with models.auth_database.connection as conn:
         cursor = conn.cursor()
         row = cursor.execute(f'SELECT payload FROM "{UI_SESSION_TABLE}"').fetchone()
     if not row:
         return None
     try:
         return json.loads(fernet.decrypt(row[0]).decode())
-    except Exception:
+    except Exception as error:
+        LOGGER.error(error)
         return None
 
 
 def delete_ui_session() -> None:
     """Remove all rows from the ui_session table, invalidating any active session."""
-    conn = models.auth_database.connection
-    with conn:
+    with models.auth_database.connection as conn:
         conn.execute(f'DELETE FROM "{UI_SESSION_TABLE}"')
         conn.commit()
 
@@ -92,8 +91,7 @@ def get_blocked_until(host: str) -> int | None:
     Args:
         host: Client IP address to check.
     """
-    conn = models.auth_database.connection
-    with conn:
+    with models.auth_database.connection as conn:
         row = (
             conn.cursor()
             .execute(
@@ -128,8 +126,7 @@ def remove_blocked_host(host: str) -> None:
     Args:
         host: Client IP address to remove.
     """
-    conn = models.auth_database.connection
-    with conn:
+    with models.auth_database.connection as conn:
         conn.execute(f'DELETE FROM "{BLOCKED_HOSTS_TABLE}" WHERE host = ?', (host,))
         conn.commit()
 
@@ -143,8 +140,7 @@ def increment_failed_auth(host: str) -> None:
     Args:
         host: Client IP address that failed authentication.
     """
-    conn = models.auth_database.connection
-    with conn:
+    with models.auth_database.connection as conn:
         conn.execute(
             f'INSERT INTO "{BLOCKED_HOSTS_TABLE}" (host, failed_auth) VALUES (?, 1) '
             f"ON CONFLICT(host) DO UPDATE SET failed_auth = failed_auth + 1",
@@ -179,8 +175,7 @@ def reset_failed_auth(host: str) -> None:
     Args:
         host: Client IP address to reset.
     """
-    conn = models.auth_database.connection
-    with conn:
+    with models.auth_database.connection as conn:
         conn.execute(
             f'UPDATE "{BLOCKED_HOSTS_TABLE}" SET failed_auth = 0, blocked_until = NULL WHERE host = ?',
             (host,),
@@ -194,13 +189,11 @@ def table_exists(table_name: str) -> bool:
     Args:
         table_name: Name of the table to check.
     """
-    with models.database.connection:
-        cursor = models.database.connection.cursor()
-        cursor.execute(
+    with models.database.connection as conn:
+        result = conn.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
             (table_name,),
-        )
-        result = cursor.fetchone()
+        ).fetchone()
     if result:
         return True
     return False
@@ -208,10 +201,8 @@ def table_exists(table_name: str) -> bool:
 
 def list_tables() -> List[str]:
     """Function to list all available tables in the database."""
-    with models.database.connection:
-        cursor = models.database.connection.cursor()
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-        tables = cursor.fetchall()
+    with models.database.connection as conn:
+        tables = conn.execute("SELECT name FROM sqlite_master WHERE type='table';").fetchall()
     return [table[0] for table in tables]
 
 
@@ -222,10 +213,9 @@ def create_table(table_name: str, columns: List[str] | Tuple[str]) -> None:
         table_name: Name of the table that has to be created.
         columns: List of columns that has to be created.
     """
-    with models.database.connection:
-        cursor = models.database.connection.cursor()
+    with models.database.connection as conn:
         # Use f-string or %s as table names cannot be parametrized
-        cursor.execute(
+        conn.execute(
             f"CREATE TABLE IF NOT EXISTS {table_name!r} ({', '.join(columns)})"
         )
 
@@ -241,9 +231,8 @@ def get_secret(key: str, table_name: str) -> str | None:
         str:
         Returns the secret value.
     """
-    with models.database.connection:
-        cursor = models.database.connection.cursor()
-        state = cursor.execute(
+    with models.database.connection as conn:
+        state = conn.execute(
             f'SELECT value FROM "{table_name}" WHERE key=(?)', (key,)
         ).fetchone()
     if state and state[0]:
@@ -261,9 +250,8 @@ def get_table(table_name: str) -> List[Tuple[str, str]]:
         str:
         Returns the secret value.
     """
-    with models.database.connection:
-        cursor = models.database.connection.cursor()
-        state = cursor.execute(f'SELECT * FROM "{table_name}"').fetchall()
+    with models.database.connection as conn:
+        state = conn.execute(f'SELECT * FROM "{table_name}"').fetchall()
     return state
 
 
@@ -275,9 +263,8 @@ def put_secret(key: str, value: str, table_name: str) -> None:
         value: Value of the secret to be stored
         table_name: Name of the table where the secret is stored.
     """
-    with models.database.connection:
-        cursor = models.database.connection.cursor()
-        cursor.execute(
+    with models.database.connection as conn:
+        conn.execute(
             f'INSERT INTO "{table_name}" (key, value) VALUES (?,?)',
             (key, value),
         )
@@ -291,9 +278,8 @@ def remove_secret(key: str, table_name: str) -> None:
         key: Name of the secret to be removed.
         table_name: Name of the table where the secret is stored.
     """
-    with models.database.connection:
-        cursor = models.database.connection.cursor()
-        cursor.execute(f'DELETE FROM "{table_name}" WHERE key=(?)', (key,))
+    with models.database.connection as conn:
+        conn.execute(f'DELETE FROM "{table_name}" WHERE key=(?)', (key,))
         models.database.connection.commit()
 
 
@@ -303,7 +289,6 @@ def drop_table(table_name: str) -> None:
     Args:
         table_name: Name of the table to be dropped.
     """
-    with models.database.connection:
-        cursor = models.database.connection.cursor()
-        cursor.execute(f'DROP TABLE IF EXISTS "{table_name}"')
+    with models.database.connection as conn:
+        conn.execute(f'DROP TABLE IF EXISTS "{table_name}"')
         models.database.connection.commit()
