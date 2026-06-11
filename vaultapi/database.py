@@ -1,5 +1,5 @@
-import logging
 import json
+import logging
 import time
 from collections import OrderedDict
 from typing import List, Tuple
@@ -202,7 +202,9 @@ def table_exists(table_name: str) -> bool:
 def list_tables() -> List[str]:
     """Function to list all available tables in the database."""
     with models.database.connection as conn:
-        tables = conn.execute("SELECT name FROM sqlite_master WHERE type='table';").fetchall()
+        tables = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table';"
+        ).fetchall()
     return [table[0] for table in tables]
 
 
