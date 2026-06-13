@@ -1841,7 +1841,7 @@
                 if (blockedMatch) {
                     const [, timestamp, attempts] = blockedMatch;
                     const unblockDate = new Date(parseInt(timestamp, 10) * 1000);
-                    msg = `Too many failed attempts (${attempts}). Try again after ${unblockDate.toLocaleString()}.`;
+                    msg = `Too many [${attempts}] failed attempts. Try again after ${unblockDate.toLocaleString()}.`;
                 }
                 errText.textContent = msg;
                 errEl.className = 'login-error visible';
