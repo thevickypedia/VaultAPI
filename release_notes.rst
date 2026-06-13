@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v0.5.1 (06/13/2026)
+-------------------
+- `527da4f <https://github.com/thevickypedia/VaultAPI/commit/527da4fb5365c637b2f637bedb2936a413186f6c>`_ chore: Release ``v0.5.1``
+- `782411f <https://github.com/thevickypedia/VaultAPI/commit/782411f26992803b66737aa046e2c4d20aa354cf>`_ style: Update error message for too many failed attempts in the UI
+- `ab88806 <https://github.com/thevickypedia/VaultAPI/commit/ab8880683a28246015b0d479c32e8da9bdb55ef7>`_ refactor: Restructure server import and update database path handling
+- `6207742 <https://github.com/thevickypedia/VaultAPI/commit/6207742fda7c2434666650f1fd8b1822e781c65a>`_ feat: Reset the lockout timer while maintaining the failed authentication count in the auth DB for tier-based escalation
+- `24d3455 <https://github.com/thevickypedia/VaultAPI/commit/24d3455e2cd4bdff032f8df2c425236360cfede9>`_ chore: Update release notes for v0.5.0
+
 v0.5.0 (06/10/2026)
 -------------------
 - `3cb27da <https://github.com/thevickypedia/VaultAPI/commit/3cb27dabafae6a78cb49a1afc4260b74811210d4>`_ chore: Release ``v0.5.0``
