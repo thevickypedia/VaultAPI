@@ -38,10 +38,10 @@ python -m pip install vaultapi
 
 **Initiate - IDE**
 ```python
-import vaultapi.server
+import vaultapi
 
 if __name__ == '__main__':
-    vaultapi.server.start()
+    vaultapi.start()
 ```
 
 **Initiate - CLI**
@@ -169,7 +169,7 @@ pre-commit run --all-files
 Licensed under the [MIT License][license]
 
 [label-actions-markdown]: https://github.com/thevickypedia/VaultAPI/actions/workflows/markdown.yml/badge.svg
-[label-docker]: https://github.com/thevickypedia/VaultAPI/actions/workflows/docker-publish.yml/badge.svg
+[label-docker]: https://github.com/thevickypedia/VaultAPI/actions/workflows/docker.yml/badge.svg
 [label-pypi-package]: https://img.shields.io/badge/Pypi%20Package-VaultAPI-blue?style=for-the-badge&logo=Python
 [label-sphinx-doc]: https://img.shields.io/badge/Made%20with-Sphinx-blue?style=for-the-badge&logo=Sphinx
 [label-docker-doc]: https://img.shields.io/badge/Made%20with-Docker-blue?style=for-the-badge&logo=Docker

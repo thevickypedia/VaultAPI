@@ -5,6 +5,7 @@ import click
 from cryptography.fernet import Fernet
 
 from . import version
+from .server import start
 
 
 @click.command()
@@ -64,7 +65,6 @@ def commandline(*args, **kwargs) -> None:
 
     # Store 'env' key's value as the env var 'env_file' - with default to '.env'
     os.environ["env_file"] = kwargs.get("env") or ".env"
-    from .server import start
 
     trigger = (
         kwargs.get("start") or kwargs.get("run") or kwargs.get("keygen") or ""

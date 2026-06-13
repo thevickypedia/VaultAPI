@@ -5,15 +5,21 @@ import os
 import pathlib
 from datetime import datetime
 
-logs_dir = os.path.join(pathlib.Path(__file__).parent, "logs")
-db_file = os.environ.get("database") or os.environ.get("DATABASE") or "secrets.db"
-db_path = os.path.join(pathlib.Path(__file__).parent, "data", db_file)
+import vaultapi
+
+db_filename = (
+    lambda key, default: os.environ.get(key) or os.environ.get(key.upper()) or default
+)
+logs_dir = pathlib.Path(__file__).parent / "logs"
+data_dir = pathlib.Path(__file__).parent / "data"
+db_path = data_dir / db_filename("database", "secrets.db")
+auth_db = data_dir / db_filename("auth_database", "auth.db")
 
 DEFAULT_LOG_FILENAME: str = datetime.now().strftime(
-    os.path.join(logs_dir, "vaultapi_%d-%m-%Y.log")
+    str(logs_dir / "vaultapi_%d-%m-%Y.log")
 )
-
-os.makedirs(logs_dir, exist_ok=True)
+data_dir.mkdir(parents=True, exist_ok=True)
+logs_dir.mkdir(parents=True, exist_ok=True)
 
 log_config = {
     "version": 1,
@@ -60,9 +66,9 @@ log_config = {
 }
 
 os.environ["log_config"] = json.dumps(log_config)
-os.environ["database"] = db_path
+os.environ["database"] = str(db_path)
+os.environ["auth_database"] = str(auth_db)
 
-import vaultapi.server  # noqa: E402
 
 if __name__ == "__main__":
-    vaultapi.server.start()
+    vaultapi.start()

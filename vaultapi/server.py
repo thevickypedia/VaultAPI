@@ -2,11 +2,11 @@ import pathlib
 
 import uvicorn
 
-from . import database, models
-
 
 def start() -> None:
     """Starter function for the API, which uses uvicorn server as trigger."""
+    from . import database, models
+
     database.create_table("default", ["key", "value"])
     module_name = pathlib.Path(__file__)
     kwargs = dict(
