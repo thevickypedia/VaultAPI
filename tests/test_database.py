@@ -190,9 +190,9 @@ class TestBlockedHosts:
         before = int(_time.time())
         for _ in range(3):
             database.increment_failed_auth("3.4.5.6")
-        blocked_until = database.get_blocked_until("3.4.5.6")
-        assert blocked_until is not None
-        assert blocked_until >= before + 299
+        auth_counter = database.get_blocked_until("3.4.5.6")
+        assert auth_counter is not None
+        assert auth_counter.blocked_until >= before + 299
         assert database.is_host_blocked("3.4.5.6")
 
     def test_five_failures_sets_15min_cooloff(self):
@@ -201,9 +201,9 @@ class TestBlockedHosts:
         before = int(_time.time())
         for _ in range(5):
             database.increment_failed_auth("5.6.7.8")
-        blocked_until = database.get_blocked_until("5.6.7.8")
-        assert blocked_until is not None
-        assert blocked_until >= before + 899
+        auth_counter = database.get_blocked_until("5.6.7.8")
+        assert auth_counter is not None
+        assert auth_counter.blocked_until >= before + 899
 
     def test_ten_failures_sets_1day_cooloff(self):
         import time as _time
@@ -211,23 +211,51 @@ class TestBlockedHosts:
         before = int(_time.time())
         for _ in range(10):
             database.increment_failed_auth("6.7.8.9")
-        blocked_until = database.get_blocked_until("6.7.8.9")
-        assert blocked_until is not None
-        assert blocked_until >= before + 86399
+        auth_counter = database.get_blocked_until("6.7.8.9")
+        assert auth_counter is not None
+        assert auth_counter.blocked_until >= before + 86399
 
-    def test_expired_cooloff_removes_entry_and_allows(self, monkeypatch):
+    def test_expired_cooloff_clears_timer_but_keeps_count(self, monkeypatch):
         import time as _time
 
-        database.increment_failed_auth("7.8.9.0")
-        database.increment_failed_auth("7.8.9.0")
-        database.increment_failed_auth("7.8.9.0")
-        # Wind clock past the block
+        for _ in range(3):
+            database.increment_failed_auth("7.8.9.0")
+        # Wind clock past the 5-minute block
         monkeypatch.setattr(
             "vaultapi.database.time",
             type("_T", (), {"time": staticmethod(lambda: _time.time() + 400)})(),
         )
         assert database.get_blocked_until("7.8.9.0") is None
         assert not database.is_host_blocked("7.8.9.0")
+        # Row must survive with the original failure count intact
+        row = _IN_MEMORY_AUTH_CONN.execute(
+            f'SELECT failed_auth, blocked_until FROM "{database.BLOCKED_HOSTS_TABLE}" WHERE host = ?',
+            ("7.8.9.0",),
+        ).fetchone()
+        assert row is not None
+        assert row[0] == 3
+        assert row[1] is None
+
+    def test_failure_count_persists_across_cooloff_cycles(self):
+        import time as _time
+        from unittest.mock import patch
+
+        # 3 failures → 5-min block; cooloff expires; 2 more failures → count=5 → 15-min block
+        for _ in range(3):
+            database.increment_failed_auth("7.8.9.1")
+        # Simulate time advancing past the 5-minute window to expire the block
+        future = _time.time() + 400
+        with patch("vaultapi.database.time") as mock_time:
+            mock_time.time.return_value = future
+            database.get_blocked_until("7.8.9.1")  # trigger timer clear
+        database.increment_failed_auth("7.8.9.1")
+        database.increment_failed_auth("7.8.9.1")
+        row = _IN_MEMORY_AUTH_CONN.execute(
+            f'SELECT failed_auth, blocked_until FROM "{database.BLOCKED_HOSTS_TABLE}" WHERE host = ?',
+            ("7.8.9.1",),
+        ).fetchone()
+        assert row[0] == 5
+        assert row[1] is not None  # escalated to 15-min tier
 
     def test_remove_blocked_host(self):
         for _ in range(3):

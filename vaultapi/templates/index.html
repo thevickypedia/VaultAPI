@@ -1835,10 +1835,13 @@
                 navigateTo('tables');
             } else {
                 let msg = data.detail || 'Login failed.';
-                const blockedMatch = typeof msg === 'string' && msg.match(/^Blocked until (\d+)$/);
+                const blockedMatch =
+                    typeof msg === 'string' &&
+                    msg.match(/^Blocked until \[(\d+)\] after (\d+) failed auth attempts\.$/);
                 if (blockedMatch) {
-                    const unblockDate = new Date(parseInt(blockedMatch[1], 10) * 1000);
-                    msg = `Too many failed attempts. Try again after ${unblockDate.toLocaleString()}.`;
+                    const [, timestamp, attempts] = blockedMatch;
+                    const unblockDate = new Date(parseInt(timestamp, 10) * 1000);
+                    msg = `Too many failed attempts (${attempts}). Try again after ${unblockDate.toLocaleString()}.`;
                 }
                 errText.textContent = msg;
                 errEl.className = 'login-error visible';

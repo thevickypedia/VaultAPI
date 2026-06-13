@@ -74,14 +74,16 @@ def blocked(host: str) -> None:
         APIResponse:
         - 403: If the host has a non-expired ``blocked_until`` entry.
     """
-    blocked_until = database.get_blocked_until(host)
-    if blocked_until is not None:
+    auth_counter = database.get_blocked_until(host)
+    if auth_counter is not None:
         LOGGER.info(
-            "Host: %s has been blocked after repeated failed auth attempts", host
+            "Host: %s has been blocked after %d failed auth attempts",
+            host,
+            auth_counter.count,
         )
         raise exceptions.APIResponse(
             status_code=HTTPStatus.FORBIDDEN.real,
-            detail=f"Blocked until {blocked_until}",
+            detail=f"Blocked until [{auth_counter.blocked_until}] after {auth_counter.count} failed auth attempts.",
         )
 
 

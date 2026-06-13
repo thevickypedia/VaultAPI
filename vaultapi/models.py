@@ -110,6 +110,17 @@ class RateLimit(BaseModel):
     seconds: PositiveInt
 
 
+class AuthCounter(BaseModel):
+    """Base model for auth counters.
+
+    >>> AuthCounter
+
+    """
+
+    count: int
+    blocked_until: int
+
+
 # noinspection PyDataclass
 class Session(BaseModel):
     """Object to store session information.

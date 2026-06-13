@@ -83,13 +83,17 @@ def delete_ui_session() -> None:
         conn.commit()
 
 
-def get_blocked_until(host: str) -> int | None:
+def get_blocked_until(host: str) -> models.AuthCounter | None:
     """Return the ``blocked_until`` Unix timestamp for a host, or ``None`` if not blocked.
 
     If the entry exists but its cooloff has expired, it is removed and ``None`` is returned.
 
     Args:
         host: Client IP address to check.
+
+    Returns:
+        models.AuthCounter | None:
+        Returns a reference to the AuthCounter model if a host has been blocked.
     """
     with models.auth_database.connection as conn:
         row = (
@@ -102,13 +106,23 @@ def get_blocked_until(host: str) -> int | None:
         )
     if not row:
         return None
-    _, blocked_until = row
+    count, blocked_until = row
     if blocked_until is None:
         return None
     if int(time.time()) >= blocked_until:
-        remove_blocked_host(host)
+        # Clear the timer but keep the failure count so the tier escalates on
+        # subsequent failures; only a successful login resets the counter.
+        with models.auth_database.connection as conn:
+            conn.execute(
+                f'UPDATE "{BLOCKED_HOSTS_TABLE}" SET blocked_until = NULL WHERE host = ?',
+                (host,),
+            )
+            conn.commit()
         return None
-    return blocked_until
+    return models.AuthCounter(
+        count=count,
+        blocked_until=blocked_until,
+    )
 
 
 def is_host_blocked(host: str) -> bool:
