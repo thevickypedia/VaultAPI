@@ -47,7 +47,7 @@
 <h1>VaultAPI<a class="headerlink" href="#vaultapi" title="Permalink to this heading">¶</a></h1>
 <p>Lightweight API to store/retrieve secrets to/from an encrypted Database</p>
 <p>VaultAPI is designed to be extremely lightweight, secure, and easy to use.
-It provides cutting edge security features like AES encryption, IP-based access control, and rate limiting all out of the box.
+It provides cutting-edge security features like AES-GCM, Fernet encryption, and rate limiting all out of the box.
 It also includes transit encryption to ensure that the secrets are encrypted during transit to protect against man-in-the-middle attacks.</p>
 <p><img alt="Python" src="https://img.shields.io/badge/python-3.10%20%7C%203.11-blue" /></p>
 <p><strong>Platform Supported</strong></p>
@@ -108,25 +108,19 @@ It also includes transit encryption to ensure that the secrets are encrypted dur
 <li><p><strong>WORKERS</strong> - Number of workers for the uvicorn server. Defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
 <li><p><strong>RATE_LIMIT</strong> - List of dictionaries with <code class="docutils literal notranslate"><span class="pre">max_requests</span></code> and <code class="docutils literal notranslate"><span class="pre">seconds</span></code> to apply as rate limit.
 Defaults to 5req/2s [AND] 10req/30s</p></li>
-<li><p><strong>ALLOW_PUBLIC_IP</strong> - Boolean flag to allow connections via public IP. Defaults to <code class="docutils literal notranslate"><span class="pre">false</span></code></p></li>
-<li><p><strong>ALLOW_PRIVATE_IP</strong> - Boolean flag to allow connections via private IP. Defaults to <code class="docutils literal notranslate"><span class="pre">false</span></code></p></li>
-<li><p><strong>ALLOW_PRIVATE_IP_RANGE</strong> - Boolean flag to allow connections via any private IP address <em>(<code class="docutils literal notranslate"><span class="pre">1-256</span></code>)</em> within range. Defaults to <code class="docutils literal notranslate"><span class="pre">false</span></code></p></li>
 </ul>
 <p><strong>Optional (without defaults)</strong></p>
 <ul class="simple">
 <li><p><strong>LOG_CONFIG</strong> - FilePath or dictionary of key-value pairs for log config.</p></li>
-<li><p><strong>ALLOWED_ORIGINS</strong> - Origins that are allowed to retrieve secrets.</p></li>
-<li><p><strong>ALLOWED_IP_RANGE</strong> - IP range that is allowed to retrieve secrets. <em>(eg: <code class="docutils literal notranslate"><span class="pre">10.112.8.10-210</span></code>)</em></p></li>
+<li><p><strong>ALLOWED_ORIGINS</strong> - Origins that are allowed through CORS.</p></li>
 </ul>
 <p><strong>Optional (UI integration)</strong></p>
 <ul class="simple">
 <li><p><strong>ENABLE_UI</strong> - Boolean flag to enable the UI. Defaults to <code class="docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><strong>AUTH_DATABASE</strong> - FilePath to store the UI authentication database. Defaults to <code class="docutils literal notranslate"><span class="pre">auth.db</span></code></p></li>
 <li><p><strong>TOTP_TOKEN</strong> - Secret token for TOTP authentication in the UI. Can be generated using any TOTP generator app like <code class="docutils literal notranslate"><span class="pre">Google</span> <span class="pre">Authenticator</span></code> or <code class="docutils literal notranslate"><span class="pre">Authy</span></code>.</p></li>
 <li><p><strong>UI_LIFETIME</strong> - Time in seconds for which the UI session should remain active. Defaults to <code class="docutils literal notranslate"><span class="pre">900</span></code> (15 minutes)</p></li>
 </ul>
-<blockquote>
-<div><p>Checkout <a class="reference external" href="https://github.com/thevickypedia/VaultAPI/blob/main/decryptors">decryptors</a> for more information about decrypting the retrieved secret from the server.</p>
-</div></blockquote>
 <details>
 <summary>Auto generate a <code>SECRET</code> value</summary><p>This value will be used to encrypt/decrypt the secrets stored in the database.</p>
 <p><strong>CLI</strong></p>
@@ -151,6 +145,15 @@ Defaults to 5req/2s [AND] 10req/30s</p></li>
 | <code class="docutils literal notranslate"><span class="pre">/delete-secret</span></code> | Delete a specific secret                   | DELETE     |
 | <code class="docutils literal notranslate"><span class="pre">/create-table</span></code>  | Create a new table                         | POST       |
 | <code class="docutils literal notranslate"><span class="pre">/delete-table</span></code>  | Deletes an existing table                  | DELETE     |</p>
+</section>
+<section id="clients">
+<h2>Clients<a class="headerlink" href="#clients" title="Permalink to this heading">¶</a></h2>
+<p>Clients are available in multiple languages to interact with the API server.</p>
+<p><strong>Python</strong>: <a class="reference external" href="https://github.com/thevickypedia/VaultAPI-Client-python">VaultAPI-Client-python</a></p>
+<p><strong>Rust</strong>: <a class="reference external" href="https://github.com/thevickypedia/VaultAPI-Client-rust">VaultAPI-Client-rust</a></p>
+<blockquote>
+<div><p>Checkout <a class="reference external" href="https://github.com/thevickypedia/VaultAPI/blob/main/decryptors">decryptors</a> for on-demand scripts to decrypt the secrets retrieved from the API.</p>
+</div></blockquote>
 </section>
 <section id="coding-standards">
 <h2>Coding Standards<a class="headerlink" href="#coding-standards" title="Permalink to this heading">¶</a></h2>
@@ -217,6 +220,7 @@ markdown files (including Wiki pages)</p>
 <li><a class="reference internal" href="#kick-off">Kick off</a></li>
 <li><a class="reference internal" href="#environment-variables">Environment Variables</a></li>
 <li><a class="reference internal" href="#api-functionality">API Functionality</a></li>
+<li><a class="reference internal" href="#clients">Clients</a></li>
 <li><a class="reference internal" href="#coding-standards">Coding Standards</a></li>
 <li><a class="reference internal" href="#release-notes">Release Notes</a></li>
 <li><a class="reference internal" href="#linting">Linting</a></li>

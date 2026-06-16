@@ -2,7 +2,7 @@
 Lightweight API to store/retrieve secrets to/from an encrypted Database
 
 VaultAPI is designed to be extremely lightweight, secure, and easy to use.
-It provides cutting edge security features like AES encryption, IP-based access control, and rate limiting all out of the box.
+It provides cutting-edge security features like AES-GCM, Fernet encryption, and rate limiting all out of the box.
 It also includes transit encryption to ensure that the secrets are encrypted during transit to protect against man-in-the-middle attacks.
 
 ![Python][label-pyversion]
@@ -72,21 +72,16 @@ vaultapi start
 - **WORKERS** - Number of workers for the uvicorn server. Defaults to `1`
 - **RATE_LIMIT** - List of dictionaries with `max_requests` and `seconds` to apply as rate limit.
 Defaults to 5req/2s [AND] 10req/30s
-- **ALLOW_PUBLIC_IP** - Boolean flag to allow connections via public IP. Defaults to `false`
-- **ALLOW_PRIVATE_IP** - Boolean flag to allow connections via private IP. Defaults to `false`
-- **ALLOW_PRIVATE_IP_RANGE** - Boolean flag to allow connections via any private IP address _(`1-256`)_ within range. Defaults to `false`
 
 **Optional (without defaults)**
 - **LOG_CONFIG** - FilePath or dictionary of key-value pairs for log config.
-- **ALLOWED_ORIGINS** - Origins that are allowed to retrieve secrets.
-- **ALLOWED_IP_RANGE** - IP range that is allowed to retrieve secrets. _(eg: `10.112.8.10-210`)_
+- **ALLOWED_ORIGINS** - Origins that are allowed through CORS.
 
 **Optional (UI integration)**
 - **ENABLE_UI** - Boolean flag to enable the UI. Defaults to `false`
+- **AUTH_DATABASE** - FilePath to store the UI authentication database. Defaults to `auth.db`
 - **TOTP_TOKEN** - Secret token for TOTP authentication in the UI. Can be generated using any TOTP generator app like `Google Authenticator` or `Authy`.
 - **UI_LIFETIME** - Time in seconds for which the UI session should remain active. Defaults to `900` (15 minutes)
-
-> Checkout [decryptors][decryptors] for more information about decrypting the retrieved secret from the server.
 
 <details>
 <summary>Auto generate a <code>SECRET</code> value</summary>
@@ -117,6 +112,15 @@ print(Fernet.generate_key())
 | `/delete-secret` | Delete a specific secret                   | DELETE     |
 | `/create-table`  | Create a new table                         | POST       |
 | `/delete-table`  | Deletes an existing table                  | DELETE     |
+
+## Clients
+Clients are available in multiple languages to interact with the API server.
+
+**Python**: [VaultAPI-Client-python]
+
+**Rust**: [VaultAPI-Client-rust]
+
+> Checkout [decryptors][decryptors] for on-demand scripts to decrypt the secrets retrieved from the API.
 
 ## Coding Standards
 Docstring format: [`Google`][google-docs] <br>
@@ -168,6 +172,8 @@ pre-commit run --all-files
 
 Licensed under the [MIT License][license]
 
+[VaultAPI-Client-python]: https://github.com/thevickypedia/VaultAPI-Client-python
+[VaultAPI-Client-rust]: https://github.com/thevickypedia/VaultAPI-Client-rust
 [label-actions-markdown]: https://github.com/thevickypedia/VaultAPI/actions/workflows/markdown.yml/badge.svg
 [label-docker]: https://github.com/thevickypedia/VaultAPI/actions/workflows/docker.yml/badge.svg
 [label-pypi-package]: https://img.shields.io/badge/Pypi%20Package-VaultAPI-blue?style=for-the-badge&logo=Python
