@@ -17,6 +17,9 @@ It also includes transit encryption to ensure that the secrets are encrypted dur
 [![docker][label-docker]][gha_docker]
 [![pypi][label-actions-pypi]][gha_pypi]
 
+[![coverage][label-coverage]][gha_coverage]
+[![dependabot][label-dependabot]][gha_dependabot]
+
 [![markdown][label-actions-markdown]][gha_md_valid]
 [![pages][label-actions-pages]][gha_pages]
 
@@ -175,6 +178,8 @@ Licensed under the [MIT License][license]
 [VaultAPI-Client-python]: https://github.com/thevickypedia/VaultAPI-Client-python
 [VaultAPI-Client-rust]: https://github.com/thevickypedia/VaultAPI-Client-rust
 [label-actions-markdown]: https://github.com/thevickypedia/VaultAPI/actions/workflows/markdown.yml/badge.svg
+[label-dependabot]: https://github.com/thevickypedia/VaultAPI/actions/workflows/dependabot/update-graph/badge.svg
+[label-coverage]: https://github.com/thevickypedia/VaultAPI/actions/workflows/code-coverage.yml/badge.svg
 [label-docker]: https://github.com/thevickypedia/VaultAPI/actions/workflows/docker.yml/badge.svg
 [label-pypi-package]: https://img.shields.io/badge/Pypi%20Package-VaultAPI-blue?style=for-the-badge&logo=Python
 [label-sphinx-doc]: https://img.shields.io/badge/Made%20with-Sphinx-blue?style=for-the-badge&logo=Sphinx
@@ -193,6 +198,8 @@ Licensed under the [MIT License][license]
 [release-notes]: https://github.com/thevickypedia/VaultAPI/blob/main/release_notes.rst
 [decryptors]: https://github.com/thevickypedia/VaultAPI/blob/main/decryptors
 [gha_pages]: https://github.com/thevickypedia/VaultAPI/actions/workflows/pages/pages-build-deployment
+[gha_coverage]: https://github.com/thevickypedia/VaultAPI/actions/workflows/code-coverage.yml
+[gha_dependabot]: https://github.com/thevickypedia/VaultAPI/actions/workflows/dependabot/update-graph
 [gha_docker]: https://github.com/thevickypedia/VaultAPI/actions/workflows/docker.yml
 [gha_pypi]: https://github.com/thevickypedia/VaultAPI/actions/workflows/python-publish.yml
 [gha_md_valid]: https://github.com/thevickypedia/VaultAPI/actions/workflows/markdown.yml
