@@ -6,16 +6,24 @@ on:
       tag_name:
         type: string
         description: 'Tag name for the release (e.g., 1.0.1)'
+        required: true
+      latest:
+        type: boolean
+        description: 'Tag image as latest'
         required: false
-        default: latest
+        default: true
 
   workflow_call:
     inputs:
       tag_name:
         type: string
         description: 'Tag name for the release (e.g., 1.0.1)'
+        required: true
+      latest:
+        type: boolean
+        description: 'Tag image as latest'
         required: false
-        default: latest
+        default: true
 
 jobs:
   release:
@@ -41,9 +49,13 @@ jobs:
           echo "tag_name=${tag_name}" >> $GITHUB_ENV
 
           # Set tags for Docker image
-          tags="${repository,,}:latest"
-          if [ -n "${tag_name}" ] && [ "${tag_name}" != "latest" ]; then
-            tags+=",${repository,,}:${tag_name}"
+          if [ "${{ inputs.latest || github.event.inputs.latest }}" = "true" ]; then
+            tags="${repository,,}:latest"
+            if [ -n "${tag_name}" ] && [ "${tag_name}" != "latest" ]; then
+              tags+=",${repository,,}:${tag_name}"
+            fi
+          else
+            tags="${repository,,}:${tag_name}"
           fi
           echo "Docker image will be published with tags: ${tags}"
           echo "dockertags=${tags}" >> $GITHUB_ENV
