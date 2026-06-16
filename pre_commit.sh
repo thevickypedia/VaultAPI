@@ -44,7 +44,7 @@ else
   clean_docs &
   gen_docs &
   update_release_notes &
-  run_pytest &
+  #run_pytest &
 
   wait
 

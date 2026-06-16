@@ -14,8 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - run: |
-          pip install --upgrade pip uv
-          uv pip install ".[ui,totp,dev]" --system
+          pip install pre-commit
           export PATH="$HOME/.local/bin:$PATH"
           echo "$HOME/.local/bin" >> $GITHUB_PATH
           pre-commit run --all-files

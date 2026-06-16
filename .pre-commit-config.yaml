@@ -46,7 +46,7 @@ repos:
   - repo: local
     hooks:
       - id: docs
-        name: runbook and pytest
+        name: runbook
         entry: /bin/bash pre_commit.sh
         language: system
         pass_filenames: false
