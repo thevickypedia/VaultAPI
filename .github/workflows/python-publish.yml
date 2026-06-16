@@ -25,7 +25,7 @@ jobs:
     uses: ./.github/workflows/code-coverage.yml
 
   pypi-publisher:
-    needs: pre-commit
+    needs: run-tests
     runs-on: thevickypedia-default
     outputs:
       version: ${{ steps.publish.outputs.version }}

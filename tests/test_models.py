@@ -230,3 +230,14 @@ class TestLoadEnvNoFile:
         # The env vars set in conftest are still in os.environ so EnvConfig() is valid
         cfg = load_env()
         assert cfg.apikey is not None
+
+    def test_returns_env_config_from_file(self, monkeypatch, tmp_path):
+        """load_env() must load from the env file when it exists."""
+        from vaultapi.models import load_env
+
+        env_file = tmp_path / "test.json"
+        env_file.write_text(json.dumps({"apikey": VALID_KEY, "secret": VALID_SECRET}))
+        monkeypatch.setenv("env_file", str(env_file))
+        monkeypatch.delenv("ENV_FILE", raising=False)
+        cfg = load_env()
+        assert cfg.apikey == VALID_KEY
