@@ -250,6 +250,9 @@ async def ui_put_secret(
         request: Reference to the FastAPI request object.
         session_token: Session token generated after a successful login.
 
+    See Also:
+        Requires TOTP token as MFA code since adding a new secret can override an existing value.
+
     Returns:
         JSONResponse:
         Returns a JSON response indicating success or failure.
@@ -261,11 +264,26 @@ async def ui_put_secret(
     body = await request.json()
     table_name = body.get("table_name", "default")
     key = body.get("key", "").strip()
-    value = body.get("value", "")
+    value = body.get("value", "").strip()
+    totp_code = str(body.get("totp_code", "")).strip()
     if not key:
         return JSONResponse(
             status_code=HTTPStatus.BAD_REQUEST.real,
             content={"detail": "Key cannot be empty"},
+        )
+    try:
+        import pyotp
+
+        if not pyotp.TOTP(models.env.totp_token).verify(totp_code):
+            return JSONResponse(
+                status_code=HTTPStatus.UNAUTHORIZED.real,
+                content={"detail": "Invalid authenticator code"},
+            )
+    except Exception as error:
+        LOGGER.error("TOTP validation error: %s", error)
+        return JSONResponse(
+            status_code=HTTPStatus.UNAUTHORIZED.real,
+            content={"detail": "Invalid authenticator code"},
         )
     if not database.table_exists(table_name):
         return JSONResponse(
@@ -287,6 +305,9 @@ async def ui_import_secrets(
         request: Reference to the FastAPI request object.
         session_token: Session token generated after a successful login.
 
+    See Also:
+        Requires TOTP token as MFA code since importing secrets can override existing secret value(s).
+
     Returns:
         JSONResponse:
         Returns a JSON response with counts of imported and skipped secrets.
@@ -300,6 +321,21 @@ async def ui_import_secrets(
     table_name = body.get("table_name", "default")
     payload = body.get("payload", "")
     payload_type = body.get("payload_type", "").lower()
+    totp_code = str(body.get("totp_code", "")).strip()
+    try:
+        import pyotp
+
+        if not pyotp.TOTP(models.env.totp_token).verify(totp_code):
+            return JSONResponse(
+                status_code=HTTPStatus.UNAUTHORIZED.real,
+                content={"detail": "Invalid authenticator code"},
+            )
+    except Exception as error:
+        LOGGER.error("TOTP validation error: %s", error)
+        return JSONResponse(
+            status_code=HTTPStatus.UNAUTHORIZED.real,
+            content={"detail": "Invalid authenticator code"},
+        )
 
     if not database.table_exists(table_name):
         return JSONResponse(

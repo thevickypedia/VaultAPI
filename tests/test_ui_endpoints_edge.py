@@ -91,6 +91,7 @@ class TestUiImportBlankKey:
             "table_name": "imp_blk",
             "payload": _json.dumps({"": "no_key_value", "REAL_KEY": "val"}),
             "payload_type": "json",
+            "totp_code": make_totp(),
         }
         r = await client.post("/ui/import", json=payload, headers=_h(token))
         assert r.status_code == 200
@@ -111,6 +112,7 @@ class TestUiImportDbError:
                 "table_name": "imp_ferr",
                 "payload": '{"K": "V"}',
                 "payload_type": "json",
+                "totp_code": make_totp(),
             }
             r = await client.post("/ui/import", json=payload, headers=_h(token))
         assert r.status_code == 200

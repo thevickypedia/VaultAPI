@@ -1536,9 +1536,23 @@
             <textarea class="form-input mono" id="input-secret-value" placeholder="secret value..."
                       spellcheck="false"></textarea>
         </div>
+        <div class="form-field" style="margin-bottom:0;">
+            <label class="form-label" for="add-secret-totp">Authenticator Code</label>
+            <input class="form-input mono" id="add-secret-totp" type="text" inputmode="numeric"
+                   maxlength="6" placeholder="000000" autocomplete="one-time-code"
+                   onkeydown="if(event.key==='Enter')document.getElementById('btn-add-secret-ok').click()">
+            <div class="login-error" id="add-secret-totp-error" style="margin-top:8px;">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <span id="add-secret-totp-error-text">Invalid authenticator code</span>
+            </div>
+        </div>
         <div class="modal-footer">
             <button class="btn btn-ghost" onclick="closeModal('modal-add-secret')">Cancel</button>
-            <button class="btn btn-primary" onclick="confirmAddSecret()">Save Secret</button>
+            <button class="btn btn-primary" id="btn-add-secret-ok" onclick="confirmAddSecret()">Save Secret</button>
         </div>
     </div>
 </div>
@@ -1607,6 +1621,20 @@
             </div>
         </div>
 
+        <div class="form-field" style="margin-top:16px;margin-bottom:0;">
+            <label class="form-label" for="import-totp">Authenticator Code</label>
+            <input class="form-input mono" id="import-totp" type="text" inputmode="numeric"
+                   maxlength="6" placeholder="000000" autocomplete="one-time-code"
+                   onkeydown="if(event.key==='Enter')document.getElementById('btn-import-confirm').click()">
+            <div class="login-error" id="import-totp-error" style="margin-top:8px;">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <span id="import-totp-error-text">Invalid authenticator code</span>
+            </div>
+        </div>
         <div class="modal-footer">
             <button class="btn btn-ghost" onclick="closeModal('modal-import')">Cancel</button>
             <button class="btn btn-primary" id="btn-import-confirm" onclick="confirmImport()">
@@ -2084,24 +2112,49 @@
 
         // ── Add secret ─────────────────────────────────
         function openAddSecret() {
+            document.getElementById('input-secret-key').value = '';
+            document.getElementById('input-secret-value').value = '';
+            document.getElementById('add-secret-totp').value = '';
+            document.getElementById('add-secret-totp-error').className = 'login-error';
             openModal('modal-add-secret');
+            setTimeout(() => document.getElementById('input-secret-key').focus(), 120);
         }
 
         async function confirmAddSecret() {
             const key = document.getElementById('input-secret-key').value.trim();
             const value = document.getElementById('input-secret-value').value;
+            const totp_code = document.getElementById('add-secret-totp').value.trim();
+            const totpErrEl = document.getElementById('add-secret-totp-error');
             if (!key) {
                 toast('Key cannot be empty', 'error');
                 return;
             }
-            closeModal('modal-add-secret');
-            document.getElementById('input-secret-key').value = '';
-            document.getElementById('input-secret-value').value = '';
-            const {ok, data} = await api('PUT', '/ui/secret', {table_name: state.currentTable, key, value});
+            if (!totp_code) {
+                document.getElementById('add-secret-totp-error-text').textContent = 'Authenticator code is required.';
+                totpErrEl.className = 'login-error visible';
+                document.getElementById('add-secret-totp').focus();
+                return;
+            }
+            totpErrEl.className = 'login-error';
+            const btn = document.getElementById('btn-add-secret-ok');
+            btn.disabled = true;
+            const {ok, data, status} = await api('PUT', '/ui/secret', {
+                table_name: state.currentTable, key, value, totp_code
+            }, {noAutoLogout: true});
+            btn.disabled = false;
             if (ok) {
+                closeModal('modal-add-secret');
                 toast(`Secret "${key}" saved`, 'success');
                 await loadSecrets(state.currentTable);
-            } else toast(data.detail || 'Failed to save secret', 'error');
+            } else if (status === 401) {
+                document.getElementById('add-secret-totp-error-text').textContent = data.detail || 'Invalid authenticator code';
+                totpErrEl.className = 'login-error visible';
+                document.getElementById('add-secret-totp').value = '';
+                document.getElementById('add-secret-totp').focus();
+            } else {
+                closeModal('modal-add-secret');
+                toast(data.detail || 'Failed to save secret', 'error');
+            }
         }
 
         // ── Import secrets ─────────────────────────────
@@ -2117,6 +2170,8 @@
             document.getElementById('import-paste-content').value = '';
             document.getElementById('import-detected').classList.remove('visible');
             document.getElementById('import-file-input').value = '';
+            document.getElementById('import-totp').value = '';
+            document.getElementById('import-totp-error').className = 'login-error';
             setImportFormat('json');
             setImportSource('file');
             openModal('modal-import');
@@ -2207,6 +2262,8 @@
 
         async function confirmImport() {
             let payload, payloadType;
+            const totpInput = document.getElementById('import-totp');
+            const totpErrEl = document.getElementById('import-totp-error');
 
             if (importState.source === 'file') {
                 if (!importState.fileContent) {
@@ -2237,22 +2294,38 @@
                 }
             }
 
-            closeModal('modal-import');
+            const totp_code = totpInput.value.trim();
+            if (!totp_code) {
+                document.getElementById('import-totp-error-text').textContent = 'Authenticator code is required.';
+                totpErrEl.className = 'login-error visible';
+                totpInput.focus();
+                return;
+            }
+            totpErrEl.className = 'login-error';
+
             const btn = document.getElementById('btn-import-confirm');
             btn.disabled = true;
-            const {ok, data} = await api('POST', '/ui/import', {
+            const {ok, data, status} = await api('POST', '/ui/import', {
                 table_name: state.currentTable,
                 payload,
                 payload_type: payloadType,
-            });
+                totp_code,
+            }, {noAutoLogout: true});
             btn.disabled = false;
             if (ok) {
+                closeModal('modal-import');
                 const msg = data.skipped
                     ? `Imported ${data.imported} secret${data.imported !== 1 ? 's' : ''}, ${data.skipped} skipped`
                     : `Imported ${data.imported} secret${data.imported !== 1 ? 's' : ''}`;
                 toast(msg, 'success');
                 await loadSecrets(state.currentTable);
+            } else if (status === 401) {
+                document.getElementById('import-totp-error-text').textContent = data.detail || 'Invalid authenticator code';
+                totpErrEl.className = 'login-error visible';
+                totpInput.value = '';
+                totpInput.focus();
             } else {
+                closeModal('modal-import');
                 toast(data.detail || 'Import failed', 'error');
             }
         }

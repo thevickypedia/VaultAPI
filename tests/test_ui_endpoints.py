@@ -244,22 +244,61 @@ class TestUiPutSecret:
     async def test_put_secret_to_existing_table(self, client):
         database.create_table("put_tbl", ["key", "value"])
         token = _set_valid_ui_session()
-        payload = {"table_name": "put_tbl", "key": "MY_KEY", "value": "my_value"}
+        payload = {
+            "table_name": "put_tbl",
+            "key": "MY_KEY",
+            "value": "my_value",
+            "totp_code": make_totp(),
+        }
         r = await client.put("/ui/secret", json=payload, headers=_ui_headers(token))
         assert r.status_code == 200
-        # Verify it was actually stored
         assert database.get_secret("MY_KEY", "put_tbl") is not None
 
     async def test_put_secret_empty_key_returns_400(self, client):
         database.create_table("put_tbl2", ["key", "value"])
         token = _set_valid_ui_session()
-        payload = {"table_name": "put_tbl2", "key": "", "value": "val"}
+        payload = {
+            "table_name": "put_tbl2",
+            "key": "",
+            "value": "val",
+            "totp_code": make_totp(),
+        }
         r = await client.put("/ui/secret", json=payload, headers=_ui_headers(token))
         assert r.status_code == 400
 
+    async def test_put_secret_wrong_totp_returns_401(self, client):
+        database.create_table("put_tbl3", ["key", "value"])
+        token = _set_valid_ui_session()
+        payload = {
+            "table_name": "put_tbl3",
+            "key": "K",
+            "value": "v",
+            "totp_code": "000000",
+        }
+        r = await client.put("/ui/secret", json=payload, headers=_ui_headers(token))
+        assert r.status_code == 401
+
+    async def test_put_secret_totp_exception_returns_401(self, client):
+        database.create_table("put_tbl4", ["key", "value"])
+        token = _set_valid_ui_session()
+        payload = {
+            "table_name": "put_tbl4",
+            "key": "K",
+            "value": "v",
+            "totp_code": "123456",
+        }
+        with patch("pyotp.TOTP.verify", side_effect=Exception("boom")):
+            r = await client.put("/ui/secret", json=payload, headers=_ui_headers(token))
+        assert r.status_code == 401
+
     async def test_put_secret_missing_table_returns_404(self, client):
         token = _set_valid_ui_session()
-        payload = {"table_name": "no_table", "key": "K", "value": "v"}
+        payload = {
+            "table_name": "no_table",
+            "key": "K",
+            "value": "v",
+            "totp_code": make_totp(),
+        }
         r = await client.put("/ui/secret", json=payload, headers=_ui_headers(token))
         assert r.status_code == 404
 
@@ -341,6 +380,7 @@ class TestUiImportSecrets:
             "table_name": "imp_json",
             "payload": '{"DB_URL": "postgres://localhost/db", "API_KEY": "abc123"}',
             "payload_type": "json",
+            "totp_code": make_totp(),
         }
         r = await client.post("/ui/import", json=payload, headers=_ui_headers(token))
         assert r.status_code == 200
@@ -355,6 +395,7 @@ class TestUiImportSecrets:
             "table_name": "imp_yaml",
             "payload": "DB_HOST: localhost\nDB_PORT: '5432'\n",
             "payload_type": "yaml",
+            "totp_code": make_totp(),
         }
         r = await client.post("/ui/import", json=payload, headers=_ui_headers(token))
         assert r.status_code == 200
@@ -375,6 +416,7 @@ class TestUiImportSecrets:
             "table_name": "imp_env",
             "payload": env_text,
             "payload_type": "env",
+            "totp_code": make_totp(),
         }
         r = await client.post("/ui/import", json=payload, headers=_ui_headers(token))
         assert r.status_code == 200
@@ -387,10 +429,38 @@ class TestUiImportSecrets:
             "table_name": "imp_env2",
             "payload": "no_equals_sign_here\nVALID=ok\n",
             "payload_type": "env",
+            "totp_code": make_totp(),
         }
         r = await client.post("/ui/import", json=payload, headers=_ui_headers(token))
         assert r.status_code == 200
         assert r.json()["imported"] == 1
+
+    async def test_import_wrong_totp_returns_401(self, client):
+        database.create_table("imp_totp", ["key", "value"])
+        token = _set_valid_ui_session()
+        payload = {
+            "table_name": "imp_totp",
+            "payload": '{"k": "v"}',
+            "payload_type": "json",
+            "totp_code": "000000",
+        }
+        r = await client.post("/ui/import", json=payload, headers=_ui_headers(token))
+        assert r.status_code == 401
+
+    async def test_import_totp_exception_returns_401(self, client):
+        database.create_table("imp_totp_exc", ["key", "value"])
+        token = _set_valid_ui_session()
+        payload = {
+            "table_name": "imp_totp_exc",
+            "payload": '{"k": "v"}',
+            "payload_type": "json",
+            "totp_code": "123456",
+        }
+        with patch("pyotp.TOTP.verify", side_effect=Exception("boom")):
+            r = await client.post(
+                "/ui/import", json=payload, headers=_ui_headers(token)
+            )
+        assert r.status_code == 401
 
     async def test_import_missing_table_returns_404(self, client):
         token = _set_valid_ui_session()
@@ -398,6 +468,7 @@ class TestUiImportSecrets:
             "table_name": "no_table",
             "payload": '{"k": "v"}',
             "payload_type": "json",
+            "totp_code": make_totp(),
         }
         r = await client.post("/ui/import", json=payload, headers=_ui_headers(token))
         assert r.status_code == 404
@@ -409,6 +480,7 @@ class TestUiImportSecrets:
             "table_name": "imp_bad",
             "payload": "{not valid json",
             "payload_type": "json",
+            "totp_code": make_totp(),
         }
         r = await client.post("/ui/import", json=payload, headers=_ui_headers(token))
         assert r.status_code == 400
@@ -420,6 +492,7 @@ class TestUiImportSecrets:
             "table_name": "imp_arr",
             "payload": '["a", "b"]',
             "payload_type": "json",
+            "totp_code": make_totp(),
         }
         r = await client.post("/ui/import", json=payload, headers=_ui_headers(token))
         assert r.status_code == 400
@@ -431,6 +504,7 @@ class TestUiImportSecrets:
             "table_name": "imp_ylist",
             "payload": "- item1\n- item2\n",
             "payload_type": "yaml",
+            "totp_code": make_totp(),
         }
         r = await client.post("/ui/import", json=payload, headers=_ui_headers(token))
         assert r.status_code == 400
@@ -442,6 +516,7 @@ class TestUiImportSecrets:
             "table_name": "imp_unk",
             "payload": "anything",
             "payload_type": "xml",
+            "totp_code": make_totp(),
         }
         r = await client.post("/ui/import", json=payload, headers=_ui_headers(token))
         assert r.status_code == 400
@@ -453,6 +528,7 @@ class TestUiImportSecrets:
             "table_name": "imp_empty",
             "payload": "{}",
             "payload_type": "json",
+            "totp_code": make_totp(),
         }
         r = await client.post("/ui/import", json=payload, headers=_ui_headers(token))
         assert r.status_code == 400
@@ -462,6 +538,7 @@ class TestUiImportSecrets:
             "table_name": "any",
             "payload": '{"k": "v"}',
             "payload_type": "json",
+            "totp_code": make_totp(),
         }
         r = await client.post(
             "/ui/import",
