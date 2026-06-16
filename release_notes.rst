@@ -1,6 +1,21 @@
 Release Notes
 =============
 
+v0.5.2 (06/15/2026)
+-------------------
+- `ece9ce4 <https://github.com/thevickypedia/VaultAPI/commit/ece9ce4dc0a6dcb24c3015f2ffbf0ae73fbf2669>`_ chore: Release ``v0.5.2``
+- `109f9eb <https://github.com/thevickypedia/VaultAPI/commit/109f9ebd40585bc72a7df6b4b47fb3e8deaf2c32>`_ docs: Add new GHA labels in README.md
+- `b895fd8 <https://github.com/thevickypedia/VaultAPI/commit/b895fd81ee6deb4fe01ccc7ff491e55e97624805>`_ fix: Update stale package name in GHA workflow for code coverage
+- `bd0935e <https://github.com/thevickypedia/VaultAPI/commit/bd0935e8c6f83d9ca29cd1233d13216efe764b7d>`_ ci: Add a ``latest`` boolean flag for docker GHA workflow
+- `e559689 <https://github.com/thevickypedia/VaultAPI/commit/e5596894f73f25257222c6f04a51e8587f0bb936>`_ ci: Add a new GHA workflow to run pytest including code-coverage
+- `ab8ea10 <https://github.com/thevickypedia/VaultAPI/commit/ab8ea10897f0b6b10ca56153d14e4ad3698d00a4>`_ revert: Rollback changes to run pytest along with linter
+- `772832f <https://github.com/thevickypedia/VaultAPI/commit/772832fdf74011e536ac1f8a15d55abc350b07d2>`_ ci: Run pytest along with pre-commit
+- `a6dd0b6 <https://github.com/thevickypedia/VaultAPI/commit/a6dd0b65555e5dd7b35ed27b1f2af9bc0802fdcd>`_ docs: Update docstrings and README.md
+- `75032fa <https://github.com/thevickypedia/VaultAPI/commit/75032fa0bda31c39d199e1ebff7d41c3b475b57d>`_ ci: Update naming standards for all GHA workflows
+- `a006408 <https://github.com/thevickypedia/VaultAPI/commit/a0064087423c0fb97e8268d8a3590f2d4bfc37b8>`_ docs: Update decryptor read me
+- `de313de <https://github.com/thevickypedia/VaultAPI/commit/de313de90c7f21e79b30b97b615a7a5088979251>`_ style: Set apikey to ``text`` type in the UI
+- `ca4e761 <https://github.com/thevickypedia/VaultAPI/commit/ca4e76162bf8e0fb92e012d76d68cf2ba4eaeb17>`_ chore: Update release notes for v0.5.1
+
 v0.5.1 (06/13/2026)
 -------------------
 - `527da4f <https://github.com/thevickypedia/VaultAPI/commit/527da4fb5365c637b2f637bedb2936a413186f6c>`_ chore: Release ``v0.5.1``
