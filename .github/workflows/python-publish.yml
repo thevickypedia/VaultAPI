@@ -20,6 +20,10 @@ jobs:
           pre-commit run --all-files
         shell: bash
 
+  run-tests:
+    needs: pre-commit
+    uses: ./.github/workflows/code-coverage.yml
+
   pypi-publisher:
     needs: pre-commit
     runs-on: thevickypedia-default

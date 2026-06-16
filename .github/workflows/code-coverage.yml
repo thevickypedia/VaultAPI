@@ -1,0 +1,40 @@
+name: Code Coverage
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "**/*.py"
+      - "pyproject.toml"
+      - "!**/version.py"
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: thevickypedia-default
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install dependencies
+        run: |
+          pip install ".[ui,totp,dev]"
+          export PATH="$HOME/.local/bin:$PATH"
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          echo "$(dirname $(which pip))" >> $GITHUB_PATH
+
+      - name: Run tests with coverage
+        run: python -m pytest --cov=uiauth --cov-report=xml --cov-report=html --cov-report=term-missing -v
+
+      - name: Write coverage summary to job summary
+        run: |
+          echo "## Test Coverage" >> $GITHUB_STEP_SUMMARY
+          python -m coverage report --format=markdown >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload HTML coverage report
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-html
+          path: htmlcov/
+          retention-days: 30
