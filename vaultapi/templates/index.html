@@ -67,7 +67,7 @@
             min-height: 100vh;
             align-items: center;
             justify-content: center;
-            padding: 24px 24px 56px;
+            padding: 24px 24px 60px;
         }
 
         #login-screen.active {
@@ -412,7 +412,7 @@
         main {
             max-width: 1100px;
             margin: 0 auto;
-            padding: 36px 28px 72px;
+            padding: 36px 28px 80px;
         }
 
         .page {
@@ -932,7 +932,7 @@
         /* ── Toasts ──────────────────────────────────── */
         #toast-root {
             position: fixed;
-            bottom: 24px;
+            bottom: 52px;
             right: 24px;
             z-index: 999;
             display: flex;
@@ -1238,13 +1238,15 @@
             bottom: 0;
             left: 0;
             right: 0;
-            height: 32px;
+            height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 0 20px;
-            pointer-events: none;
-            z-index: 50;
+            z-index: 100;
+            background: rgba(7, 9, 14, 0.85);
+            backdrop-filter: blur(16px);
+            border-top: 1px solid var(--border);
         }
 
         .footer-version {
