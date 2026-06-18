@@ -35,7 +35,7 @@ async def retrieve_secret(key: str, table_name: str) -> str | None:
 
 async def retrieve_secrets(
     table_name: str, keys: List[str] | None = None
-) -> Dict[str, str]:
+) -> Dict[str, bytes]:
     """Retrieve multiple secrets from a table or retrieve the table as a whole.
 
     Args:

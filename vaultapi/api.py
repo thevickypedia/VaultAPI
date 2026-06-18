@@ -1,4 +1,6 @@
+import asyncio
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,16 +8,34 @@ from fastapi.routing import APIRoute
 
 from . import api_endpoints, database, models, routes, version
 
+
+async def delete_ui_session(event: str) -> None:
+    if database.get_ui_session(models.session.fernet):
+        LOGGER.info("Existing UI session found during %s, removing it.", event)
+        database.delete_ui_session()
+    else:
+        LOGGER.info("No UI session found during %s.", event)
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    """Lifespan context manager."""
+    asyncio.create_task(delete_ui_session("startup"))
+    yield
+    asyncio.create_task(delete_ui_session("shutdown"))
+
+
 VaultAPI = FastAPI(
     title="VaultAPI",
     description="Lightweight service to serve secrets and environment variables",
     version=version.__version__,
+    lifespan=lifespan,
 )
 LOGGER = logging.getLogger("uvicorn.default")
 
 
-def lifespan() -> None:
-    """Enables CORS policy."""
+def startup() -> None:
+    """Enables CORS policy and API and UI routes."""
     # Log the IP info
     LOGGER.info("Setting CORS policy")
     VaultAPI.add_middleware(
@@ -24,11 +44,9 @@ def lifespan() -> None:
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE"],
         allow_headers=[
-            # Default headers
-            "host",
-            "user-agent",
-            "authorization",
+            # Custom headers
             "authenticator",
+            "mfa-code",
         ],
     )
 
@@ -47,4 +65,4 @@ def lifespan() -> None:
         )
 
 
-lifespan()
+startup()

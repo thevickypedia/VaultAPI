@@ -256,7 +256,7 @@ def get_secret(key: str, table_name: str) -> str | None:
     return None
 
 
-def get_table(table_name: str) -> List[Tuple[str, str]]:
+def get_table(table_name: str) -> List[Tuple[str, bytes]]:
     """Function to retrieve all key-value pairs from a particular table in the database.
 
     Args:
