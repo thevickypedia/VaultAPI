@@ -61,6 +61,13 @@
             background-attachment: fixed;
         }
 
+        .note {
+            border-left: 4px solid #3b82f6;
+            padding: 0.75rem 1rem;
+            background: #eff6ff;
+            margin: 1rem 0;
+        }
+
         /* ── Login screen ────────────────────────────── */
         #login-screen {
             display: none;
@@ -1696,6 +1703,37 @@
     </div>
 </div>
 
+<!-- Modal: Vault Secret (for decryption) -->
+<div class="overlay" id="modal-vault-secret">
+    <div class="modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+            <div class="modal-title">Enter Vault Secret</div>
+            <div class="modal-subtitle">
+                Required to decrypt secrets.<br>
+                <blockquote class="note">This value will be stored only in-memory, so a hard refresh will require re-entering the secret.</blockquote>
+            </div>
+        </div>
+        <div class="form-field" style="margin-bottom:0;">
+            <label class="form-label" for="vault-secret-input">Secret</label>
+            <input class="form-input mono" id="vault-secret-input" type="password"
+                   placeholder="secret" autocomplete="off" spellcheck="false"
+                   onkeydown="if(event.key==='Enter')document.getElementById('btn-vault-secret-ok').click()">
+            <div class="login-error" id="vault-secret-error" style="margin-top:8px;">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <span id="vault-secret-error-text">Invalid secret</span>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" id="btn-vault-secret-cancel">Cancel</button>
+            <button class="btn btn-primary" id="btn-vault-secret-ok">Decrypt</button>
+        </div>
+    </div>
+</div>
+
 <div id="toast-root"></div>
 
 <footer class="site-footer">
@@ -1716,6 +1754,7 @@
             currentTable: null,
             tables: [],
             secrets: {},
+            vaultSecret: null,
         };
 
         // ── Session timer ──────────────────────────────
@@ -1829,6 +1868,7 @@
 
         function _clearLocalSession(message, type) {
             stopTimer();
+            state.vaultSecret = null;
             sessionStorage.removeItem('session_token');
             sessionStorage.removeItem('expires');
             showLogin(message, type);
@@ -2003,6 +2043,7 @@
         async function loadSecrets(table) {
             const el = document.getElementById('secrets-content');
             el.innerHTML = `<div class="skeleton" style="height:200px;border-radius:12px"></div>`;
+            state.secrets = {};
             const {ok, data} = await api('GET', `/ui/table/${encodeURIComponent(table)}`);
             if (!ok) {
                 if (data.detail !== 'Session expired') toast(data.detail || 'Failed to load secrets', 'error');
@@ -2055,7 +2096,82 @@
                 </div>`;
         }
 
-        function toggleReveal(key) {
+        // ── Fernet decryption (JS) ─────────────────────
+        // Token layout: base64url(version[1] | timestamp[8] | iv[16] | ciphertext[n*16] | hmac[32])
+        // Key layout: base64url(sign_key[16] | enc_key[16]) — we only need enc_key for AES-128-CBC.
+        function b64urlToBytes(s) {
+            s = s.trim().replace(/-/g, '+').replace(/_/g, '/');
+            // add padding
+            const rem = s.length % 4;
+            if (rem === 2) s += '==';
+            else if (rem === 3) s += '=';
+            const bin = atob(s);
+            const out = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+            return out;
+        }
+
+        async function fernetDecrypt(tokenStr, keyStr) {
+            const sub = window.crypto && window.crypto.subtle;
+            if (!sub) throw new Error('Web Crypto API unavailable — use HTTPS or localhost');
+
+            const keyBytes = b64urlToBytes(keyStr);
+            if (keyBytes.length !== 32) throw new Error(`Expected 32-byte key, got ${keyBytes.length}`);
+
+            const tok = b64urlToBytes(tokenStr);
+            // minimum: 1 (ver) + 8 (ts) + 16 (iv) + 16 (ciphertext, 1 block min) + 32 (hmac) = 73
+            if (tok.length < 73) throw new Error(`Token too short: ${tok.length}`);
+            if (tok[0] !== 0x80) throw new Error(`Bad Fernet version: 0x${tok[0].toString(16)}`);
+
+            const encKey = keyBytes.slice(16, 32);          // AES-128 key (last 16 bytes)
+            const iv = tok.slice(9, 25);                    // 16-byte IV
+            const ciphertext = tok.slice(25, tok.length - 32); // payload (HMAC excluded)
+
+            const cryptoKey = await sub.importKey('raw', encKey, {name: 'AES-CBC'}, false, ['decrypt']);
+            const plain = await sub.decrypt({name: 'AES-CBC', iv}, cryptoKey, ciphertext);
+            return new TextDecoder().decode(plain);
+        }
+
+        // ── Vault-secret prompt ────────────────────────
+        // Resolves with the vault secret (string) or null if cancelled.
+        // If already cached, resolves immediately without showing the modal.
+        function requireVaultSecret() {
+            if (state.vaultSecret !== null) return Promise.resolve(state.vaultSecret);
+            return new Promise(resolve => {
+                const overlay = document.getElementById('modal-vault-secret');
+                const input = document.getElementById('vault-secret-input');
+                const errEl = document.getElementById('vault-secret-error');
+                input.value = '';
+                errEl.classList.remove('visible');
+                overlay.classList.add('open');
+                setTimeout(() => input.focus(), 50);
+
+                function finish(secret) {
+                    overlay.classList.remove('open');
+                    resolve(secret);
+                }
+
+                document.getElementById('btn-vault-secret-ok').onclick = () => {
+                    const val = input.value.trim();
+                    if (!val) {
+                        document.getElementById('vault-secret-error-text').textContent = 'Secret is required.';
+                        errEl.classList.add('visible');
+                        input.focus();
+                        return;
+                    }
+                    state.vaultSecret = val;
+                    finish(val);
+                };
+
+                document.getElementById('btn-vault-secret-cancel').onclick = () => finish(null);
+            });
+        }
+
+        function forgetVaultSecret() {
+            state.vaultSecret = null;
+        }
+
+        async function toggleReveal(key) {
             const valEl = document.getElementById(`val-${key}`);
             const btnEl = valEl?.nextElementSibling;
             if (!valEl || !btnEl) return;
@@ -2065,11 +2181,19 @@
                 valEl.classList.remove('revealed');
                 btnEl.innerHTML = ICONS.eye;
                 btnEl.dataset.revealed = 'false';
-            } else {
-                valEl.textContent = state.secrets[key] ?? '';
+                return;
+            }
+            const secret = await requireVaultSecret();
+            if (!secret) return;
+            try {
+                const plain = await fernetDecrypt(state.secrets[key], secret);
+                valEl.textContent = plain;
                 valEl.classList.add('revealed');
                 btnEl.innerHTML = ICONS.eyeOff;
                 btnEl.dataset.revealed = 'true';
+            } catch (e) {
+                forgetVaultSecret();
+                toast(e.message.includes('unavailable') ? e.message : 'Wrong secret — decryption failed.', 'error');
             }
         }
 
@@ -2346,25 +2470,39 @@
             });
         }
 
-        function confirmExport() {
+        async function confirmExport() {
             const secrets = state.secrets || {};
             if (!Object.keys(secrets).length) {
                 toast('No secrets to export', 'error');
                 return;
             }
+            const vaultSec = await requireVaultSecret();
+            if (!vaultSec) return;
+            // decrypt all values
+            let plain;
+            try {
+                plain = {};
+                for (const [k, v] of Object.entries(secrets)) {
+                    plain[k] = await fernetDecrypt(v, vaultSec);
+                }
+            } catch (e) {
+                forgetVaultSecret();
+                toast(e.message.includes('unavailable') ? e.message : 'Wrong secret — decryption failed.', 'error');
+                return;
+            }
             let content, mime, ext;
             if (exportState.format === 'json') {
-                content = JSON.stringify(secrets, null, 2);
+                content = JSON.stringify(plain, null, 2);
                 mime = 'application/json';
                 ext = 'json';
             } else if (exportState.format === 'yaml') {
-                content = Object.entries(secrets)
+                content = Object.entries(plain)
                     .map(([k, v]) => `${k}: ${/[\s:#{}[\],&*?|<>=!%@`]/.test(v) ? JSON.stringify(v) : v}`)
                     .join('\n') + '\n';
                 mime = 'text/yaml';
                 ext = 'yaml';
             } else {
-                content = Object.entries(secrets)
+                content = Object.entries(plain)
                     .map(([k, v]) => `${k}=${v.includes('\n') || v.includes('"') ? JSON.stringify(v) : v}`)
                     .join('\n') + '\n';
                 mime = 'text/plain';
@@ -2483,6 +2621,7 @@
         window.promptDeleteTable = promptDeleteTable;
         window.promptDeleteSecret = promptDeleteSecret;
         window.toggleReveal = toggleReveal;
+        window.forgetVaultSecret = forgetVaultSecret;
         window.openExport = openExport;
         window.setExportFormat = setExportFormat;
         window.confirmExport = confirmExport;

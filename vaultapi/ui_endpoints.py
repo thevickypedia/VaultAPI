@@ -131,6 +131,8 @@ async def ui_get_table(
             content={"detail": f"Table {table_name!r} not found"},
         )
     raw = await api_endpoints.retrieve_secrets(table_name)
+    # NOTE: There is no transit protection for the UI
+    # Knowing transit_key_length and transit_time_bucket defeats the purpose of having a UI to simplify the usage
     decoded = {
         key: value.decode("UTF-8")
         for key, value in raw.items()
