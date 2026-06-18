@@ -1,8 +1,8 @@
 import logging
 import secrets
 import time
-import warnings
 from http import HTTPStatus
+from typing import NoReturn
 
 from fastapi import Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -15,56 +15,15 @@ SECURITY = HTTPBearer()
 UI_AUTHENTICATOR = "VaultAPI-UI"
 
 
-async def ui_login(request: Request) -> bool:
-    """Validate the login credentials from the request body.
-
-    Args:
-        request: Reference to the FastAPI request object (body must contain apikey, secret, totp_code).
-
-    Returns:
-        bool:
-        ``True`` if all credentials are valid, ``False`` otherwise.
-    """
-    body = await request.json()
-    apikey = str(body.get("apikey", ""))
-    secret = str(body.get("secret", ""))
-    totp_code = str(body.get("totp_code", "")).strip()
-
-    if apikey.startswith("\\"):
-        apikey = bytes(apikey, "utf-8").decode(encoding="unicode_escape")
-
-    if secret.startswith("\\"):
-        secret = bytes(secret, "utf-8").decode(encoding="unicode_escape")
-
-    if not secrets.compare_digest(apikey, models.env.apikey):
-        LOGGER.debug("Invalid api key received")
-        return False
-
-    if not secrets.compare_digest(secret, models.env.secret):
-        LOGGER.debug("Invalid secret received")
-        return False
-
-    if models.env.totp_token:
-        try:
-            import pyotp
-
-            if not pyotp.TOTP(models.env.totp_token).verify(totp_code):
-                LOGGER.debug("Invalid totp token received")
-                return False
-        except Exception as error:
-            LOGGER.error("TOTP validation error: %s", error)
-            return False
-    else:
-        warnings.warn(
-            "TOTP not enabled but UI login attempt has been made.", UserWarning
-        )
-        LOGGER.warning("TOTP not enabled but UI login attempt has been made.")
-        return False
-
-    return True
+def unauthorized(host: str) -> NoReturn:
+    """Raise a 403 APIResponse if the host is unauthorized."""
+    database.increment_failed_auth(host)
+    raise exceptions.APIResponse(
+        status_code=HTTPStatus.UNAUTHORIZED.real, detail=HTTPStatus.UNAUTHORIZED.phrase
+    )
 
 
-def blocked(host: str) -> None:
+async def blocked(host: str) -> None | NoReturn:
     """Raise a 403 APIResponse if the host is within an active cooloff window.
 
     Args:
@@ -87,9 +46,33 @@ def blocked(host: str) -> None:
         )
 
 
+async def validate_totp(totp_code: str, host: str) -> bool | NoReturn:
+    """Validate the login credentials from the request body.
+
+    Args:
+        totp_code: TOTP code received from the client.
+        host: Hostname or IP address of the client.
+
+    Returns:
+        bool:
+        ``True`` if totp code is valid, ``False`` otherwise.
+    """
+    try:
+        import pyotp
+
+        if models.env.totp_token:
+            if pyotp.TOTP(models.env.totp_token).verify(totp_code):
+                return True
+        else:
+            LOGGER.warning("TOTP not enabled but TOTP validation attempt has been made.")
+    except Exception as error:
+        LOGGER.error("TOTP validation error: %s", error)
+    unauthorized(host)
+
+
 async def validate(
     request: Request, authorization: HTTPAuthorizationCredentials
-) -> None:
+) -> None | NoReturn:
     """Validates the auth request using HTTPBearer.
 
     Args:
@@ -102,7 +85,7 @@ async def validate(
         - 403: If host address is forbidden (blocked after repeated failures).
     """
     host = request.client.host
-    blocked(host)
+    await blocked(host)
     if authorization.credentials.startswith("\\"):
         auth = bytes(authorization.credentials, "utf-8").decode(
             encoding="unicode_escape"
@@ -133,7 +116,4 @@ async def validate(
         database.reset_failed_auth(host)
         return
     LOGGER.debug("Invalid apikey [OR] session token")
-    database.increment_failed_auth(host)
-    raise exceptions.APIResponse(
-        status_code=HTTPStatus.UNAUTHORIZED.real, detail=HTTPStatus.UNAUTHORIZED.phrase
-    )
+    unauthorized(host)

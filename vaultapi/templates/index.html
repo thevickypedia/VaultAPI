@@ -1361,12 +1361,7 @@
 
         <div class="form-field">
             <label class="form-label" for="login-apikey">API Key</label>
-            <input class="form-input mono" id="login-apikey" type="text" placeholder="apikey"
-                   autocomplete="off" spellcheck="false">
-        </div>
-        <div class="form-field">
-            <label class="form-label" for="login-secret">Secret</label>
-            <input class="form-input mono" id="login-secret" type="password" placeholder="secret"
+            <input class="form-input mono" id="login-apikey" type="password" placeholder="apikey"
                    autocomplete="off" spellcheck="false">
         </div>
         <div class="form-field" id="totp-field">
@@ -1790,10 +1785,11 @@
 
         // ── API helper — injects Bearer, handles 401 ──
         // opts.noAutoLogout: if true, 401 is returned to caller instead of triggering logout
-        async function api(method, path, body = null, {noAutoLogout = false} = {}) {
+        async function api(method, path, body = null, mfa_code = null, {noAutoLogout = false} = {}) {
             const headers = {'Content-Type': 'application/json'};
             const session_token = sessionStorage.getItem("session_token");
             if (session_token) headers['Authorization'] = `Bearer ${session_token}`;
+            if (mfa_code) headers["mfa-code"] = mfa_code;
             headers['Authenticator'] = '{{ authenticator }}';
             const fetchOpts = {method, headers};
             if (body) fetchOpts.body = JSON.stringify(body);
@@ -1819,7 +1815,6 @@
                 errEl.className = 'login-error';
             }
             document.getElementById('login-apikey').value = '';
-            document.getElementById('login-secret').value = '';
             document.getElementById('login-totp').value = '';
             setTimeout(() => document.getElementById('login-apikey').focus(), 60);
         }
@@ -1855,14 +1850,12 @@
             const errEl = document.getElementById('login-error');
             const errText = document.getElementById('login-error-text');
             const apikey = document.getElementById('login-apikey').value.trim();
-            const secret = document.getElementById('login-secret').value.trim();
             const totp_code = document.getElementById('login-totp').value.trim();
 
-            if (!apikey || !secret || !totp_code) {
-                errText.textContent = 'API Key, Secret, and OTP code are required.';
+            if (!apikey || !totp_code) {
+                errText.textContent = 'API Key, and OTP code are required.';
                 errEl.className = 'login-error visible';
                 if (!apikey) document.getElementById('login-apikey').focus();
-                else if (!secret) document.getElementById('login-secret').focus();
                 else document.getElementById('login-totp').focus();
                 return;
             }
@@ -1874,8 +1867,12 @@
 
             const {ok, data} = await fetch('/ui/login', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({apikey, secret, totp_code}),
+                headers: {
+                    Authorization: `Bearer ${apikey}`,
+                    Accept: "application/json",
+                    "mfa-code": totp_code,
+                    "Content-Type": "application/json",
+                },
             }).then(async (r) => ({ok: r.ok, data: await r.json()})).catch(() => ({ok: false, data: {}}));
 
             btn.disabled = false;
@@ -2010,7 +2007,7 @@
                 el.innerHTML = renderEmpty('secrets');
                 return;
             }
-            state.secrets = data.secrets || {};
+            state.secrets = data.encrypted_secrets || {};
             renderSecretsTable();
         }
 
@@ -2139,8 +2136,8 @@
             const btn = document.getElementById('btn-add-secret-ok');
             btn.disabled = true;
             const {ok, data, status} = await api('PUT', '/ui/secret', {
-                table_name: state.currentTable, key, value, totp_code
-            }, {noAutoLogout: true});
+                table_name: state.currentTable, key, value
+            }, totp_code, {noAutoLogout: true});
             btn.disabled = false;
             if (ok) {
                 closeModal('modal-add-secret');
@@ -2309,8 +2306,7 @@
                 table_name: state.currentTable,
                 payload,
                 payload_type: payloadType,
-                totp_code,
-            }, {noAutoLogout: true});
+            }, totp_code, {noAutoLogout: true});
             btn.disabled = false;
             if (ok) {
                 closeModal('modal-import');
@@ -2421,7 +2417,7 @@
                 'Delete Table',
                 `This will permanently delete <strong>${esc(name)}</strong> and all its secrets. This action cannot be undone.`,
                 async (totp_code) => {
-                    const result = await api('DELETE', `/ui/table/${encodeURIComponent(name)}`, {totp_code}, {noAutoLogout: true});
+                    const result = await api('DELETE', `/ui/table/${encodeURIComponent(name)}`, null, totp_code, {noAutoLogout: true});
                     if (result.ok) {
                         closeModal('modal-confirm-delete');
                         toast(`Table "${name}" deleted`, 'success');
@@ -2440,9 +2436,8 @@
                 async (totp_code) => {
                     const result = await api('DELETE', '/ui/secret', {
                         table_name: state.currentTable,
-                        key,
-                        totp_code
-                    }, {noAutoLogout: true});
+                        key
+                    }, totp_code, {noAutoLogout: true});
                     if (result.ok) {
                         closeModal('modal-confirm-delete');
                         toast(`Secret "${key}" deleted`, 'success');

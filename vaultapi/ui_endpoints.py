@@ -14,7 +14,7 @@ from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials
 from fastapi.templating import Jinja2Templates
 
-from . import api_endpoints, auth, database, exceptions, models, version
+from . import api_endpoints, auth, database, models, version
 
 LOGGER = logging.getLogger("uvicorn.default")
 templates = Jinja2Templates(directory=pathlib.Path(__file__).parent / "templates")
@@ -27,10 +27,8 @@ async def index(request: Request):
         HTMLResponse:
         Returns the HTML content for the UI.
     """
-    try:
-        auth.blocked(request.client.host)
-    except exceptions.APIResponse as exc:
-        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+    # Manually check for blocked since no auth is required for this endpoint
+    await auth.blocked(request.client.host)
     return templates.TemplateResponse(
         name="index.html",
         request=request,
@@ -42,27 +40,20 @@ async def index(request: Request):
     )
 
 
-async def ui_login(request: Request):
+async def ui_login(request: Request, apikey: HTTPAuthorizationCredentials = Depends(auth.SECURITY)):
     """Validate credentials submitted by the login form.
 
     Args:
         request: Reference to the FastAPI request object.
+        apikey: API key to authenticate the login request.
 
     Returns:
         JSONResponse:
         Returns 200 on success, 401/403 on failure.
     """
-    try:
-        auth.blocked(request.client.host)
-    except exceptions.APIResponse as exc:
-        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
-
-    if not await auth.ui_login(request):
-        database.increment_failed_auth(request.client.host)
-        return JSONResponse(
-            status_code=HTTPStatus.UNAUTHORIZED.real,
-            content={"detail": "Invalid credentials"},
-        )
+    await auth.validate(request, apikey)
+    totp_code = request.headers.get("mfa-code", "")
+    await auth.validate_totp(totp_code, host=request.client.host)
 
     token = base64.urlsafe_b64encode(os.urandom(32)).decode("utf-8")
     expires = int(time.time()) + models.env.ui_lifetime
@@ -93,10 +84,7 @@ async def ui_logout(
         JSONResponse:
         Returns 200 on success, 401/403 if the token is already invalid.
     """
-    try:
-        await auth.validate(request, session_token)
-    except exceptions.APIResponse as exc:
-        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+    await auth.validate(request, session_token)
     database.delete_ui_session()
     LOGGER.info("UI session invalidated by logout request")
     return JSONResponse(content={"detail": "OK"})
@@ -116,10 +104,7 @@ async def ui_list_tables(
         JSONResponse:
         Returns a JSON response with the list of tables.
     """
-    try:
-        await auth.validate(request, session_token)
-    except exceptions.APIResponse as exc:
-        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+    await auth.validate(request, session_token)
     return JSONResponse(content={"tables": database.list_tables()})
 
 
@@ -137,26 +122,20 @@ async def ui_get_table(
 
     Returns:
         JSONResponse:
-        Returns a JSON response with the decrypted key-value pairs.
+        Returns a JSON response with the decoded (NOT decrypted) key-value pairs.
     """
-    try:
-        await auth.validate(request, session_token)
-    except exceptions.APIResponse as exc:
-        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+    await auth.validate(request, session_token)
     if not database.table_exists(table_name):
         return JSONResponse(
             status_code=HTTPStatus.NOT_FOUND.real,
             content={"detail": f"Table {table_name!r} not found"},
         )
-    try:
-        raw = await api_endpoints.retrieve_secrets(table_name)
-    except exceptions.APIResponse as exc:
-        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
-    decrypted = {
-        key: models.session.fernet.decrypt(value).decode("UTF-8")
+    raw = await api_endpoints.retrieve_secrets(table_name)
+    decoded = {
+        key: value.decode("UTF-8")
         for key, value in raw.items()
     }
-    return JSONResponse(content={"secrets": decrypted})
+    return JSONResponse(content={"encrypted_secrets": decoded})
 
 
 async def ui_create_table(
@@ -175,10 +154,7 @@ async def ui_create_table(
         JSONResponse:
         Returns a JSON response indicating success or failure.
     """
-    try:
-        await auth.validate(request, session_token)
-    except exceptions.APIResponse as exc:
-        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+    await auth.validate(request, session_token)
     try:
         database.create_table(table_name, ["key", "value"])
     except sqlite3.OperationalError as error:
@@ -205,26 +181,9 @@ async def ui_delete_table(
         JSONResponse:
         Returns a JSON response indicating success or failure.
     """
-    try:
-        await auth.validate(request, session_token)
-    except exceptions.APIResponse as exc:
-        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
-    body = await request.json()
-    totp_code = str(body.get("totp_code", "")).strip()
-    try:
-        import pyotp
-
-        if not pyotp.TOTP(models.env.totp_token).verify(totp_code):
-            return JSONResponse(
-                status_code=HTTPStatus.UNAUTHORIZED.real,
-                content={"detail": "Invalid authenticator code"},
-            )
-    except Exception as error:
-        LOGGER.error("TOTP validation error: %s", error)
-        return JSONResponse(
-            status_code=HTTPStatus.UNAUTHORIZED.real,
-            content={"detail": "Invalid authenticator code"},
-        )
+    await auth.validate(request, session_token)
+    totp_code = request.headers.get("mfa-code", "")
+    await auth.validate_totp(totp_code, host=request.client.host)
     if not database.table_exists(table_name):
         return JSONResponse(
             status_code=HTTPStatus.NOT_FOUND.real,
@@ -257,33 +216,18 @@ async def ui_put_secret(
         JSONResponse:
         Returns a JSON response indicating success or failure.
     """
-    try:
-        await auth.validate(request, session_token)
-    except exceptions.APIResponse as exc:
-        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+    await auth.validate(request, session_token)
+    totp_code = request.headers.get("mfa-code", "")
+    await auth.validate_totp(totp_code, host=request.client.host)
+
     body = await request.json()
     table_name = body.get("table_name", "default")
     key = body.get("key", "").strip()
     value = body.get("value", "").strip()
-    totp_code = str(body.get("totp_code", "")).strip()
     if not key:
         return JSONResponse(
             status_code=HTTPStatus.BAD_REQUEST.real,
             content={"detail": "Key cannot be empty"},
-        )
-    try:
-        import pyotp
-
-        if not pyotp.TOTP(models.env.totp_token).verify(totp_code):
-            return JSONResponse(
-                status_code=HTTPStatus.UNAUTHORIZED.real,
-                content={"detail": "Invalid authenticator code"},
-            )
-    except Exception as error:
-        LOGGER.error("TOTP validation error: %s", error)
-        return JSONResponse(
-            status_code=HTTPStatus.UNAUTHORIZED.real,
-            content={"detail": "Invalid authenticator code"},
         )
     if not database.table_exists(table_name):
         return JSONResponse(
@@ -312,31 +256,14 @@ async def ui_import_secrets(
         JSONResponse:
         Returns a JSON response with counts of imported and skipped secrets.
     """
-    try:
-        await auth.validate(request, session_token)
-    except exceptions.APIResponse as exc:
-        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+    await auth.validate(request, session_token)
+    totp_code = request.headers.get("mfa-code", "")
+    await auth.validate_totp(totp_code, host=request.client.host)
 
     body = await request.json()
     table_name = body.get("table_name", "default")
     payload = body.get("payload", "")
     payload_type = body.get("payload_type", "").lower()
-    totp_code = str(body.get("totp_code", "")).strip()
-    try:
-        import pyotp
-
-        if not pyotp.TOTP(models.env.totp_token).verify(totp_code):
-            return JSONResponse(
-                status_code=HTTPStatus.UNAUTHORIZED.real,
-                content={"detail": "Invalid authenticator code"},
-            )
-    except Exception as error:
-        LOGGER.error("TOTP validation error: %s", error)
-        return JSONResponse(
-            status_code=HTTPStatus.UNAUTHORIZED.real,
-            content={"detail": "Invalid authenticator code"},
-        )
-
     if not database.table_exists(table_name):
         return JSONResponse(
             status_code=HTTPStatus.NOT_FOUND.real,
@@ -422,26 +349,11 @@ async def ui_delete_secret(
         JSONResponse:
         Returns a JSON response indicating success or failure.
     """
-    try:
-        await auth.validate(request, session_token)
-    except exceptions.APIResponse as exc:
-        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
-    body = await request.json()
-    totp_code = str(body.get("totp_code", "")).strip()
-    try:
-        import pyotp
+    await auth.validate(request, session_token)
+    totp_code = request.headers.get("mfa-code", "")
+    await auth.validate_totp(totp_code, host=request.client.host)
 
-        if not pyotp.TOTP(models.env.totp_token).verify(totp_code):
-            return JSONResponse(
-                status_code=HTTPStatus.UNAUTHORIZED.real,
-                content={"detail": "Invalid authenticator code"},
-            )
-    except Exception as error:
-        LOGGER.error("TOTP validation error: %s", error)
-        return JSONResponse(
-            status_code=HTTPStatus.UNAUTHORIZED.real,
-            content={"detail": "Invalid authenticator code"},
-        )
+    body = await request.json()
     table_name = body.get("table_name", "default")
     key = body.get("key", "").strip()
     if not key:
@@ -449,10 +361,7 @@ async def ui_delete_secret(
             status_code=HTTPStatus.BAD_REQUEST.real,
             content={"detail": "Key cannot be empty"},
         )
-    try:
-        existing = await api_endpoints.retrieve_secret(key, table_name)
-    except exceptions.APIResponse as exc:
-        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+    existing = await api_endpoints.retrieve_secret(key, table_name)
     if not existing:
         return JSONResponse(
             status_code=HTTPStatus.NOT_FOUND.real,
