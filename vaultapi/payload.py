@@ -23,3 +23,13 @@ class PutSecret(BaseModel):
 
     secrets: Dict[str, str] | str
     table_name: str = "default"
+
+
+class RenameTable(BaseModel):
+    """Payload for rename-table API call.
+
+    >>> RenameTable
+
+    """
+
+    new_name: str

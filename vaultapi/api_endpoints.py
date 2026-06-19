@@ -283,6 +283,58 @@ async def create_table(
         status_code=HTTPStatus.OK.real, detail=HTTPStatus.OK.phrase
     )
 
+# TODO: Update clients with this functionality
+#   Any write operations for API should require secret value (transit encode through Bearer)
+#   Remove redundancies between API endpoints and UI endpoints
+async def rename_table(
+    request: Request,
+    table_name: str,
+    data: payload.RenameTable,
+    apikey: HTTPAuthorizationCredentials = Depends(security),
+):
+    """**API function to rename an existing table in the database.**
+
+    **Args:**
+
+        request: Reference to the FastAPI request object.
+        table_name: Current name of the table to rename.
+        apikey: API Key to authenticate the request.
+
+    **Raises:**
+
+        APIResponse:
+        Raises the HTTPStatus object with a status code and detail as response.
+    """
+    await auth.validate(request, apikey)
+    totp_code = request.headers.get("mfa-code", "")
+    await auth.validate_totp(totp_code, host=request.client.host)
+    if not data.new_name:
+        raise exceptions.APIResponse(
+            status_code=HTTPStatus.BAD_REQUEST.real,
+            detail="New table name cannot be empty",
+        )
+    if not database.table_exists(table_name):
+        raise exceptions.APIResponse(
+            status_code=HTTPStatus.NOT_FOUND.real,
+            detail=f"Table {table_name!r} not found",
+        )
+    if database.table_exists(data.new_name):
+        raise exceptions.APIResponse(
+            status_code=HTTPStatus.CONFLICT.real,
+            detail=f"Table {data.new_name!r} already exists",
+        )
+    try:
+        database.rename_table(table_name, data.new_name)
+        LOGGER.info("Table renamed '%s' -> '%s' successfully", table_name, data.new_name)
+    except sqlite3.OperationalError as error:
+        LOGGER.error(error)
+        raise exceptions.APIResponse(
+            status_code=HTTPStatus.BAD_REQUEST.real, detail=error.args[0]
+        )
+    raise exceptions.APIResponse(
+        status_code=HTTPStatus.OK.real, detail=HTTPStatus.OK.phrase
+    )
+
 
 async def delete_table(
     request: Request,

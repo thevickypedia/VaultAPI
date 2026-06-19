@@ -150,6 +150,12 @@ def api_routes() -> List[APIRoute]:
             dependencies=DEPENDENCIES,
         ),
         APIRoute(
+            path="/rename-table",
+            endpoint=api_endpoints.rename_table,
+            methods=["PATCH"],
+            dependencies=DEPENDENCIES,
+        ),
+        APIRoute(
             path="/delete-table",
             endpoint=api_endpoints.delete_table,
             methods=["DELETE"],
