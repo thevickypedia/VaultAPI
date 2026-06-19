@@ -24,7 +24,7 @@ def unauthorized(host: str) -> NoReturn:
 
 
 async def blocked(host: str) -> None | NoReturn:
-    """Raise a 403 APIResponse if the host is within an active cooloff window.
+    """Raise a 403 APIResponse if the host is within an active cool-off window.
 
     Args:
         host: Hostname or IP address of the client.
@@ -33,8 +33,7 @@ async def blocked(host: str) -> None | NoReturn:
         APIResponse:
         - 403: If the host has a non-expired ``blocked_until`` entry.
     """
-    auth_counter = database.get_blocked_until(host)
-    if auth_counter is not None:
+    if auth_counter := database.get_blocked_until(host):
         LOGGER.info(
             "Host: %s has been blocked after %d failed auth attempts",
             host,
@@ -60,11 +59,10 @@ async def validate_totp(totp_code: str, host: str) -> bool | NoReturn:
     try:
         import pyotp
 
-        if models.env.totp_token:
-            if pyotp.TOTP(models.env.totp_token).verify(totp_code):
-                return True
+        if models.env.totp_token and pyotp.TOTP(models.env.totp_token).verify(totp_code):
+            return True
         else:
-            LOGGER.warning("TOTP not enabled but TOTP validation attempt has been made.")
+            LOGGER.warning("TOTP verification failed, missing: %s", models.env.totp_token is None)
     except Exception as error:
         LOGGER.error("TOTP validation error: %s", error)
     unauthorized(host)
