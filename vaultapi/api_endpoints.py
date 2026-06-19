@@ -267,6 +267,11 @@ async def create_table(
         Raises the HTTPStatus object with a status code and detail as response.
     """
     await auth.validate(request, apikey)
+    if database.table_exists(table_name):
+        raise exceptions.APIResponse(
+            status_code=HTTPStatus.CONFLICT.real,
+            detail=f"A table with name {table_name!r} already exists"
+        )
     try:
         database.create_table(table_name, ["key", "value"])
     except sqlite3.OperationalError as error:

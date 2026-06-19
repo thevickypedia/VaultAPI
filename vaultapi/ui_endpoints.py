@@ -160,8 +160,6 @@ async def ui_rename_table(
     totp_code = request.headers.get("mfa-code", "")
     await auth.validate_totp(totp_code, host=request.client.host)
     body = await request.json()
-    print(body)
-    print(table_name)
     new_name = body.get("new_name", "").strip()
     if not new_name:
         return JSONResponse(
@@ -205,6 +203,11 @@ async def ui_create_table(
         Returns a JSON response indicating success or failure.
     """
     await auth.validate(request, session_token)
+    if database.table_exists(table_name):
+        return JSONResponse(
+            status_code=HTTPStatus.CONFLICT.real,
+            content={"detail": f"A table with name {table_name!r} already exists"},
+        )
     try:
         database.create_table(table_name, ["key", "value"])
     except sqlite3.OperationalError as error:
