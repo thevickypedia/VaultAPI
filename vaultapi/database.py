@@ -308,3 +308,15 @@ def drop_table(table_name: str) -> None:
     with models.database.connection as conn:
         conn.execute(f'DROP TABLE IF EXISTS "{table_name}"')
         models.database.connection.commit()
+
+
+def rename_table(old_name: str, new_name: str) -> None:
+    """Function to rename a table in the database.
+
+    Args:
+        old_name: Current name of the table.
+        new_name: New name for the table.
+    """
+    with models.database.connection as conn:
+        conn.execute(f'ALTER TABLE "{old_name}" RENAME TO "{new_name}"')
+        models.database.connection.commit()

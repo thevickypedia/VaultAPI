@@ -63,6 +63,13 @@ def ui_routes() -> List[APIRoute]:
         ),
         APIRoute(
             path="/ui/table/{table_name}",
+            endpoint=ui_endpoints.ui_rename_table,
+            methods=["PATCH"],
+            include_in_schema=False,
+            dependencies=DEPENDENCIES,
+        ),
+        APIRoute(
+            path="/ui/table/{table_name}",
             endpoint=ui_endpoints.ui_delete_table,
             methods=["DELETE"],
             include_in_schema=False,

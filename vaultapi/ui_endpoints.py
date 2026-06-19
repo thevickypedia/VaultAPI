@@ -140,6 +140,54 @@ async def ui_get_table(
     return JSONResponse(content={"encrypted_secrets": decoded})
 
 
+async def ui_rename_table(
+    request: Request,
+    table_name: str,
+    session_token: HTTPAuthorizationCredentials = Depends(api_endpoints.security),
+):
+    """Rename an existing table for the UI.
+
+    Args:
+        request: Reference to the FastAPI request object.
+        table_name: Current name of the table to rename.
+        session_token: Session token generated after a successful login.
+
+    Returns:
+        JSONResponse:
+        Returns a JSON response indicating success or failure.
+    """
+    await auth.validate(request, session_token)
+    totp_code = request.headers.get("mfa-code", "")
+    await auth.validate_totp(totp_code, host=request.client.host)
+    body = await request.json()
+    print(body)
+    print(table_name)
+    new_name = body.get("new_name", "").strip()
+    if not new_name:
+        return JSONResponse(
+            status_code=HTTPStatus.BAD_REQUEST.real,
+            content={"detail": "New table name cannot be empty"},
+        )
+    if not database.table_exists(table_name):
+        return JSONResponse(
+            status_code=HTTPStatus.NOT_FOUND.real,
+            content={"detail": f"Table {table_name!r} not found"},
+        )
+    if database.table_exists(new_name):
+        return JSONResponse(
+            status_code=HTTPStatus.CONFLICT.real,
+            content={"detail": f"Table {new_name!r} already exists"},
+        )
+    try:
+        database.rename_table(table_name, new_name)
+    except sqlite3.OperationalError as error:
+        LOGGER.error(error)
+        return JSONResponse(
+            status_code=HTTPStatus.BAD_REQUEST.real, content={"detail": error.args[0]}
+        )
+    return JSONResponse(content={"detail": "OK"})
+
+
 async def ui_create_table(
     request: Request,
     table_name: str,
