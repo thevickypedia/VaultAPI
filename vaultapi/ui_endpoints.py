@@ -34,7 +34,6 @@ async def index(request: Request):
         request=request,
         context={
             "request": request,
-            "authenticator": auth.UI_AUTHENTICATOR,
             "version": version.__version__,
         },
     )
@@ -51,9 +50,7 @@ async def ui_login(request: Request, apikey: HTTPAuthorizationCredentials = Depe
         JSONResponse:
         Returns 200 on success, 401/403 on failure.
     """
-    await auth.validate(request, apikey)
-    totp_code = request.headers.get("mfa-code", "")
-    await auth.validate_totp(totp_code, host=request.client.host)
+    await auth.validate(request, apikey, auth_type=auth.AuthType.ui_advanced)
 
     token = base64.urlsafe_b64encode(os.urandom(32)).decode("utf-8")
     expires = int(time.time()) + models.env.ui_lifetime
@@ -84,7 +81,7 @@ async def ui_logout(
         JSONResponse:
         Returns 200 on success, 401/403 if the token is already invalid.
     """
-    await auth.validate(request, session_token)
+    await auth.validate(request, session_token, auth_type=auth.AuthType.ui_basic)
     database.delete_ui_session()
     LOGGER.info("UI session invalidated by logout request")
     return JSONResponse(content={"detail": "OK"})
@@ -104,7 +101,7 @@ async def ui_list_tables(
         JSONResponse:
         Returns a JSON response with the list of tables.
     """
-    await auth.validate(request, session_token)
+    await auth.validate(request, session_token, auth_type=auth.AuthType.ui_basic)
     return JSONResponse(content={"tables": database.list_tables()})
 
 
@@ -124,7 +121,7 @@ async def ui_get_table(
         JSONResponse:
         Returns a JSON response with the decoded (NOT decrypted) key-value pairs.
     """
-    await auth.validate(request, session_token)
+    await auth.validate(request, session_token, auth_type=auth.AuthType.ui_basic)
     if not database.table_exists(table_name):
         return JSONResponse(
             status_code=HTTPStatus.NOT_FOUND.real,
@@ -156,9 +153,7 @@ async def ui_rename_table(
         JSONResponse:
         Returns a JSON response indicating success or failure.
     """
-    await auth.validate(request, session_token)
-    totp_code = request.headers.get("mfa-code", "")
-    await auth.validate_totp(totp_code, host=request.client.host)
+    await auth.validate(request, session_token, auth_type=auth.AuthType.ui_advanced)
     body = await request.json()
     new_name = body.get("new_name", "").strip()
     if not new_name:
@@ -202,7 +197,7 @@ async def ui_create_table(
         JSONResponse:
         Returns a JSON response indicating success or failure.
     """
-    await auth.validate(request, session_token)
+    await auth.validate(request, session_token, auth_type=auth.AuthType.ui_basic)
     if database.table_exists(table_name):
         return JSONResponse(
             status_code=HTTPStatus.CONFLICT.real,
@@ -234,9 +229,7 @@ async def ui_delete_table(
         JSONResponse:
         Returns a JSON response indicating success or failure.
     """
-    await auth.validate(request, session_token)
-    totp_code = request.headers.get("mfa-code", "")
-    await auth.validate_totp(totp_code, host=request.client.host)
+    await auth.validate(request, session_token, auth_type=auth.AuthType.ui_advanced)
     if not database.table_exists(table_name):
         return JSONResponse(
             status_code=HTTPStatus.NOT_FOUND.real,
@@ -262,17 +255,11 @@ async def ui_put_secret(
         request: Reference to the FastAPI request object.
         session_token: Session token generated after a successful login.
 
-    See Also:
-        Requires TOTP token as MFA code since adding a new secret can override an existing value.
-
     Returns:
         JSONResponse:
         Returns a JSON response indicating success or failure.
     """
-    await auth.validate(request, session_token)
-    totp_code = request.headers.get("mfa-code", "")
-    await auth.validate_totp(totp_code, host=request.client.host)
-
+    await auth.validate(request, session_token, auth_type=auth.AuthType.ui_advanced)
     body = await request.json()
     table_name = body.get("table_name", "default")
     key = body.get("key", "").strip()
@@ -302,17 +289,11 @@ async def ui_import_secrets(
         request: Reference to the FastAPI request object.
         session_token: Session token generated after a successful login.
 
-    See Also:
-        Requires TOTP token as MFA code since importing secrets can override existing secret value(s).
-
     Returns:
         JSONResponse:
         Returns a JSON response with counts of imported and skipped secrets.
     """
-    await auth.validate(request, session_token)
-    totp_code = request.headers.get("mfa-code", "")
-    await auth.validate_totp(totp_code, host=request.client.host)
-
+    await auth.validate(request, session_token, auth_type=auth.AuthType.ui_advanced)
     body = await request.json()
     table_name = body.get("table_name", "default")
     payload = body.get("payload", "")
@@ -402,10 +383,7 @@ async def ui_delete_secret(
         JSONResponse:
         Returns a JSON response indicating success or failure.
     """
-    await auth.validate(request, session_token)
-    totp_code = request.headers.get("mfa-code", "")
-    await auth.validate_totp(totp_code, host=request.client.host)
-
+    await auth.validate(request, session_token, auth_type=auth.AuthType.ui_advanced)
     body = await request.json()
     table_name = body.get("table_name", "default")
     key = body.get("key", "").strip()

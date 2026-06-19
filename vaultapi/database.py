@@ -65,8 +65,7 @@ def get_ui_session(fernet: Fernet) -> dict | None:
         ``{"token": str, "host": str, "exp": int}`` on success, ``None`` otherwise.
     """
     with models.auth_database.connection as conn:
-        cursor = conn.cursor()
-        row = cursor.execute(f'SELECT payload FROM "{UI_SESSION_TABLE}"').fetchone()
+        row = conn.cursor().execute(f'SELECT payload FROM "{UI_SESSION_TABLE}"').fetchone()
     if not row:
         return None
     try:
@@ -284,7 +283,7 @@ def put_secret(key: str, value: str, table_name: str) -> None:
             f'INSERT INTO "{table_name}" (key, value) VALUES (?,?)',
             (key, value),
         )
-        models.database.connection.commit()
+        conn.commit()
 
 
 def remove_secret(key: str, table_name: str) -> None:
@@ -296,7 +295,7 @@ def remove_secret(key: str, table_name: str) -> None:
     """
     with models.database.connection as conn:
         conn.execute(f'DELETE FROM "{table_name}" WHERE key=(?)', (key,))
-        models.database.connection.commit()
+        conn.commit()
 
 
 def drop_table(table_name: str) -> None:
@@ -307,7 +306,7 @@ def drop_table(table_name: str) -> None:
     """
     with models.database.connection as conn:
         conn.execute(f'DROP TABLE IF EXISTS "{table_name}"')
-        models.database.connection.commit()
+        conn.commit()
 
 
 def rename_table(old_name: str, new_name: str) -> None:
@@ -319,4 +318,4 @@ def rename_table(old_name: str, new_name: str) -> None:
     """
     with models.database.connection as conn:
         conn.execute(f'ALTER TABLE "{old_name}" RENAME TO "{new_name}"')
-        models.database.connection.commit()
+        conn.commit()

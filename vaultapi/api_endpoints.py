@@ -82,7 +82,7 @@ async def get_secret(
         APIResponse:
         Raises the HTTPStatus object with a status code and detail as response.
     """
-    await auth.validate(request, apikey)
+    await auth.validate(request, apikey, auth_type=auth.AuthType.api_basic)
     # keys = [key.strip() for key in keys.split(",") if key.strip()]
     keys = list(filter(None, map(str.strip, key.split(","))))
     keys_ct = len(keys)
@@ -140,7 +140,7 @@ async def list_tables(
         APIResponse:
         Raises the HTTPStatus object with a status code and detail as response.
     """
-    await auth.validate(request, apikey)
+    await auth.validate(request, apikey, auth_type=auth.AuthType.api_basic)
     raise exceptions.APIResponse(
         status_code=HTTPStatus.OK.real, detail=database.list_tables()
     )
@@ -164,7 +164,7 @@ async def get_table(
         APIResponse:
         Raises the HTTPStatus object with a status code and detail as response.
     """
-    await auth.validate(request, apikey)
+    await auth.validate(request, apikey, auth_type=auth.AuthType.api_basic)
     table_content = await retrieve_secrets(table_name)
     decrypted = {
         key: models.session.fernet.decrypt(value).decode(encoding="UTF-8")
@@ -193,16 +193,15 @@ async def put_secret(
         APIResponse:
         Raises the HTTPStatus object with a status code and detail as response.
     """
-    await auth.validate(request, apikey)
+    await auth.validate(request, apikey, auth_type=auth.AuthType.api_advanced)
     if not database.table_exists(data.table_name):
         raise exceptions.APIResponse(
             status_code=HTTPStatus.NOT_FOUND.real,
             detail=f"Table not found: {data.table_name!r}",
         )
     # Supports transit encrypted string
-    if isinstance(data.secrets, str):
-        data.secrets = transit.decrypt(data.secrets)
-    for key, value in data.secrets.items():
+    received_secrets = transit.decrypt(data.secrets) if isinstance(data.secrets, str) else data.secrets
+    for key, value in received_secrets.items():
         encrypted = models.session.fernet.encrypt(value.encode(encoding="UTF-8"))
         database.put_secret(key=key, value=encrypted, table_name=data.table_name)
     raise exceptions.APIResponse(
@@ -228,7 +227,7 @@ async def delete_secret(
         APIResponse:
         Raises the HTTPStatus object with a status code and detail as response.
     """
-    await auth.validate(request, apikey)
+    await auth.validate(request, apikey, auth_type=auth.AuthType.api_advanced)
     if await retrieve_secret(data.key, data.table_name):
         LOGGER.info("Secret value for '%s' will be removed", data.key)
     else:
@@ -266,7 +265,7 @@ async def create_table(
         APIResponse:
         Raises the HTTPStatus object with a status code and detail as response.
     """
-    await auth.validate(request, apikey)
+    await auth.validate(request, apikey, auth_type=auth.AuthType.api_basic)
     if database.table_exists(table_name):
         raise exceptions.APIResponse(
             status_code=HTTPStatus.CONFLICT.real,
@@ -283,9 +282,7 @@ async def create_table(
         status_code=HTTPStatus.OK.real, detail=HTTPStatus.OK.phrase
     )
 
-# TODO: Update clients with this functionality
-#   Any write operations for API should require secret value (transit encode through Bearer)
-#   Remove redundancies between API endpoints and UI endpoints
+# TODO: Remove redundancies between API endpoints and UI endpoints
 async def rename_table(
     request: Request,
     table_name: str,
@@ -305,9 +302,7 @@ async def rename_table(
         APIResponse:
         Raises the HTTPStatus object with a status code and detail as response.
     """
-    await auth.validate(request, apikey)
-    totp_code = request.headers.get("mfa-code", "")
-    await auth.validate_totp(totp_code, host=request.client.host)
+    await auth.validate(request, apikey, auth_type=auth.AuthType.api_advanced)
     if not data.new_name:
         raise exceptions.APIResponse(
             status_code=HTTPStatus.BAD_REQUEST.real,
@@ -354,7 +349,7 @@ async def delete_table(
         APIResponse:
         Raises the HTTPStatus object with a status code and detail as response.
     """
-    await auth.validate(request, apikey)
+    await auth.validate(request, apikey, auth_type=auth.AuthType.api_advanced)
     if not database.table_exists(table_name):
         raise exceptions.APIResponse(
             status_code=HTTPStatus.NOT_FOUND.real,
@@ -373,7 +368,7 @@ async def delete_table(
 
 
 async def health() -> Dict[str, str]:
-    """Healthcheck endpoint.
+    """Health check endpoint.
 
     Returns:
         Dict[str, str]:

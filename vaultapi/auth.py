@@ -1,6 +1,7 @@
 import logging
 import secrets
 import time
+from enum import Enum
 from http import HTTPStatus
 from typing import NoReturn
 
@@ -12,7 +13,25 @@ from . import database, exceptions, models
 LOGGER = logging.getLogger("uvicorn.default")
 SECURITY = HTTPBearer()
 
-UI_AUTHENTICATOR = "VaultAPI-UI"
+UI_BASIC = lambda session, auth, host: bool(
+    session
+    and secrets.compare_digest(auth, session["token"])
+    and session["host"] == host
+    and int(session["exp"]) > int(time.time())
+)
+API_BASIC = lambda auth: secrets.compare_digest(auth, models.env.apikey)
+
+class AuthType(Enum):
+    """Model for the authentication type.
+
+    >>> AuthType
+
+    """
+
+    ui_basic = "UI_BASIC"
+    ui_advanced = "UI_ADVANCED"
+    api_basic = "API_BASIC"
+    api_advanced = "API_ADVANCED"
 
 
 def unauthorized(host: str) -> NoReturn:
@@ -65,17 +84,18 @@ async def validate_totp(totp_code: str, host: str) -> bool | NoReturn:
             LOGGER.warning("TOTP verification failed, missing: %s", models.env.totp_token is None)
     except Exception as error:
         LOGGER.error("TOTP validation error: %s", error)
-    unauthorized(host)
+    return False
 
 
 async def validate(
-    request: Request, authorization: HTTPAuthorizationCredentials
+        request: Request, authorization: HTTPAuthorizationCredentials, auth_type: AuthType
 ) -> None | NoReturn:
     """Validates the auth request using HTTPBearer.
 
     Args:
         request: Takes the authorization header token as an argument.
         authorization: Basic APIKey required for API routes [OR] session token required for UI routes.
+        auth_type: The type of authentication to use.
 
     Raises:
         APIResponse:
@@ -90,18 +110,19 @@ async def validate(
         )
     else:
         auth = authorization.credentials
-    if request.headers.get("authenticator", "") == UI_AUTHENTICATOR:
-        LOGGER.debug("Assuming UI authenticator")
-        session = database.get_ui_session(models.session.fernet)
-        authenticated = bool(
-            session
-            and secrets.compare_digest(auth, session["token"])
-            and session["host"] == host
-            and int(session["exp"]) > int(time.time())
-        )
-    else:
-        LOGGER.debug("Assuming API authenticator")
-        authenticated = secrets.compare_digest(auth, models.env.apikey)
+    match auth_type:
+        case AuthType.ui_basic:
+            session = database.get_ui_session(models.session.fernet)
+            authenticated = UI_BASIC(session, auth, host)
+        case AuthType.ui_advanced:
+            session = database.get_ui_session(models.session.fernet)
+            totp_code = request.headers.get("mfa-code", "")
+            authenticated = UI_BASIC(session, auth, host) and await validate_totp(totp_code, host=request.client.host)
+        case AuthType.api_basic:
+            authenticated = API_BASIC(auth)
+        case AuthType.api_advanced:
+            # TODO: Add a read/write key [OR] an additional layer of security for API_ADVANCED auth type
+            authenticated = API_BASIC(auth)
     if authenticated:
         LOGGER.debug(
             "Connection received from host: %s, host-header: %s, x-fwd-host: %s",

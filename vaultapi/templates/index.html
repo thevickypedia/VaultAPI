@@ -1884,7 +1884,6 @@
             const session_token = sessionStorage.getItem("session_token");
             if (session_token) headers['Authorization'] = `Bearer ${session_token}`;
             if (mfa_code) headers["mfa-code"] = mfa_code;
-            headers['Authenticator'] = '{{ authenticator }}';
             const fetchOpts = {method, headers};
             if (body) fetchOpts.body = JSON.stringify(body);
             const res = await fetch(path, fetchOpts);

@@ -45,7 +45,6 @@ def startup() -> None:
         allow_methods=["GET", "POST", "PUT", "DELETE"],
         allow_headers=[
             # Custom headers
-            "authenticator",
             "mfa-code",
         ],
     )
