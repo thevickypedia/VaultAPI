@@ -10,6 +10,7 @@ from . import api_endpoints, database, models, routes, version
 
 
 async def delete_ui_session(event: str) -> None:
+    """Clear any existing UI sessions, so the tokens can't be re-used when the server is restarted."""
     if database.get_ui_session(models.session.fernet):
         LOGGER.info("Existing UI session found during %s, removing it.", event)
         database.delete_ui_session()

@@ -94,9 +94,7 @@ def test_display_secret_uses_terminal_size(monkeypatch, capsys):
         authenticator_app="VaultAPI",
         secret="ABCDEF",
     )
-    monkeypatch.setattr(
-        "vaultapi.otp.os.get_terminal_size", lambda: os.terminal_size((20, 20))
-    )
+    monkeypatch.setattr("vaultapi.otp.os.get_terminal_size", lambda: os.terminal_size((20, 20)))
 
     display_secret(config)
     out = capsys.readouterr().out

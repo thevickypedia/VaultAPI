@@ -28,14 +28,10 @@ async def retrieve_secret(key: str, table_name: str) -> str | None:
         return database.get_secret(key=key, table_name=table_name)
     except sqlite3.OperationalError as error:
         LOGGER.error(error)
-        raise exceptions.APIResponse(
-            status_code=HTTPStatus.BAD_REQUEST.real, detail=error.args[0]
-        )
+        raise exceptions.APIResponse(status_code=HTTPStatus.BAD_REQUEST.real, detail=error.args[0])
 
 
-async def retrieve_secrets(
-    table_name: str, keys: List[str] | None = None
-) -> Dict[str, bytes]:
+async def retrieve_secrets(table_name: str, keys: List[str] | None = None) -> Dict[str, bytes]:
     """Retrieve multiple secrets from a table or retrieve the table as a whole.
 
     Args:
@@ -57,9 +53,7 @@ async def retrieve_secrets(
             return dict(database.get_table(table_name))
         except sqlite3.OperationalError as error:
             LOGGER.error(error)
-            raise exceptions.APIResponse(
-                status_code=HTTPStatus.BAD_REQUEST.real, detail=error.args[0]
-            )
+            raise exceptions.APIResponse(status_code=HTTPStatus.BAD_REQUEST.real, detail=error.args[0])
 
 
 async def get_secret(
@@ -90,9 +84,7 @@ async def get_secret(
         assert keys_ct, "Expected at least one key, received 0"
     except AssertionError as error:
         LOGGER.error(error)
-        raise exceptions.APIResponse(
-            status_code=HTTPStatus.BAD_REQUEST.real, detail=error.args[0]
-        )
+        raise exceptions.APIResponse(status_code=HTTPStatus.BAD_REQUEST.real, detail=error.args[0])
     if values := await retrieve_secrets(table_name, keys):
         values_ct = len(values)
         try:
@@ -105,12 +97,9 @@ async def get_secret(
             LOGGER.warning(error)
             code = HTTPStatus.PARTIAL_CONTENT.real
         decrypted = {
-            key: models.session.fernet.decrypt(value).decode(encoding="UTF-8")
-            for key, value in values.items()
+            key: models.session.fernet.decrypt(value).decode(encoding="UTF-8") for key, value in values.items()
         }
-        raise exceptions.APIResponse(
-            status_code=code, detail=transit.encrypt(decrypted)
-        )
+        raise exceptions.APIResponse(status_code=code, detail=transit.encrypt(decrypted))
     if keys_ct == 1:
         LOGGER.info("Secret value for '%s' NOT found in the datastore", keys[0])
     else:
@@ -119,9 +108,7 @@ async def get_secret(
             keys_ct,
             keys,
         )
-    raise exceptions.APIResponse(
-        status_code=HTTPStatus.NOT_FOUND.real, detail=HTTPStatus.NOT_FOUND.phrase
-    )
+    raise exceptions.APIResponse(status_code=HTTPStatus.NOT_FOUND.real, detail=HTTPStatus.NOT_FOUND.phrase)
 
 
 async def list_tables(
@@ -141,9 +128,7 @@ async def list_tables(
         Raises the HTTPStatus object with a status code and detail as response.
     """
     await auth.validate(request, apikey, auth_type=auth.AuthType.api_basic)
-    raise exceptions.APIResponse(
-        status_code=HTTPStatus.OK.real, detail=database.list_tables()
-    )
+    raise exceptions.APIResponse(status_code=HTTPStatus.OK.real, detail=database.list_tables())
 
 
 async def get_table(
@@ -167,12 +152,9 @@ async def get_table(
     await auth.validate(request, apikey, auth_type=auth.AuthType.api_basic)
     table_content = await retrieve_secrets(table_name)
     decrypted = {
-        key: models.session.fernet.decrypt(value).decode(encoding="UTF-8")
-        for key, value in table_content.items()
+        key: models.session.fernet.decrypt(value).decode(encoding="UTF-8") for key, value in table_content.items()
     }
-    raise exceptions.APIResponse(
-        status_code=HTTPStatus.OK.real, detail=transit.encrypt(decrypted)
-    )
+    raise exceptions.APIResponse(status_code=HTTPStatus.OK.real, detail=transit.encrypt(decrypted))
 
 
 async def put_secret(
@@ -204,9 +186,7 @@ async def put_secret(
     for key, value in received_secrets.items():
         encrypted = models.session.fernet.encrypt(value.encode(encoding="UTF-8"))
         database.put_secret(key=key, value=encrypted, table_name=data.table_name)
-    raise exceptions.APIResponse(
-        status_code=HTTPStatus.OK.real, detail=HTTPStatus.OK.phrase
-    )
+    raise exceptions.APIResponse(status_code=HTTPStatus.OK.real, detail=HTTPStatus.OK.phrase)
 
 
 async def delete_secret(
@@ -232,19 +212,13 @@ async def delete_secret(
         LOGGER.info("Secret value for '%s' will be removed", data.key)
     else:
         LOGGER.warning("Secret value for '%s' NOT found", data.key)
-        raise exceptions.APIResponse(
-            status_code=HTTPStatus.NOT_FOUND.real, detail=HTTPStatus.NOT_FOUND.phrase
-        )
+        raise exceptions.APIResponse(status_code=HTTPStatus.NOT_FOUND.real, detail=HTTPStatus.NOT_FOUND.phrase)
     try:
         database.remove_secret(key=data.key, table_name=data.table_name)
     except sqlite3.OperationalError as error:
         LOGGER.error(error)
-        raise exceptions.APIResponse(
-            status_code=HTTPStatus.EXPECTATION_FAILED.real, detail=error.args[0]
-        )
-    raise exceptions.APIResponse(
-        status_code=HTTPStatus.OK.real, detail=HTTPStatus.OK.phrase
-    )
+        raise exceptions.APIResponse(status_code=HTTPStatus.EXPECTATION_FAILED.real, detail=error.args[0])
+    raise exceptions.APIResponse(status_code=HTTPStatus.OK.real, detail=HTTPStatus.OK.phrase)
 
 
 async def create_table(
@@ -268,19 +242,15 @@ async def create_table(
     await auth.validate(request, apikey, auth_type=auth.AuthType.api_basic)
     if database.table_exists(table_name):
         raise exceptions.APIResponse(
-            status_code=HTTPStatus.CONFLICT.real,
-            detail=f"A table with name {table_name!r} already exists"
+            status_code=HTTPStatus.CONFLICT.real, detail=f"A table with name {table_name!r} already exists"
         )
     try:
         database.create_table(table_name, ["key", "value"])
     except sqlite3.OperationalError as error:
         LOGGER.error(error)
-        raise exceptions.APIResponse(
-            status_code=HTTPStatus.EXPECTATION_FAILED.real, detail=error.args[0]
-        )
-    raise exceptions.APIResponse(
-        status_code=HTTPStatus.OK.real, detail=HTTPStatus.OK.phrase
-    )
+        raise exceptions.APIResponse(status_code=HTTPStatus.EXPECTATION_FAILED.real, detail=error.args[0])
+    raise exceptions.APIResponse(status_code=HTTPStatus.OK.real, detail=HTTPStatus.OK.phrase)
+
 
 # TODO: Remove redundancies between API endpoints and UI endpoints
 async def rename_table(
@@ -323,12 +293,8 @@ async def rename_table(
         LOGGER.info("Table renamed '%s' -> '%s' successfully", table_name, data.new_name)
     except sqlite3.OperationalError as error:
         LOGGER.error(error)
-        raise exceptions.APIResponse(
-            status_code=HTTPStatus.BAD_REQUEST.real, detail=error.args[0]
-        )
-    raise exceptions.APIResponse(
-        status_code=HTTPStatus.OK.real, detail=HTTPStatus.OK.phrase
-    )
+        raise exceptions.APIResponse(status_code=HTTPStatus.BAD_REQUEST.real, detail=error.args[0])
+    raise exceptions.APIResponse(status_code=HTTPStatus.OK.real, detail=HTTPStatus.OK.phrase)
 
 
 async def delete_table(
@@ -359,12 +325,8 @@ async def delete_table(
         database.drop_table(table_name)
     except sqlite3.OperationalError as error:
         LOGGER.error(error)
-        raise exceptions.APIResponse(
-            status_code=HTTPStatus.EXPECTATION_FAILED.real, detail=error.args[0]
-        )
-    raise exceptions.APIResponse(
-        status_code=HTTPStatus.OK.real, detail=HTTPStatus.OK.phrase
-    )
+        raise exceptions.APIResponse(status_code=HTTPStatus.EXPECTATION_FAILED.real, detail=error.args[0])
+    raise exceptions.APIResponse(status_code=HTTPStatus.OK.real, detail=HTTPStatus.OK.phrase)
 
 
 async def health() -> Dict[str, str]:

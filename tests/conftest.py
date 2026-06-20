@@ -97,9 +97,7 @@ def _clean_tables():
 @pytest_asyncio.fixture
 async def client() -> AsyncClient:
     """Async HTTPX client wired directly to the FastAPI app."""
-    async with AsyncClient(
-        transport=ASGITransport(app=api.VaultAPI), base_url="http://127.0.0.1"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=api.VaultAPI), base_url="http://127.0.0.1") as ac:
         yield ac
 
 

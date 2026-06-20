@@ -119,12 +119,8 @@ class TestUiSession:
     def test_upsert_replaces_previous_session(self):
         import time
 
-        database.upsert_ui_session(
-            "old-tok", "h1", int(time.time()) + 900, models.session.fernet
-        )
-        database.upsert_ui_session(
-            "new-tok", "h2", int(time.time()) + 900, models.session.fernet
-        )
+        database.upsert_ui_session("old-tok", "h1", int(time.time()) + 900, models.session.fernet)
+        database.upsert_ui_session("new-tok", "h2", int(time.time()) + 900, models.session.fernet)
         result = database.get_ui_session(models.session.fernet)
         assert result["token"] == "new-tok"
         assert result["host"] == "h2"
@@ -132,18 +128,14 @@ class TestUiSession:
     def test_delete_clears_session(self):
         import time
 
-        database.upsert_ui_session(
-            "tok", "h", int(time.time()) + 900, models.session.fernet
-        )
+        database.upsert_ui_session("tok", "h", int(time.time()) + 900, models.session.fernet)
         database.delete_ui_session()
         assert database.get_ui_session(models.session.fernet) is None
 
     def test_tampered_blob_returns_none(self):
         import time
 
-        database.upsert_ui_session(
-            "tok", "h", int(time.time()) + 900, models.session.fernet
-        )
+        database.upsert_ui_session("tok", "h", int(time.time()) + 900, models.session.fernet)
         # Overwrite the blob with garbage so Fernet raises on decrypt
         with _IN_MEMORY_AUTH_CONN:
             _IN_MEMORY_AUTH_CONN.execute(

@@ -8,19 +8,20 @@ from typing import NoReturn
 from fastapi import Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from . import database, exceptions, models, header
+from . import database, exceptions, header, models
 
 LOGGER = logging.getLogger("uvicorn.default")
 SECURITY = HTTPBearer()
 
-UI_BASIC = lambda session, auth, host: bool(
+UI_BASIC = lambda session, auth, host: bool(  # noqa: E731
     session
     and secrets.compare_digest(auth, session["token"])
     and session["host"] == host
     and int(session["exp"]) > int(time.time())
 )
-API_BASIC = lambda auth: header.validate(auth, models.env.apikey)
-API_ADVANCED = lambda auth: header.validate(auth, f"{models.env.apikey}.{models.env.secret}")
+API_BASIC = lambda auth: header.validate(auth, models.env.apikey)  # noqa: E731
+API_ADVANCED = lambda auth: header.validate(auth, f"{models.env.apikey}.{models.env.secret}")  # noqa: E731
+
 
 class AuthType(Enum):
     """Model for the authentication type.
@@ -32,6 +33,7 @@ class AuthType(Enum):
     ui_basic = "UI_BASIC"
     ui_login = "UI_LOGIN"
     ui_advanced = "UI_ADVANCED"
+
     api_basic = "API_BASIC"
     api_advanced = "API_ADVANCED"
 
@@ -39,9 +41,7 @@ class AuthType(Enum):
 def unauthorized(host: str) -> NoReturn:
     """Raise a 403 APIResponse if the host is unauthorized."""
     database.increment_failed_auth(host)
-    raise exceptions.APIResponse(
-        status_code=HTTPStatus.UNAUTHORIZED.real, detail=HTTPStatus.UNAUTHORIZED.phrase
-    )
+    raise exceptions.APIResponse(status_code=HTTPStatus.UNAUTHORIZED.real, detail=HTTPStatus.UNAUTHORIZED.phrase)
 
 
 async def blocked(host: str) -> None | NoReturn:
@@ -82,14 +82,18 @@ async def validate_totp(totp_code: str) -> bool | NoReturn:
         if models.env.totp_token and pyotp.TOTP(models.env.totp_token).verify(totp_code):
             return True
         else:
-            LOGGER.warning("TOTP verification failed, server-missing: %s, client-missing: %s", models.env.totp_token is None, totp_code is None)
+            LOGGER.warning(
+                "TOTP verification failed, server-missing: %s, client-missing: %s",
+                models.env.totp_token is None,
+                totp_code is None,
+            )
     except Exception as error:
         LOGGER.error("TOTP validation error: %s", error)
     return False
 
 
 async def validate(
-        request: Request, authorization: HTTPAuthorizationCredentials, auth_type: AuthType
+    request: Request, authorization: HTTPAuthorizationCredentials, auth_type: AuthType
 ) -> None | NoReturn:
     """Validates the auth request using HTTPBearer.
 

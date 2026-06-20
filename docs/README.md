@@ -78,7 +78,7 @@ Defaults to 5req/2s [AND] 10req/30s
 
 **Optional (without defaults)**
 - **LOG_CONFIG** - FilePath or dictionary of key-value pairs for log config.
-- **ALLOWED_ORIGINS** - Origins that are allowed through CORS.
+- **ALLOWED_ORIGINS** - List of origins that should be allowed through CORS.
 
 **Optional (UI integration)**
 - **ENABLE_UI** - Boolean flag to enable the UI. Defaults to `false`

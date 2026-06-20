@@ -13,9 +13,7 @@ UI_SESSION_TABLE = "ui_session"
 BLOCKED_HOSTS_TABLE = "blocked_hosts"
 FAILED_AUTH_LIMIT = 3
 
-COOLOFF_THRESHOLDS: OrderedDict[int, int] = OrderedDict(
-    [(10, 86400), (5, 900), (3, 300)]
-)
+COOLOFF_THRESHOLDS: OrderedDict[int, int] = OrderedDict([(10, 86400), (5, 900), (3, 300)])
 
 
 def create_auth_tables() -> None:
@@ -43,14 +41,10 @@ def upsert_ui_session(token: str, hostname: str, expires: int, fernet: Fernet) -
         expires: Unix timestamp after which the session is invalid.
         fernet: Fernet instance from ``models.session.fernet``.
     """
-    payload = fernet.encrypt(
-        json.dumps({"token": token, "host": hostname, "exp": expires}).encode()
-    )
+    payload = fernet.encrypt(json.dumps({"token": token, "host": hostname, "exp": expires}).encode())
     with models.auth_database.connection as conn:
         conn.execute(f'DELETE FROM "{UI_SESSION_TABLE}"')
-        conn.execute(
-            f'INSERT INTO "{UI_SESSION_TABLE}" (payload) VALUES (?)', (payload,)
-        )
+        conn.execute(f'INSERT INTO "{UI_SESSION_TABLE}" (payload) VALUES (?)', (payload,))
         conn.commit()
 
 
@@ -215,9 +209,7 @@ def table_exists(table_name: str) -> bool:
 def list_tables() -> List[str]:
     """Function to list all available tables in the database."""
     with models.database.connection as conn:
-        tables = conn.execute(
-            "SELECT name FROM sqlite_master WHERE type='table';"
-        ).fetchall()
+        tables = conn.execute("SELECT name FROM sqlite_master WHERE type='table';").fetchall()
     return [table[0] for table in tables]
 
 
@@ -230,9 +222,7 @@ def create_table(table_name: str, columns: List[str] | Tuple[str]) -> None:
     """
     with models.database.connection as conn:
         # Use f-string or %s as table names cannot be parametrized
-        conn.execute(
-            f"CREATE TABLE IF NOT EXISTS {table_name!r} ({', '.join(columns)})"
-        )
+        conn.execute(f"CREATE TABLE IF NOT EXISTS {table_name!r} ({', '.join(columns)})")
 
 
 def get_secret(key: str, table_name: str) -> str | None:
@@ -247,9 +237,7 @@ def get_secret(key: str, table_name: str) -> str | None:
         Returns the secret value.
     """
     with models.database.connection as conn:
-        state = conn.execute(
-            f'SELECT value FROM "{table_name}" WHERE key=(?)', (key,)
-        ).fetchone()
+        state = conn.execute(f'SELECT value FROM "{table_name}" WHERE key=(?)', (key,)).fetchone()
     if state and state[0]:
         return state[0]
     return None

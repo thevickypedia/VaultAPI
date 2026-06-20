@@ -54,9 +54,7 @@ async def ui_login(request: Request, apikey: HTTPAuthorizationCredentials = Depe
 
     token = base64.urlsafe_b64encode(os.urandom(32)).decode("utf-8")
     expires = int(time.time()) + models.env.ui_lifetime
-    database.upsert_ui_session(
-        token, request.client.host, expires, models.session.fernet
-    )
+    database.upsert_ui_session(token, request.client.host, expires, models.session.fernet)
     LOGGER.info(
         "Connection received from host: %s, host-header: %s, x-fwd-host: %s",
         request.client.host,
@@ -130,10 +128,7 @@ async def ui_get_table(
     raw = await api_endpoints.retrieve_secrets(table_name)
     # NOTE: There is no transit protection for the UI
     # Knowing transit_key_length and transit_time_bucket defeats the purpose of having a UI to simplify the usage
-    decoded = {
-        key: value.decode("UTF-8")
-        for key, value in raw.items()
-    }
+    decoded = {key: value.decode("UTF-8") for key, value in raw.items()}
     return JSONResponse(content={"encrypted_secrets": decoded})
 
 
@@ -175,9 +170,7 @@ async def ui_rename_table(
         database.rename_table(table_name, new_name)
     except sqlite3.OperationalError as error:
         LOGGER.error(error)
-        return JSONResponse(
-            status_code=HTTPStatus.BAD_REQUEST.real, content={"detail": error.args[0]}
-        )
+        return JSONResponse(status_code=HTTPStatus.BAD_REQUEST.real, content={"detail": error.args[0]})
     return JSONResponse(content={"detail": "OK"})
 
 
@@ -207,9 +200,7 @@ async def ui_create_table(
         database.create_table(table_name, ["key", "value"])
     except sqlite3.OperationalError as error:
         LOGGER.error(error)
-        return JSONResponse(
-            status_code=HTTPStatus.BAD_REQUEST.real, content={"detail": error.args[0]}
-        )
+        return JSONResponse(status_code=HTTPStatus.BAD_REQUEST.real, content={"detail": error.args[0]})
     return JSONResponse(content={"detail": "OK"})
 
 
@@ -239,9 +230,7 @@ async def ui_delete_table(
         database.drop_table(table_name)
     except sqlite3.OperationalError as error:
         LOGGER.error(error)
-        return JSONResponse(
-            status_code=HTTPStatus.BAD_REQUEST.real, content={"detail": error.args[0]}
-        )
+        return JSONResponse(status_code=HTTPStatus.BAD_REQUEST.real, content={"detail": error.args[0]})
     return JSONResponse(content={"detail": "OK"})
 
 
@@ -337,9 +326,7 @@ async def ui_import_secrets(
         else:
             return JSONResponse(
                 status_code=HTTPStatus.BAD_REQUEST.real,
-                content={
-                    "detail": f"Unsupported payload_type {payload_type!r}; use json, yaml, or env"
-                },
+                content={"detail": f"Unsupported payload_type {payload_type!r}; use json, yaml, or env"},
             )
     except Exception as error:
         return JSONResponse(
@@ -402,7 +389,5 @@ async def ui_delete_secret(
         database.remove_secret(key=key, table_name=table_name)
     except sqlite3.OperationalError as error:
         LOGGER.error(error)
-        return JSONResponse(
-            status_code=HTTPStatus.BAD_REQUEST.real, content={"detail": error.args[0]}
-        )
+        return JSONResponse(status_code=HTTPStatus.BAD_REQUEST.real, content={"detail": error.args[0]})
     return JSONResponse(content={"detail": "OK"})

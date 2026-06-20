@@ -77,9 +77,7 @@ class TestAuthValidate:
     async def test_expired_ui_session_rejected(self):
         """Session written with a past expiry must be rejected."""
         token = "expired-test-token"
-        database.upsert_ui_session(
-            token, "127.0.0.1", int(time.time()) - 1, models.session.fernet
-        )
+        database.upsert_ui_session(token, "127.0.0.1", int(time.time()) - 1, models.session.fernet)
         req = _make_request(headers={"authenticator": "VaultAPI-UI"})
         with pytest.raises(APIResponse) as exc_info:
             await auth.validate(req, _make_creds(token))
@@ -88,9 +86,7 @@ class TestAuthValidate:
     async def test_wrong_host_rejected(self):
         """Session written for host-A must be rejected when request comes from host-B."""
         token = "host-bound-token"
-        database.upsert_ui_session(
-            token, "192.168.1.100", int(time.time()) + 900, models.session.fernet
-        )
+        database.upsert_ui_session(token, "192.168.1.100", int(time.time()) + 900, models.session.fernet)
         req = _make_request(host="127.0.0.1", headers={"authenticator": "VaultAPI-UI"})
         with pytest.raises(APIResponse) as exc_info:
             await auth.validate(req, _make_creds(token))

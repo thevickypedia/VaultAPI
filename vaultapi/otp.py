@@ -44,9 +44,7 @@ def generate_qr(show_qr: bool, config: OTPConfig) -> None:
     secret = pyotp.random_base32()
 
     # STEP 2: Create a provisioning URI (for the QR code)
-    uri = pyotp.TOTP(secret).provisioning_uri(
-        name=str(config.authenticator_user), issuer_name=config.authenticator_app
-    )
+    uri = pyotp.TOTP(secret).provisioning_uri(name=str(config.authenticator_user), issuer_name=config.authenticator_app)
 
     # STEP 3: Generate a QR code (scan this with your authenticator app)
     qr = qrcode.make(uri)

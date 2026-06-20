@@ -7,17 +7,13 @@ from datetime import datetime
 
 import vaultapi
 
-db_filename = (
-    lambda key, default: os.environ.get(key) or os.environ.get(key.upper()) or default
-)
+db_filename = lambda key, default: os.environ.get(key) or os.environ.get(key.upper()) or default  # noqa: E731
 logs_dir = pathlib.Path(__file__).parent / "logs"
 data_dir = pathlib.Path(__file__).parent / "data"
 db_path = data_dir / db_filename("database", "secrets.db")
 auth_db = data_dir / db_filename("auth_database", "auth.db")
 
-DEFAULT_LOG_FILENAME: str = datetime.now().strftime(
-    str(logs_dir / "vaultapi_%d-%m-%Y.log")
-)
+DEFAULT_LOG_FILENAME: str = datetime.now().strftime(str(logs_dir / "vaultapi_%d-%m-%Y.log"))
 data_dir.mkdir(parents=True, exist_ok=True)
 logs_dir.mkdir(parents=True, exist_ok=True)
 

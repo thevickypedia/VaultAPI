@@ -213,26 +213,20 @@ class TestUiCreateDeleteTable:
     async def test_delete_existing_table(self, client):
         database.create_table("to_delete", ["key", "value"])
         token = _set_valid_ui_session()
-        r = await self._delete_table(
-            client, "to_delete", make_totp(), _ui_headers(token)
-        )
+        r = await self._delete_table(client, "to_delete", make_totp(), _ui_headers(token))
         assert r.status_code == 200
         assert not database.table_exists("to_delete")
 
     async def test_delete_table_wrong_totp_returns_401(self, client):
         database.create_table("totp_guard_tbl", ["key", "value"])
         token = _set_valid_ui_session()
-        r = await self._delete_table(
-            client, "totp_guard_tbl", "000000", _ui_headers(token)
-        )
+        r = await self._delete_table(client, "totp_guard_tbl", "000000", _ui_headers(token))
         assert r.status_code == 401
         assert database.table_exists("totp_guard_tbl")
 
     async def test_delete_missing_table_returns_404(self, client):
         token = _set_valid_ui_session()
-        r = await self._delete_table(
-            client, "ghost_table", make_totp(), _ui_headers(token)
-        )
+        r = await self._delete_table(client, "ghost_table", make_totp(), _ui_headers(token))
         assert r.status_code == 404
 
 
@@ -457,9 +451,7 @@ class TestUiImportSecrets:
             "totp_code": "123456",
         }
         with patch("pyotp.TOTP.verify", side_effect=Exception("boom")):
-            r = await client.post(
-                "/ui/import", json=payload, headers=_ui_headers(token)
-            )
+            r = await client.post("/ui/import", json=payload, headers=_ui_headers(token))
         assert r.status_code == 401
 
     async def test_import_missing_table_returns_404(self, client):

@@ -54,9 +54,7 @@ class RateLimiter:
         with self.locks[identifier]:
             # Clean up expired timestamps
             self.requests[identifier] = [
-                timestamp
-                for timestamp in self.requests[identifier]
-                if current_time - timestamp < self.seconds
+                timestamp for timestamp in self.requests[identifier] if current_time - timestamp < self.seconds
             ]
 
             if len(self.requests[identifier]) >= self.max_requests:

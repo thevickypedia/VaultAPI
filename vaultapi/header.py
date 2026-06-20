@@ -101,7 +101,7 @@ def validate(auth_header: str, token: str) -> bool:
     return False
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     TOKEN = "{apikey}.{secret}"
     header = generate(TOKEN)
     time.sleep(5)  # Simulate delay to test expiration

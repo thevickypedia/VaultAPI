@@ -24,9 +24,7 @@ HANDLER.setFormatter(DEFAULT_FORMATTER)
 LOGGER.addHandler(HANDLER)
 
 
-def dotenv_to_table(
-    table_name: str, dotenv_file: str, drop_existing: bool = False
-) -> None:
+def dotenv_to_table(table_name: str, dotenv_file: str, drop_existing: bool = False) -> None:
     """Store all the env vars from a .env file into the database.
 
     Args:
@@ -49,9 +47,7 @@ def dotenv_to_table(
                 )
         except sqlite3.OperationalError as error:
             if str(error) == f"no such table: {table_name}":
-                LOGGER.info(
-                    "Creating a new table '%s' in '%s'", table_name, models.env.database
-                )
+                LOGGER.info("Creating a new table '%s' in '%s'", table_name, models.env.database)
                 database.create_table(table_name, ["key", "value"])
             else:
                 raise

@@ -6,8 +6,7 @@ from fastapi.routing import APIRoute
 from . import api_endpoints, models, rate_limit, ui_endpoints
 
 DEPENDENCIES = [
-    Depends(dependency=rate_limit.RateLimiter(each_rate_limit).init)
-    for each_rate_limit in models.env.rate_limit
+    Depends(dependency=rate_limit.RateLimiter(each_rate_limit).init) for each_rate_limit in models.env.rate_limit
 ]
 
 

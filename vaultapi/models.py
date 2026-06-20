@@ -42,22 +42,16 @@ def complexity_checker(secret: str, max_len: int = 32) -> None:
         AssertionError: When at least 1 of the above conditions fail to match.
     """
     # calculates the length
-    assert (
-        len(secret) >= max_len
-    ), f"secret length must be at least {max_len}, received {len(secret)}"
+    assert len(secret) >= max_len, f"secret length must be at least {max_len}, received {len(secret)}"
 
     # searches for digits
     assert re.search(r"\d", secret), "secret must include an integer"
 
     # searches for uppercase
-    assert re.search(
-        r"[A-Z]", secret
-    ), "secret must include at least one uppercase letter"
+    assert re.search(r"[A-Z]", secret), "secret must include at least one uppercase letter"
 
     # searches for lowercase
-    assert re.search(
-        r"[a-z]", secret
-    ), "secret must include at least one lowercase letter"
+    assert re.search(r"[a-z]", secret), "secret must include at least one lowercase letter"
 
     # searches for symbols
     assert re.search(
@@ -94,9 +88,7 @@ class Database:
         db_path.parent.mkdir(parents=True, exist_ok=True)
         db_path.touch(exist_ok=True)
 
-        self.connection = sqlite3.connect(
-            database=str(db_path), check_same_thread=False, timeout=timeout
-        )
+        self.connection = sqlite3.connect(database=str(db_path), check_same_thread=False, timeout=timeout)
 
 
 class RateLimit(BaseModel):
@@ -276,15 +268,11 @@ def load_env() -> EnvConfig:
 
 env: EnvConfig = load_env()
 if env.enable_ui:
-    assert (
-        env.totp_token is not None
-    ), "TOTP token must be provided if enable_ui is True"
+    assert env.totp_token is not None, "TOTP token must be provided if enable_ui is True"
     try:
         import pyotp  # noqa: F401
     except (ImportError, ModuleNotFoundError):  # pragma: no cover
-        raise exceptions.StartupError(
-            "Missing requirements. Please install 'vaultapi[ui]'"
-        )
+        raise exceptions.StartupError("Missing requirements. Please install 'vaultapi[ui]'")
     validate_totp_secret(env.totp_token)
 database: Database = Database(env.database)
 auth_database: Database = Database(env.auth_database)
