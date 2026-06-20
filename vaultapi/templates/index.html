@@ -1939,6 +1939,44 @@
             }
         }
 
+        // Equivalent of: authorization = lambda token, skew=0: f"{token}.{int(time.time() // 5) - skew}"
+        function authorization(token, skew = 0) {
+          return `${token}.${Math.floor(Date.now() / 1000 / 5) - skew}`;
+        }
+
+        async function generateTokenHash(value) {
+            const salt = crypto.getRandomValues(new Uint8Array(16));
+
+            const keyMaterial = await crypto.subtle.importKey(
+                "raw",
+                new TextEncoder().encode(value),
+                { name: "PBKDF2" },
+                false,
+                ["deriveBits"]
+            );
+
+            const hashBits = await crypto.subtle.deriveBits(
+                {
+                    name: "PBKDF2",
+                    salt,
+                    iterations: 100_000,
+                    hash: "SHA-256",
+                },
+                keyMaterial,
+                256 // 32 bytes
+            );
+
+            const hash = new Uint8Array(hashBits);
+
+            const combined = new Uint8Array(salt.length + hash.length);
+            combined.set(salt);
+            combined.set(hash, salt.length);
+
+            return Array.from(combined)
+                .map(b => b.toString(16).padStart(2, "0"))
+                .join("");
+        }
+
         async function submitLogin() {
             const btn = document.getElementById('login-btn');
             const errEl = document.getElementById('login-error');
@@ -1958,11 +1996,12 @@
             btn.classList.add('loading');
             btn.innerHTML = `${ICONS.spinner} Signing in…`;
             errEl.classList.remove('visible');
+            const bearer_token = await generateTokenHash(authorization(apikey));
 
             const {ok, data} = await fetch('/ui/login', {
                 method: 'POST',
                 headers: {
-                    Authorization: `Bearer ${apikey}`,
+                    Authorization: `Bearer ${bearer_token}`,
                     Accept: "application/json",
                     "mfa-code": totp_code,
                     "Content-Type": "application/json",

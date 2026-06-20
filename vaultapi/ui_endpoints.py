@@ -50,7 +50,7 @@ async def ui_login(request: Request, apikey: HTTPAuthorizationCredentials = Depe
         JSONResponse:
         Returns 200 on success, 401/403 on failure.
     """
-    await auth.validate(request, apikey, auth_type=auth.AuthType.ui_advanced)
+    await auth.validate(request, apikey, auth_type=auth.AuthType.ui_login)
 
     token = base64.urlsafe_b64encode(os.urandom(32)).decode("utf-8")
     expires = int(time.time()) + models.env.ui_lifetime

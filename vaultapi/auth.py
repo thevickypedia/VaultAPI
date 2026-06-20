@@ -8,7 +8,7 @@ from typing import NoReturn
 from fastapi import Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from . import database, exceptions, models
+from . import database, exceptions, models, header
 
 LOGGER = logging.getLogger("uvicorn.default")
 SECURITY = HTTPBearer()
@@ -19,7 +19,8 @@ UI_BASIC = lambda session, auth, host: bool(
     and session["host"] == host
     and int(session["exp"]) > int(time.time())
 )
-API_BASIC = lambda auth: secrets.compare_digest(auth, models.env.apikey)
+API_BASIC = lambda auth: header.verify(token=models.env.apikey, received_hex=auth)
+API_ADVANCED = lambda auth: header.verify(token=f"{models.env.apikey}.{models.env.secret}", received_hex=auth)
 
 class AuthType(Enum):
     """Model for the authentication type.
@@ -29,6 +30,7 @@ class AuthType(Enum):
     """
 
     ui_basic = "UI_BASIC"
+    ui_login = "UI_LOGIN"
     ui_advanced = "UI_ADVANCED"
     api_basic = "API_BASIC"
     api_advanced = "API_ADVANCED"
@@ -64,12 +66,11 @@ async def blocked(host: str) -> None | NoReturn:
         )
 
 
-async def validate_totp(totp_code: str, host: str) -> bool | NoReturn:
+async def validate_totp(totp_code: str) -> bool | NoReturn:
     """Validate the login credentials from the request body.
 
     Args:
         totp_code: TOTP code received from the client.
-        host: Hostname or IP address of the client.
 
     Returns:
         bool:
@@ -104,25 +105,25 @@ async def validate(
     """
     host = request.client.host
     await blocked(host)
-    if authorization.credentials.startswith("\\"):
-        auth = bytes(authorization.credentials, "utf-8").decode(
-            encoding="unicode_escape"
-        )
-    else:
-        auth = authorization.credentials
     match auth_type:
+        case AuthType.ui_login:
+            # UI login page requires an API key and MFA code
+            authenticated = API_BASIC(authorization.credentials) and await validate_totp(host)
         case AuthType.ui_basic:
+            # UI requests with read-only operations require a session token for validation
             session = database.get_ui_session(models.session.fernet)
-            authenticated = UI_BASIC(session, auth, host)
+            authenticated = UI_BASIC(session, authorization.credentials, host)
         case AuthType.ui_advanced:
+            # UI requests with write/modify operations require a session token and MFA code for validation
             session = database.get_ui_session(models.session.fernet)
             totp_code = request.headers.get("mfa-code", "")
-            authenticated = UI_BASIC(session, auth, host) and await validate_totp(totp_code, host=request.client.host)
+            authenticated = UI_BASIC(session, authorization.credentials, host) and await validate_totp(totp_code)
         case AuthType.api_basic:
-            authenticated = API_BASIC(auth)
+            # API requests with read-only operations requires apikey + time based signature authentication
+            authenticated = API_BASIC(authorization.credentials)
         case AuthType.api_advanced:
-            # TODO: Add a read/write key [OR] an additional layer of security for API_ADVANCED auth type
-            authenticated = API_BASIC(auth)
+            # API requests with write/modify operations require apikey + secret + time based signature authentication
+            authenticated = API_ADVANCED(authorization.credentials)
     if authenticated:
         LOGGER.debug(
             "Connection received from host: %s, host-header: %s, x-fwd-host: %s",
@@ -134,5 +135,4 @@ async def validate(
             LOGGER.debug("User agent: %s", user_agent)
         database.reset_failed_auth(host)
         return
-    LOGGER.debug("Invalid apikey [OR] session token")
     unauthorized(host)
