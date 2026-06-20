@@ -19,8 +19,8 @@ UI_BASIC = lambda session, auth, host: bool(
     and session["host"] == host
     and int(session["exp"]) > int(time.time())
 )
-API_BASIC = lambda auth: header.verify(models.env.apikey, received_hex=auth)
-API_ADVANCED = lambda auth: header.verify(models.env.apikey, models.env.secret, received_hex=auth)
+API_BASIC = lambda auth: header.validate(auth, models.env.apikey)
+API_ADVANCED = lambda auth: header.validate(auth, f"{models.env.apikey}.{models.env.secret}")
 
 class AuthType(Enum):
     """Model for the authentication type.

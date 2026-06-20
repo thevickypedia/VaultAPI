@@ -1939,42 +1939,26 @@
             }
         }
 
-        // Equivalent of: authorization = lambda token, skew=0: f"{token}.{int(time.time() // 5) - skew}"
-        function authorization(token, skew = 0) {
-          return `${token}.${Math.floor(Date.now() / 1000 / 5) - skew}`;
-        }
-
-        async function generateTokenHash(value) {
-            const salt = crypto.getRandomValues(new Uint8Array(16));
-
-            const keyMaterial = await crypto.subtle.importKey(
-                "raw",
-                new TextEncoder().encode(value),
-                { name: "PBKDF2" },
+        async function generateSignature(value) {
+            // NOTE: The server uses LATENCY_TOLERANCE = 5 seconds
+            // So the browser's Math.round could also cause off-by-one edge cases
+            // Using Math.floor (matching Python's int(time.time())) is safer
+            const timestamp = String(Math.floor(new Date().getTime() / 1000));
+            const keyMaterial = await window.crypto.subtle.importKey(
+                'raw',
+                new TextEncoder().encode(value),  // token as HMAC key
+                {name: 'HMAC', hash: 'SHA-512'},
                 false,
-                ["deriveBits"]
+                ['sign']
             );
-
-            const hashBits = await crypto.subtle.deriveBits(
-                {
-                    name: "PBKDF2",
-                    salt,
-                    iterations: 100_000,
-                    hash: "SHA-256",
-                },
+            const sigBuffer = await window.crypto.subtle.sign(
+                'HMAC',
                 keyMaterial,
-                256 // 32 bytes
+                new TextEncoder().encode(timestamp)  // only timestamp as message
             );
-
-            const hash = new Uint8Array(hashBits);
-
-            const combined = new Uint8Array(salt.length + hash.length);
-            combined.set(salt);
-            combined.set(hash, salt.length);
-
-            return Array.from(combined)
-                .map(b => b.toString(16).padStart(2, "0"))
-                .join("");
+            const hash = Array.from(new Uint8Array(sigBuffer))
+                .map(b => b.toString(16).padStart(2, '0')).join('');
+            return 'Signature=' + hash + ',timestamp=' + timestamp;
         }
 
         async function submitLogin() {
@@ -1996,7 +1980,7 @@
             btn.classList.add('loading');
             btn.innerHTML = `${ICONS.spinner} Signing in…`;
             errEl.classList.remove('visible');
-            const bearer_token = await generateTokenHash(authorization(apikey));
+            const bearer_token = await generateSignature(apikey);
 
             const {ok, data} = await fetch('/ui/login', {
                 method: 'POST',
