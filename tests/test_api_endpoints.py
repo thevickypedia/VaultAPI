@@ -2,7 +2,7 @@
 
 import pytest
 
-from tests.conftest import auth_headers
+from tests.conftest import api_advanced_headers, auth_headers
 from vaultapi import database, models
 
 
@@ -12,6 +12,13 @@ class TestHealth:
         r = await client.get("/health")
         assert r.status_code == 200
         assert r.json()["STATUS"] == "OK"
+
+
+@pytest.mark.asyncio
+class TestVersion:
+    async def test_version_ok(self, client):
+        r = await client.get("/version", headers=auth_headers())
+        assert r.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -37,15 +44,68 @@ class TestCreateAndDeleteTable:
         assert r.status_code == 200
         assert database.table_exists("newtable")
 
+    async def test_create_duplicate_table(self, client):
+        database.create_table("duptable", ["key", "value"])
+        r = await client.post("/create-table?table_name=duptable", headers=auth_headers())
+        assert r.status_code == 409
+
     async def test_delete_existing_table(self, client):
         database.create_table("todel", ["key", "value"])
-        r = await client.delete("/delete-table?table_name=todel", headers=auth_headers())
+        r = await client.delete("/delete-table?table_name=todel", headers=api_advanced_headers())
         assert r.status_code == 200
         assert not database.table_exists("todel")
 
     async def test_delete_nonexistent_table(self, client):
-        r = await client.delete("/delete-table?table_name=ghost", headers=auth_headers())
+        r = await client.delete("/delete-table?table_name=ghost", headers=api_advanced_headers())
         assert r.status_code == 404
+
+
+@pytest.mark.asyncio
+class TestRenameTable:
+    async def test_rename_existing_table(self, client):
+        database.create_table("old_name", ["key", "value"])
+        r = await client.patch(
+            "/rename-table?table_name=old_name",
+            json={"new_name": "new_name"},
+            headers=api_advanced_headers(),
+        )
+        assert r.status_code == 200
+        assert not database.table_exists("old_name")
+        assert database.table_exists("new_name")
+
+    async def test_rename_nonexistent_table(self, client):
+        r = await client.patch(
+            "/rename-table?table_name=ghost",
+            json={"new_name": "whatever"},
+            headers=api_advanced_headers(),
+        )
+        assert r.status_code == 404
+
+    async def test_rename_to_existing_name_returns_409(self, client):
+        database.create_table("src_tbl", ["key", "value"])
+        database.create_table("dst_tbl", ["key", "value"])
+        r = await client.patch(
+            "/rename-table?table_name=src_tbl",
+            json={"new_name": "dst_tbl"},
+            headers=api_advanced_headers(),
+        )
+        assert r.status_code == 409
+
+    async def test_rename_empty_new_name_returns_400(self, client):
+        database.create_table("src_tbl2", ["key", "value"])
+        r = await client.patch(
+            "/rename-table?table_name=src_tbl2",
+            json={"new_name": ""},
+            headers=api_advanced_headers(),
+        )
+        assert r.status_code == 400
+
+    async def test_rename_requires_auth(self, client):
+        r = await client.patch(
+            "/rename-table?table_name=any",
+            json={"new_name": "other"},
+        )
+        assert r.status_code in (401, 403)
 
 
 @pytest.mark.asyncio
@@ -53,12 +113,12 @@ class TestPutAndGetSecret:
     async def test_put_secret_to_existing_table(self, client):
         database.create_table("vault", ["key", "value"])
         payload = {"secrets": {"DB_PASS": "hunter2"}, "table_name": "vault"}
-        r = await client.put("/put-secret", json=payload, headers=auth_headers())
+        r = await client.put("/put-secret", json=payload, headers=api_advanced_headers())
         assert r.status_code == 200
 
     async def test_put_secret_to_missing_table(self, client):
         payload = {"secrets": {"KEY": "val"}, "table_name": "missing_table"}
-        r = await client.put("/put-secret", json=payload, headers=auth_headers())
+        r = await client.put("/put-secret", json=payload, headers=api_advanced_headers())
         assert r.status_code == 404
 
     async def test_get_single_secret(self, client):
@@ -82,7 +142,6 @@ class TestPutAndGetSecret:
         database.create_table("vault5", ["key", "value"])
         encrypted = models.session.fernet.encrypt(b"val1")
         database.put_secret("K1", encrypted, "vault5")
-        # K2 does not exist — partial content
         r = await client.get("/get-secret?key=K1,K2&table_name=vault5", headers=auth_headers())
         assert r.status_code == 206
 
@@ -107,7 +166,7 @@ class TestDeleteSecret:
             "DELETE",
             "/delete-secret",
             content=_json.dumps(payload),
-            headers={**auth_headers(), "Content-Type": "application/json"},
+            headers={**api_advanced_headers(), "Content-Type": "application/json"},
         )
         assert r.status_code == 200
 
@@ -120,7 +179,7 @@ class TestDeleteSecret:
             "DELETE",
             "/delete-secret",
             content=_json.dumps(payload),
-            headers={**auth_headers(), "Content-Type": "application/json"},
+            headers={**api_advanced_headers(), "Content-Type": "application/json"},
         )
         assert r.status_code == 404
 
@@ -133,5 +192,5 @@ class TestPutSecretTransitEncrypted:
         database.create_table("transit_tbl", ["key", "value"])
         encrypted_payload = transit.encrypt({"TK": "tv"})
         payload = {"secrets": encrypted_payload, "table_name": "transit_tbl"}
-        r = await client.put("/put-secret", json=payload, headers=auth_headers())
+        r = await client.put("/put-secret", json=payload, headers=api_advanced_headers())
         assert r.status_code == 200

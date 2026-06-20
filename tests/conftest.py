@@ -109,7 +109,15 @@ def make_totp() -> str:
 
 
 def auth_headers() -> dict:
-    return {"Authorization": f"Bearer {API_KEY}"}
+    from vaultapi import header
+
+    return {"Authorization": f"Bearer {header.generate(API_KEY)}"}
+
+
+def api_advanced_headers() -> dict:
+    from vaultapi import header
+
+    return {"Authorization": f"Bearer {header.generate(f'{API_KEY}.{FERNET_KEY}')}"}
 
 
 def ui_session_headers(token: str) -> dict:

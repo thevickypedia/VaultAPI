@@ -10,8 +10,11 @@ from tests.conftest import _set_valid_ui_session, make_totp, ui_session_headers
 from vaultapi import database, models
 
 
-def _h(token):
-    return ui_session_headers(token)
+def _h(token, totp=None):
+    headers = ui_session_headers(token)
+    if totp is not None:
+        headers["mfa-code"] = totp
+    return headers
 
 
 @pytest.mark.asyncio
@@ -32,8 +35,23 @@ class TestUiDeleteTableDbError:
             r = await client.request(
                 "DELETE",
                 "/ui/table/del_err_ui",
-                content=_json.dumps({"totp_code": make_totp()}),
-                headers={**_h(token), "Content-Type": "application/json"},
+                content=_json.dumps({}),
+                headers={**_h(token, make_totp()), "Content-Type": "application/json"},
+            )
+        assert r.status_code == 400
+
+
+@pytest.mark.asyncio
+class TestUiRenameTableDbError:
+    async def test_sqlite_error_returns_400(self, client):
+        database.create_table("ren_err_ui", ["key", "value"])
+        token = _set_valid_ui_session()
+        with patch.object(database, "rename_table", side_effect=sqlite3.OperationalError("locked")):
+            r = await client.request(
+                "PATCH",
+                "/ui/table/ren_err_ui",
+                content=_json.dumps({"new_name": "new_ren_err"}),
+                headers={**_h(token, make_totp()), "Content-Type": "application/json"},
             )
         assert r.status_code == 400
 
@@ -49,14 +67,8 @@ class TestUiDeleteSecretDbError:
             r = await client.request(
                 "DELETE",
                 "/ui/secret",
-                content=_json.dumps(
-                    {
-                        "table_name": "del_s_err",
-                        "key": "ERR_KEY",
-                        "totp_code": make_totp(),
-                    }
-                ),
-                headers={**_h(token), "Content-Type": "application/json"},
+                content=_json.dumps({"table_name": "del_s_err", "key": "ERR_KEY"}),
+                headers={**_h(token, make_totp()), "Content-Type": "application/json"},
             )
         assert r.status_code == 400
 
@@ -74,18 +86,18 @@ class TestUiGetTableDbError:
 @pytest.mark.asyncio
 class TestUiImportBlankKey:
     async def test_blank_key_in_json_counts_as_skipped(self, client):
-        """An empty-string key in JSON should be skipped (not 400)."""
         database.create_table("imp_blk", ["key", "value"])
         token = _set_valid_ui_session()
-        import json as _json
-
         payload = {
             "table_name": "imp_blk",
             "payload": _json.dumps({"": "no_key_value", "REAL_KEY": "val"}),
             "payload_type": "json",
-            "totp_code": make_totp(),
         }
-        r = await client.post("/ui/import", json=payload, headers=_h(token))
+        r = await client.post(
+            "/ui/import",
+            json=payload,
+            headers={**_h(token, make_totp()), "Content-Type": "application/json"},
+        )
         assert r.status_code == 200
         data = r.json()
         assert data["imported"] == 1
@@ -102,9 +114,12 @@ class TestUiImportDbError:
                 "table_name": "imp_ferr",
                 "payload": '{"K": "V"}',
                 "payload_type": "json",
-                "totp_code": make_totp(),
             }
-            r = await client.post("/ui/import", json=payload, headers=_h(token))
+            r = await client.post(
+                "/ui/import",
+                json=payload,
+                headers={**_h(token, make_totp()), "Content-Type": "application/json"},
+            )
         assert r.status_code == 200
         assert r.json()["skipped"] == 1
         assert r.json()["imported"] == 0

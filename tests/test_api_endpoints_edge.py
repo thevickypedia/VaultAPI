@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from tests.conftest import auth_headers
+from tests.conftest import api_advanced_headers, auth_headers
 from vaultapi import api_endpoints, database, exceptions, models
 
 
@@ -37,7 +37,6 @@ class TestGetSecretSingleKeyNotFound:
         assert r.status_code == 404
 
     async def test_multiple_missing_keys_uses_plural_log_path(self, client):
-        # Both K1 and K2 absent → the else-branch logger fires (keys_ct > 1, all missing)
         database.create_table("log_multi", ["key", "value"])
         r = await client.get("/get-secret?key=K1,K2&table_name=log_multi", headers=auth_headers())
         assert r.status_code == 404
@@ -57,9 +56,9 @@ class TestDeleteSecretSqliteError:
                 "DELETE",
                 "/delete-secret",
                 content=_json.dumps(payload),
-                headers={**auth_headers(), "Content-Type": "application/json"},
+                headers={**api_advanced_headers(), "Content-Type": "application/json"},
             )
-        assert r.status_code == 417  # EXPECTATION_FAILED
+        assert r.status_code == 417
 
 
 @pytest.mark.asyncio
@@ -75,8 +74,21 @@ class TestDeleteTableSqliteError:
     async def test_delete_table_db_error(self, client):
         database.create_table("dtbl_err", ["key", "value"])
         with patch.object(database, "drop_table", side_effect=sqlite3.OperationalError("locked")):
-            r = await client.delete("/delete-table?table_name=dtbl_err", headers=auth_headers())
+            r = await client.delete("/delete-table?table_name=dtbl_err", headers=api_advanced_headers())
         assert r.status_code == 417
+
+
+@pytest.mark.asyncio
+class TestRenameTableSqliteError:
+    async def test_rename_table_db_error(self, client):
+        database.create_table("rename_err_tbl", ["key", "value"])
+        with patch.object(database, "rename_table", side_effect=sqlite3.OperationalError("locked")):
+            r = await client.patch(
+                "/rename-table?table_name=rename_err_tbl",
+                json={"new_name": "new_name_err"},
+                headers=api_advanced_headers(),
+            )
+        assert r.status_code == 400
 
 
 @pytest.mark.asyncio

@@ -4,18 +4,20 @@ from unittest.mock import patch
 
 import pytest
 
-from tests.conftest import (
-    API_KEY,
-    FERNET_KEY,
-    _set_valid_ui_session,
-    make_totp,
-    ui_session_headers,
-)
-from vaultapi import database, models  # noqa: F401
+from tests.conftest import API_KEY, _set_valid_ui_session, make_totp, ui_session_headers
+from vaultapi import database, header, models  # noqa: F401
 
 
 def _ui_headers(token):
     return ui_session_headers(token)
+
+
+def _login_headers(totp: str = None) -> dict:
+    """Headers for /ui/login: HMAC Authorization + mfa-code."""
+    h = {"Authorization": f"Bearer {header.generate(API_KEY)}"}
+    if totp is not None:
+        h["mfa-code"] = totp
+    return h
 
 
 # ---------------------------------------------------------------------------
@@ -42,10 +44,7 @@ class TestIndex:
 @pytest.mark.asyncio
 class TestUiLogin:
     async def test_valid_credentials_returns_token(self, client):
-        r = await client.post(
-            "/ui/login",
-            json={"apikey": API_KEY, "secret": FERNET_KEY, "totp_code": make_totp()},
-        )
+        r = await client.post("/ui/login", headers=_login_headers(make_totp()))
         assert r.status_code == 200
         data = r.json()
         assert "token" in data
@@ -54,62 +53,32 @@ class TestUiLogin:
     async def test_wrong_apikey_returns_401(self, client):
         r = await client.post(
             "/ui/login",
-            json={
-                "apikey": "wrong-key",
-                "secret": FERNET_KEY,
-                "totp_code": make_totp(),
-            },
-        )
-        assert r.status_code == 401
-
-    async def test_wrong_secret_returns_401(self, client):
-        r = await client.post(
-            "/ui/login",
-            json={
-                "apikey": API_KEY,
-                "secret": "wrong-secret",
-                "totp_code": make_totp(),
-            },
+            headers={"Authorization": "Bearer wrong-key", "mfa-code": make_totp()},
         )
         assert r.status_code == 401
 
     async def test_wrong_totp_returns_401(self, client):
-        r = await client.post(
-            "/ui/login",
-            json={"apikey": API_KEY, "secret": FERNET_KEY, "totp_code": "000000"},
-        )
+        r = await client.post("/ui/login", headers=_login_headers("000000"))
         assert r.status_code == 401
 
     async def test_forbidden_from_blocked_host(self, client):
         for _ in range(database.FAILED_AUTH_LIMIT):
             database.increment_failed_auth("127.0.0.1")
-        r = await client.post(
-            "/ui/login",
-            json={"apikey": API_KEY, "secret": FERNET_KEY, "totp_code": make_totp()},
-        )
+        r = await client.post("/ui/login", headers=_login_headers(make_totp()))
         assert r.status_code == 403
 
     async def test_totp_exception_returns_401(self, client):
         with patch("pyotp.TOTP.verify", side_effect=Exception("boom")):
-            r = await client.post(
-                "/ui/login",
-                json={"apikey": API_KEY, "secret": FERNET_KEY, "totp_code": "123456"},
-            )
+            r = await client.post("/ui/login", headers=_login_headers("123456"))
         assert r.status_code == 401
 
-    async def test_apikey_with_backslash_prefix_decoded(self, client):
+    async def test_missing_totp_returns_401(self, client):
+        # No mfa-code header → empty string → TOTP fails
         r = await client.post(
             "/ui/login",
-            json={"apikey": "\\nwrong", "secret": FERNET_KEY, "totp_code": make_totp()},
+            headers={"Authorization": f"Bearer {header.generate(API_KEY)}"},
         )
-        assert r.status_code in (401, 429)
-
-    async def test_secret_with_backslash_prefix_decoded(self, client):
-        r = await client.post(
-            "/ui/login",
-            json={"apikey": API_KEY, "secret": "\\nwrong", "totp_code": make_totp()},
-        )
-        assert r.status_code in (401, 429)
+        assert r.status_code == 401
 
 
 # ---------------------------------------------------------------------------
@@ -121,7 +90,6 @@ class TestUiLogout:
         token = _set_valid_ui_session()
         r = await client.post("/ui/logout", headers=_ui_headers(token))
         assert r.status_code == 200
-        # Token must no longer be accepted after logout
         r2 = await client.get("/ui/tables", headers=_ui_headers(token))
         assert r2.status_code == 401
 
@@ -174,7 +142,8 @@ class TestUiGetTable:
         token = _set_valid_ui_session()
         r = await client.get("/ui/table/t1", headers=_ui_headers(token))
         assert r.status_code == 200
-        assert r.json()["secrets"]["MYKEY"] == "myval"
+        # Returns fernet token string, not plaintext
+        assert "MYKEY" in r.json()["encrypted_secrets"]
 
     async def test_get_missing_table_returns_404(self, client):
         token = _set_valid_ui_session()
@@ -186,11 +155,11 @@ class TestUiGetTable:
         token = _set_valid_ui_session()
         r = await client.get("/ui/table/empty_t", headers=_ui_headers(token))
         assert r.status_code == 200
-        assert r.json()["secrets"] == {}
+        assert r.json()["encrypted_secrets"] == {}
 
 
 # ---------------------------------------------------------------------------
-# /ui/table/{table_name}  (POST / DELETE)
+# /ui/table/{table_name}  (POST / PATCH / DELETE)
 # ---------------------------------------------------------------------------
 @pytest.mark.asyncio
 class TestUiCreateDeleteTable:
@@ -200,14 +169,20 @@ class TestUiCreateDeleteTable:
         assert r.status_code == 200
         assert database.table_exists("brand_new")
 
+    async def test_create_duplicate_table_returns_409(self, client):
+        database.create_table("dup_tbl", ["key", "value"])
+        token = _set_valid_ui_session()
+        r = await client.post("/ui/table/dup_tbl", headers=_ui_headers(token))
+        assert r.status_code == 409
+
     async def _delete_table(self, client, name, totp_code, headers):
         import json as _json
 
         return await client.request(
             "DELETE",
             f"/ui/table/{name}",
-            content=_json.dumps({"totp_code": totp_code}),
-            headers={**headers, "Content-Type": "application/json"},
+            content=_json.dumps({}),
+            headers={**headers, "Content-Type": "application/json", "mfa-code": totp_code},
         )
 
     async def test_delete_existing_table(self, client):
@@ -231,6 +206,63 @@ class TestUiCreateDeleteTable:
 
 
 # ---------------------------------------------------------------------------
+# /ui/table/{table_name}  (PATCH — rename)
+# ---------------------------------------------------------------------------
+@pytest.mark.asyncio
+class TestUiRenameTable:
+    async def _rename(self, client, old_name, new_name, totp_code, headers):
+        import json as _json
+
+        return await client.request(
+            "PATCH",
+            f"/ui/table/{old_name}",
+            content=_json.dumps({"new_name": new_name}),
+            headers={**headers, "Content-Type": "application/json", "mfa-code": totp_code},
+        )
+
+    async def test_rename_existing_table(self, client):
+        database.create_table("orig_tbl", ["key", "value"])
+        token = _set_valid_ui_session()
+        r = await self._rename(client, "orig_tbl", "renamed_tbl", make_totp(), _ui_headers(token))
+        assert r.status_code == 200
+        assert not database.table_exists("orig_tbl")
+        assert database.table_exists("renamed_tbl")
+
+    async def test_rename_missing_table_returns_404(self, client):
+        token = _set_valid_ui_session()
+        r = await self._rename(client, "no_such", "whatever", make_totp(), _ui_headers(token))
+        assert r.status_code == 404
+
+    async def test_rename_to_existing_name_returns_409(self, client):
+        database.create_table("src_ui", ["key", "value"])
+        database.create_table("dst_ui", ["key", "value"])
+        token = _set_valid_ui_session()
+        r = await self._rename(client, "src_ui", "dst_ui", make_totp(), _ui_headers(token))
+        assert r.status_code == 409
+
+    async def test_rename_empty_new_name_returns_400(self, client):
+        database.create_table("src_empty", ["key", "value"])
+        token = _set_valid_ui_session()
+        r = await self._rename(client, "src_empty", "", make_totp(), _ui_headers(token))
+        assert r.status_code == 400
+
+    async def test_rename_wrong_totp_returns_401(self, client):
+        database.create_table("totp_ren_tbl", ["key", "value"])
+        token = _set_valid_ui_session()
+        r = await self._rename(client, "totp_ren_tbl", "newname", "000000", _ui_headers(token))
+        assert r.status_code == 401
+
+    async def test_rename_requires_auth(self, client):
+        r = await client.request(
+            "PATCH",
+            "/ui/table/any",
+            headers={"Authorization": "Bearer bad", "Content-Type": "application/json", "mfa-code": make_totp()},
+            content='{"new_name": "other"}',
+        )
+        assert r.status_code in (401, 403)
+
+
+# ---------------------------------------------------------------------------
 # /ui/secret  (PUT)
 # ---------------------------------------------------------------------------
 @pytest.mark.asyncio
@@ -238,62 +270,57 @@ class TestUiPutSecret:
     async def test_put_secret_to_existing_table(self, client):
         database.create_table("put_tbl", ["key", "value"])
         token = _set_valid_ui_session()
-        payload = {
-            "table_name": "put_tbl",
-            "key": "MY_KEY",
-            "value": "my_value",
-            "totp_code": make_totp(),
-        }
-        r = await client.put("/ui/secret", json=payload, headers=_ui_headers(token))
+        payload = {"table_name": "put_tbl", "key": "MY_KEY", "value": "my_value"}
+        r = await client.put(
+            "/ui/secret",
+            json=payload,
+            headers={**_ui_headers(token), "mfa-code": make_totp()},
+        )
         assert r.status_code == 200
         assert database.get_secret("MY_KEY", "put_tbl") is not None
 
     async def test_put_secret_empty_key_returns_400(self, client):
         database.create_table("put_tbl2", ["key", "value"])
         token = _set_valid_ui_session()
-        payload = {
-            "table_name": "put_tbl2",
-            "key": "",
-            "value": "val",
-            "totp_code": make_totp(),
-        }
-        r = await client.put("/ui/secret", json=payload, headers=_ui_headers(token))
+        payload = {"table_name": "put_tbl2", "key": "", "value": "val"}
+        r = await client.put(
+            "/ui/secret",
+            json=payload,
+            headers={**_ui_headers(token), "mfa-code": make_totp()},
+        )
         assert r.status_code == 400
 
     async def test_put_secret_wrong_totp_returns_401(self, client):
         database.create_table("put_tbl3", ["key", "value"])
         token = _set_valid_ui_session()
-        payload = {
-            "table_name": "put_tbl3",
-            "key": "K",
-            "value": "v",
-            "totp_code": "000000",
-        }
-        r = await client.put("/ui/secret", json=payload, headers=_ui_headers(token))
+        payload = {"table_name": "put_tbl3", "key": "K", "value": "v"}
+        r = await client.put(
+            "/ui/secret",
+            json=payload,
+            headers={**_ui_headers(token), "mfa-code": "000000"},
+        )
         assert r.status_code == 401
 
     async def test_put_secret_totp_exception_returns_401(self, client):
         database.create_table("put_tbl4", ["key", "value"])
         token = _set_valid_ui_session()
-        payload = {
-            "table_name": "put_tbl4",
-            "key": "K",
-            "value": "v",
-            "totp_code": "123456",
-        }
+        payload = {"table_name": "put_tbl4", "key": "K", "value": "v"}
         with patch("pyotp.TOTP.verify", side_effect=Exception("boom")):
-            r = await client.put("/ui/secret", json=payload, headers=_ui_headers(token))
+            r = await client.put(
+                "/ui/secret",
+                json=payload,
+                headers={**_ui_headers(token), "mfa-code": "123456"},
+            )
         assert r.status_code == 401
 
     async def test_put_secret_missing_table_returns_404(self, client):
         token = _set_valid_ui_session()
-        payload = {
-            "table_name": "no_table",
-            "key": "K",
-            "value": "v",
-            "totp_code": make_totp(),
-        }
-        r = await client.put("/ui/secret", json=payload, headers=_ui_headers(token))
+        payload = {"table_name": "no_table", "key": "K", "value": "v"}
+        r = await client.put(
+            "/ui/secret",
+            json=payload,
+            headers={**_ui_headers(token), "mfa-code": make_totp()},
+        )
         assert r.status_code == 404
 
 
@@ -320,8 +347,8 @@ class TestUiDeleteSecret:
         r = await self._delete(
             client,
             "/ui/secret",
-            {"table_name": "del_tbl", "key": "DEL_KEY", "totp_code": make_totp()},
-            _ui_headers(token),
+            {"table_name": "del_tbl", "key": "DEL_KEY"},
+            {**_ui_headers(token), "mfa-code": make_totp()},
         )
         assert r.status_code == 200
         assert database.get_secret("DEL_KEY", "del_tbl") is None
@@ -334,8 +361,8 @@ class TestUiDeleteSecret:
         r = await self._delete(
             client,
             "/ui/secret",
-            {"table_name": "del_totp_tbl", "key": "GUARDED_KEY", "totp_code": "000000"},
-            _ui_headers(token),
+            {"table_name": "del_totp_tbl", "key": "GUARDED_KEY"},
+            {**_ui_headers(token), "mfa-code": "000000"},
         )
         assert r.status_code == 401
         assert database.get_secret("GUARDED_KEY", "del_totp_tbl") is not None
@@ -345,8 +372,8 @@ class TestUiDeleteSecret:
         r = await self._delete(
             client,
             "/ui/secret",
-            {"table_name": "any", "key": "", "totp_code": make_totp()},
-            _ui_headers(token),
+            {"table_name": "any", "key": ""},
+            {**_ui_headers(token), "mfa-code": make_totp()},
         )
         assert r.status_code == 400
 
@@ -356,8 +383,8 @@ class TestUiDeleteSecret:
         r = await self._delete(
             client,
             "/ui/secret",
-            {"table_name": "del_tbl2", "key": "GHOST", "totp_code": make_totp()},
-            _ui_headers(token),
+            {"table_name": "del_tbl2", "key": "GHOST"},
+            {**_ui_headers(token), "mfa-code": make_totp()},
         )
         assert r.status_code == 404
 
@@ -374,9 +401,12 @@ class TestUiImportSecrets:
             "table_name": "imp_json",
             "payload": '{"DB_URL": "postgres://localhost/db", "API_KEY": "abc123"}',
             "payload_type": "json",
-            "totp_code": make_totp(),
         }
-        r = await client.post("/ui/import", json=payload, headers=_ui_headers(token))
+        r = await client.post(
+            "/ui/import",
+            json=payload,
+            headers={**_ui_headers(token), "mfa-code": make_totp()},
+        )
         assert r.status_code == 200
         data = r.json()
         assert data["imported"] == 2
@@ -389,9 +419,12 @@ class TestUiImportSecrets:
             "table_name": "imp_yaml",
             "payload": "DB_HOST: localhost\nDB_PORT: '5432'\n",
             "payload_type": "yaml",
-            "totp_code": make_totp(),
         }
-        r = await client.post("/ui/import", json=payload, headers=_ui_headers(token))
+        r = await client.post(
+            "/ui/import",
+            json=payload,
+            headers={**_ui_headers(token), "mfa-code": make_totp()},
+        )
         assert r.status_code == 200
         assert r.json()["imported"] == 2
 
@@ -410,9 +443,12 @@ class TestUiImportSecrets:
             "table_name": "imp_env",
             "payload": env_text,
             "payload_type": "env",
-            "totp_code": make_totp(),
         }
-        r = await client.post("/ui/import", json=payload, headers=_ui_headers(token))
+        r = await client.post(
+            "/ui/import",
+            json=payload,
+            headers={**_ui_headers(token), "mfa-code": make_totp()},
+        )
         assert r.status_code == 200
         assert r.json()["imported"] == 4
 
@@ -423,9 +459,12 @@ class TestUiImportSecrets:
             "table_name": "imp_env2",
             "payload": "no_equals_sign_here\nVALID=ok\n",
             "payload_type": "env",
-            "totp_code": make_totp(),
         }
-        r = await client.post("/ui/import", json=payload, headers=_ui_headers(token))
+        r = await client.post(
+            "/ui/import",
+            json=payload,
+            headers={**_ui_headers(token), "mfa-code": make_totp()},
+        )
         assert r.status_code == 200
         assert r.json()["imported"] == 1
 
@@ -436,9 +475,12 @@ class TestUiImportSecrets:
             "table_name": "imp_totp",
             "payload": '{"k": "v"}',
             "payload_type": "json",
-            "totp_code": "000000",
         }
-        r = await client.post("/ui/import", json=payload, headers=_ui_headers(token))
+        r = await client.post(
+            "/ui/import",
+            json=payload,
+            headers={**_ui_headers(token), "mfa-code": "000000"},
+        )
         assert r.status_code == 401
 
     async def test_import_totp_exception_returns_401(self, client):
@@ -448,10 +490,13 @@ class TestUiImportSecrets:
             "table_name": "imp_totp_exc",
             "payload": '{"k": "v"}',
             "payload_type": "json",
-            "totp_code": "123456",
         }
         with patch("pyotp.TOTP.verify", side_effect=Exception("boom")):
-            r = await client.post("/ui/import", json=payload, headers=_ui_headers(token))
+            r = await client.post(
+                "/ui/import",
+                json=payload,
+                headers={**_ui_headers(token), "mfa-code": "123456"},
+            )
         assert r.status_code == 401
 
     async def test_import_missing_table_returns_404(self, client):
@@ -460,9 +505,12 @@ class TestUiImportSecrets:
             "table_name": "no_table",
             "payload": '{"k": "v"}',
             "payload_type": "json",
-            "totp_code": make_totp(),
         }
-        r = await client.post("/ui/import", json=payload, headers=_ui_headers(token))
+        r = await client.post(
+            "/ui/import",
+            json=payload,
+            headers={**_ui_headers(token), "mfa-code": make_totp()},
+        )
         assert r.status_code == 404
 
     async def test_import_invalid_json_returns_400(self, client):
@@ -472,9 +520,12 @@ class TestUiImportSecrets:
             "table_name": "imp_bad",
             "payload": "{not valid json",
             "payload_type": "json",
-            "totp_code": make_totp(),
         }
-        r = await client.post("/ui/import", json=payload, headers=_ui_headers(token))
+        r = await client.post(
+            "/ui/import",
+            json=payload,
+            headers={**_ui_headers(token), "mfa-code": make_totp()},
+        )
         assert r.status_code == 400
 
     async def test_import_json_non_dict_returns_400(self, client):
@@ -484,9 +535,12 @@ class TestUiImportSecrets:
             "table_name": "imp_arr",
             "payload": '["a", "b"]',
             "payload_type": "json",
-            "totp_code": make_totp(),
         }
-        r = await client.post("/ui/import", json=payload, headers=_ui_headers(token))
+        r = await client.post(
+            "/ui/import",
+            json=payload,
+            headers={**_ui_headers(token), "mfa-code": make_totp()},
+        )
         assert r.status_code == 400
 
     async def test_import_yaml_non_dict_returns_400(self, client):
@@ -496,9 +550,12 @@ class TestUiImportSecrets:
             "table_name": "imp_ylist",
             "payload": "- item1\n- item2\n",
             "payload_type": "yaml",
-            "totp_code": make_totp(),
         }
-        r = await client.post("/ui/import", json=payload, headers=_ui_headers(token))
+        r = await client.post(
+            "/ui/import",
+            json=payload,
+            headers={**_ui_headers(token), "mfa-code": make_totp()},
+        )
         assert r.status_code == 400
 
     async def test_import_unsupported_type_returns_400(self, client):
@@ -508,9 +565,12 @@ class TestUiImportSecrets:
             "table_name": "imp_unk",
             "payload": "anything",
             "payload_type": "xml",
-            "totp_code": make_totp(),
         }
-        r = await client.post("/ui/import", json=payload, headers=_ui_headers(token))
+        r = await client.post(
+            "/ui/import",
+            json=payload,
+            headers={**_ui_headers(token), "mfa-code": make_totp()},
+        )
         assert r.status_code == 400
 
     async def test_import_empty_payload_returns_400(self, client):
@@ -520,9 +580,12 @@ class TestUiImportSecrets:
             "table_name": "imp_empty",
             "payload": "{}",
             "payload_type": "json",
-            "totp_code": make_totp(),
         }
-        r = await client.post("/ui/import", json=payload, headers=_ui_headers(token))
+        r = await client.post(
+            "/ui/import",
+            json=payload,
+            headers={**_ui_headers(token), "mfa-code": make_totp()},
+        )
         assert r.status_code == 400
 
     async def test_import_requires_auth(self, client):
@@ -530,7 +593,6 @@ class TestUiImportSecrets:
             "table_name": "any",
             "payload": '{"k": "v"}',
             "payload_type": "json",
-            "totp_code": make_totp(),
         }
         r = await client.post(
             "/ui/import",
