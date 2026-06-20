@@ -19,8 +19,8 @@ UI_BASIC = lambda session, auth, host: bool(
     and session["host"] == host
     and int(session["exp"]) > int(time.time())
 )
-API_BASIC = lambda auth: header.verify(token=models.env.apikey, received_hex=auth)
-API_ADVANCED = lambda auth: header.verify(token=f"{models.env.apikey}.{models.env.secret}", received_hex=auth)
+API_BASIC = lambda auth: header.verify(models.env.apikey, received_hex=auth)
+API_ADVANCED = lambda auth: header.verify(models.env.apikey, models.env.secret, received_hex=auth)
 
 class AuthType(Enum):
     """Model for the authentication type.
@@ -82,7 +82,7 @@ async def validate_totp(totp_code: str) -> bool | NoReturn:
         if models.env.totp_token and pyotp.TOTP(models.env.totp_token).verify(totp_code):
             return True
         else:
-            LOGGER.warning("TOTP verification failed, missing: %s", models.env.totp_token is None)
+            LOGGER.warning("TOTP verification failed, server-missing: %s, client-missing: %s", models.env.totp_token is None, totp_code is None)
     except Exception as error:
         LOGGER.error("TOTP validation error: %s", error)
     return False
@@ -108,7 +108,8 @@ async def validate(
     match auth_type:
         case AuthType.ui_login:
             # UI login page requires an API key and MFA code
-            authenticated = API_BASIC(authorization.credentials) and await validate_totp(host)
+            totp_code = request.headers.get("mfa-code", "")
+            authenticated = API_BASIC(authorization.credentials) and await validate_totp(totp_code)
         case AuthType.ui_basic:
             # UI requests with read-only operations require a session token for validation
             session = database.get_ui_session(models.session.fernet)
