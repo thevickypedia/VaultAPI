@@ -114,6 +114,12 @@ def api_routes() -> List[APIRoute]:
             include_in_schema=False,
         ),
         APIRoute(
+            path="/version",
+            endpoint=api_endpoints.get_version,
+            methods=["GET"],
+            dependencies=DEPENDENCIES,
+        ),
+        APIRoute(
             path="/get-secret",
             endpoint=api_endpoints.get_secret,
             methods=["GET"],

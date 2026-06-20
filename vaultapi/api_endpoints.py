@@ -7,7 +7,7 @@ from fastapi import Depends, Request
 from fastapi.responses import RedirectResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from . import auth, database, exceptions, models, payload, transit
+from . import auth, database, exceptions, models, payload, transit, version
 
 LOGGER = logging.getLogger("uvicorn.default")
 security = HTTPBearer()
@@ -375,6 +375,16 @@ async def health() -> Dict[str, str]:
         Returns the health response.
     """
     return {"STATUS": "OK"}
+
+
+async def get_version() -> str:
+    """Endpoint to get the current version of the Vault API.
+
+    Returns:
+        str:
+        Returns the version string of the Vault API.
+    """
+    return version.__version__
 
 
 async def docs() -> RedirectResponse:
