@@ -1,5 +1,6 @@
 import base64
 import hashlib
+import hmac
 import json
 import os
 import time
@@ -17,6 +18,13 @@ HOST = os.environ.get("HOST", "0.0.0.0")
 PORT = os.environ.get("PORT", 8080)
 
 
+def generate_auth_header(token: str) -> str:
+    """Generate HMAC-SHA512 authorization header value matching the server's header.py."""
+    timestamp = str(int(time.time()))
+    signature = hmac.new(token.encode("utf-8"), timestamp.encode("utf-8"), hashlib.sha512).hexdigest()
+    return f"Signature={signature},timestamp={timestamp}"
+
+
 def transit_decrypt(ciphertext: str | ByteString) -> Dict[str, Any]:
     """Decrypt transit encrypted payload."""
     epoch = int(time.time()) // TRANSIT_TIME_BUCKET
@@ -32,7 +40,7 @@ def get_cipher() -> str:
     """Get ciphertext from the server."""
     headers = {
         "accept": "application/json",
-        "Authorization": f"Bearer {APIKEY}",
+        "Authorization": f"Bearer {generate_auth_header(APIKEY)}",
     }
     params = {
         "table_name": "default",

@@ -4,6 +4,11 @@ const axios = require('axios');
 const APIKEY = process.env.APIKEY;
 const SECRET = process.env.SECRET;
 
+if (!(APIKEY || SECRET)) {
+    console.error('APIKEY and SECRET environment variables must be set');
+    process.exit(1);
+}
+
 const getEnvAsInt = (key, defaultValue) => {
     const value = process.env[key];
     return value !== undefined ? parseInt(value, 10) : defaultValue;
@@ -14,6 +19,12 @@ const TRANSIT_KEY_LENGTH = getEnvAsInt("TRANSIT_KEY_LENGTH", 60);
 const HOST = process.env.HOST || "0.0.0.0";
 const PORT = getEnvAsInt("PORT", 8080);
 
+
+function generateAuthHeader(token) {
+    const timestamp = String(Math.floor(Date.now() / 1000));
+    const signature = crypto.createHmac('sha512', token).update(timestamp).digest('hex');
+    return `Signature=${signature},timestamp=${timestamp}`;
+}
 
 async function transitDecrypt(ciphertext) {
     const epoch = Math.floor(Date.now() / (1000 * TRANSIT_TIME_BUCKET));
@@ -46,7 +57,7 @@ async function transitDecrypt(ciphertext) {
 async function getCipher() {
     const headers = {
         'accept': 'application/json',
-        'Authorization': `Bearer ${APIKEY}`,
+        'Authorization': `Bearer ${generateAuthHeader(APIKEY)}`,
     };
     const params = {
         table_name: 'default',

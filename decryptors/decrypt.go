@@ -3,14 +3,17 @@ package main
 import (
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/hmac"
 	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
-	"time"
 	"strconv"
+	"time"
 )
 
 var apiKey = os.Getenv("APIKEY")
@@ -38,6 +41,14 @@ var (
     HOST                = getEnvString("HOST", "0.0.0.0")
     PORT                = getEnvInt("PORT", 8080)
 )
+
+func generateAuthHeader(token string) string {
+    timestamp := strconv.FormatInt(time.Now().Unix(), 10)
+    mac := hmac.New(sha512.New, []byte(token))
+    mac.Write([]byte(timestamp))
+    signature := hex.EncodeToString(mac.Sum(nil))
+    return fmt.Sprintf("Signature=%s,timestamp=%s", signature, timestamp)
+}
 
 func transitDecrypt(ciphertext string) (map[string]interface{}, error) {
 	epoch := time.Now().Unix() / TRANSIT_TIME_BUCKET
@@ -85,7 +96,7 @@ func getCipher() (string, error) {
 	}
 
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", "Bearer "+apiKey)
+    req.Header.Set("Authorization", "Bearer "+generateAuthHeader(apiKey))
 	q := req.URL.Query()
 	q.Add("table_name", "default")
 	req.URL.RawQuery = q.Encode()
