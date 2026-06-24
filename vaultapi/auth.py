@@ -19,8 +19,10 @@ UI_BASIC = lambda session, auth, host: bool(  # noqa: E731
     and session["host"] == host
     and int(session["exp"]) > int(time.time())
 )
-API_BASIC = lambda auth: header.validate(auth, models.env.apikey)  # noqa: E731
-API_ADVANCED = lambda auth: header.validate(auth, f"{models.env.apikey}.{models.env.secret}")  # noqa: E731
+API_BASIC = lambda auth: header.validate(auth, models.env.apikey, models.env.authorization_validity)  # noqa: E731
+API_ADVANCED = lambda auth: header.validate(  # noqa: E731
+    auth, f"{models.env.apikey}.{models.env.secret}", models.env.authorization_validity
+)
 
 
 class AuthType(Enum):

@@ -143,6 +143,10 @@ class EnvConfig(BaseSettings):
     secret: str
     transit_key_length: PositiveInt = 32
     transit_time_bucket: PositiveInt = Field(60, ge=30, le=300)  # 30s to 5m
+    # 5s will be tight - ONLY suitable for API-to-API connections (risk of replay attacks: low to none)
+    # 2m will be loose - since it allows room for requests to be replayed (risk of replay attacks: high)
+    # Choose a value that is suitable for your use case. 60s is a good balance for most scenarios.
+    authorization_validity: PositiveInt = Field(30, ge=5, le=120)  # 5s to 2m
     database: FilePath | NewPath | str = Field("secrets.db", pattern=".*.db$")
     auth_database: FilePath | NewPath | str = Field("auth.db", pattern=".*.db$")
     host: str = socket.gethostbyname("localhost") or "0.0.0.0"

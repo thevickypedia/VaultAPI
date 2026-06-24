@@ -1952,7 +1952,7 @@
         }
 
         async function generateSignature(value) {
-            // NOTE: The server uses LATENCY_TOLERANCE = 5 seconds
+            // NOTE: The server uses a custom authorization_validity
             // So the browser's Math.round could also cause off-by-one edge cases
             // Using Math.floor (matching Python's int(time.time())) is safer
             const timestamp = String(Math.floor(new Date().getTime() / 1000));
