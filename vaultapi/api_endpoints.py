@@ -1,75 +1,28 @@
 import logging
-import sqlite3
 from http import HTTPStatus
-from typing import Dict, List
+from typing import Dict
 
 from fastapi import Depends, Request
 from fastapi.responses import RedirectResponse
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.security import HTTPAuthorizationCredentials
 
-from . import auth, database, exceptions, models, payload, transit, version
+from . import auth, core, exceptions, models, payload, transit, version
 
 LOGGER = logging.getLogger("uvicorn.default")
-security = HTTPBearer()
-
-
-async def retrieve_secret(key: str, table_name: str) -> str | None:
-    """Retrieve an existing secret from a table in the database.
-
-    Args:
-        key: Name of the secret to retrieve.
-        table_name: Name of the table where the secret is stored.
-
-    Returns:
-        str:
-        Returns the secret value.
-    """
-    try:
-        return database.get_secret(key=key, table_name=table_name)
-    except sqlite3.OperationalError as error:
-        LOGGER.error(error)
-        raise exceptions.APIResponse(status_code=HTTPStatus.BAD_REQUEST.real, detail=error.args[0])
-
-
-async def retrieve_secrets(table_name: str, keys: List[str] | None = None) -> Dict[str, bytes]:
-    """Retrieve multiple secrets from a table or retrieve the table as a whole.
-
-    Args:
-        table_name: Name of the table where the secret is stored.
-        keys: List of keys for which the values have to be retrieved.
-
-    Returns:
-        Dict[str, str]:
-        Returns the key-value pairs for secret key and it's value.
-    """
-    if keys:
-        values = {}
-        for key in keys:
-            if value := await retrieve_secret(key, table_name):
-                values[key] = value
-        return values
-    else:
-        try:
-            return dict(database.get_table(table_name))
-        except sqlite3.OperationalError as error:
-            LOGGER.error(error)
-            raise exceptions.APIResponse(status_code=HTTPStatus.BAD_REQUEST.real, detail=error.args[0])
 
 
 async def get_secret(
     request: Request,
     key: str,
     table_name: str = "default",
-    apikey: HTTPAuthorizationCredentials = Depends(security),
+    apikey: HTTPAuthorizationCredentials = Depends(auth.SECURITY),
 ):
-    """**API function to retrieve multiple secrets at a time.**
+    """**API function to retrieve one or more secret(s) - transit encrypted.**
 
     **Args:**
 
-        request: Reference to the FastAPI request object.
-        keys: Comma separated list of secret names to be retrieved.
+        key: Single key or a comma separated list of secrets to be retrieved.
         table_name: Name of the table where the secrets are stored.
-        apikey: API Key to authenticate the request.
 
     **Raises:**
 
@@ -77,7 +30,6 @@ async def get_secret(
         Raises the HTTPStatus object with a status code and detail as response.
     """
     await auth.validate(request, apikey, auth_type=auth.AuthType.api_basic)
-    # keys = [key.strip() for key in keys.split(",") if key.strip()]
     keys = list(filter(None, map(str.strip, key.split(","))))
     keys_ct = len(keys)
     try:
@@ -85,7 +37,7 @@ async def get_secret(
     except AssertionError as error:
         LOGGER.error(error)
         raise exceptions.APIResponse(status_code=HTTPStatus.BAD_REQUEST.real, detail=error.args[0])
-    if values := await retrieve_secrets(table_name, keys):
+    if values := await core.retrieve_secrets(table_name, keys):
         values_ct = len(values)
         try:
             assert (
@@ -103,24 +55,15 @@ async def get_secret(
     if keys_ct == 1:
         LOGGER.info("Secret value for '%s' NOT found in the datastore", keys[0])
     else:
-        LOGGER.info(
-            "Secret values for %d keys %s were NOT found in the datastore",
-            keys_ct,
-            keys,
-        )
+        LOGGER.info("Secret values for %d keys %s were NOT found in the datastore", keys_ct, keys)
     raise exceptions.APIResponse(status_code=HTTPStatus.NOT_FOUND.real, detail=HTTPStatus.NOT_FOUND.phrase)
 
 
 async def list_tables(
     request: Request,
-    apikey: HTTPAuthorizationCredentials = Depends(security),
+    apikey: HTTPAuthorizationCredentials = Depends(auth.SECURITY),
 ):
-    """**API function to retrieve ALL available tables.**
-
-    **Args:**
-
-        request: Reference to the FastAPI request object.
-        apikey: API Key to authenticate the request.
+    """**API function to get ALL table names.**
 
     **Raises:**
 
@@ -128,21 +71,19 @@ async def list_tables(
         Raises the HTTPStatus object with a status code and detail as response.
     """
     await auth.validate(request, apikey, auth_type=auth.AuthType.api_basic)
-    raise exceptions.APIResponse(status_code=HTTPStatus.OK.real, detail=database.list_tables())
+    raise exceptions.APIResponse(status_code=HTTPStatus.OK.real, detail=core.database.list_tables())
 
 
 async def get_table(
     request: Request,
     table_name: str = "default",
-    apikey: HTTPAuthorizationCredentials = Depends(security),
+    apikey: HTTPAuthorizationCredentials = Depends(auth.SECURITY),
 ):
-    """**API function to retrieve ALL the key-value pairs stored in a particular table.**
+    """**API function to get ALL secrets in a table - transit encrypted.**
 
     **Args:**
 
-        request: Reference to the FastAPI request object.
         table_name: Name of the table where the secrets are stored.
-        apikey: API Key to authenticate the request.
 
     **Raises:**
 
@@ -150,7 +91,7 @@ async def get_table(
         Raises the HTTPStatus object with a status code and detail as response.
     """
     await auth.validate(request, apikey, auth_type=auth.AuthType.api_basic)
-    table_content = await retrieve_secrets(table_name)
+    table_content = await core.retrieve_secrets(table_name)
     decrypted = {
         key: models.session.fernet.decrypt(value).decode(encoding="UTF-8") for key, value in table_content.items()
     }
@@ -160,15 +101,13 @@ async def get_table(
 async def put_secret(
     request: Request,
     data: payload.PutSecret,
-    apikey: HTTPAuthorizationCredentials = Depends(security),
+    apikey: HTTPAuthorizationCredentials = Depends(auth.SECURITY),
 ):
-    """**API function to add multiple secrets to a table in the database.**
+    """**API function to add or update secret(s) in a table in the database.**
 
     **Args:**
 
-        request: Reference to the FastAPI request object.
         data: Payload with ``key``, ``value``, and ``table_name`` as body.
-        apikey: API Key to authenticate the request.
 
     **Raises:**
 
@@ -176,31 +115,28 @@ async def put_secret(
         Raises the HTTPStatus object with a status code and detail as response.
     """
     await auth.validate(request, apikey, auth_type=auth.AuthType.api_advanced)
-    if not database.table_exists(data.table_name):
+    if not core.database.table_exists(data.table_name):
         raise exceptions.APIResponse(
             status_code=HTTPStatus.NOT_FOUND.real,
             detail=f"Table not found: {data.table_name!r}",
         )
-    # Supports transit encrypted string
     received_secrets = transit.decrypt(data.secrets) if isinstance(data.secrets, str) else data.secrets
     for key, value in received_secrets.items():
         encrypted = models.session.fernet.encrypt(value.encode(encoding="UTF-8"))
-        database.put_secret(key=key, value=encrypted, table_name=data.table_name)
+        core.database.put_secret(key=key, value=encrypted, table_name=data.table_name)
     raise exceptions.APIResponse(status_code=HTTPStatus.OK.real, detail=HTTPStatus.OK.phrase)
 
 
 async def delete_secret(
     request: Request,
     data: payload.DeleteSecret,
-    apikey: HTTPAuthorizationCredentials = Depends(security),
+    apikey: HTTPAuthorizationCredentials = Depends(auth.SECURITY),
 ):
-    """**API function to delete secrets from database.**
+    """**API function to delete a secret from a table in the database.**
 
     **Args:**
 
-        request: Reference to the FastAPI request object.
         data: Payload with ``key`` and ``table_name`` as body.
-        apikey: API Key to authenticate the request.
 
     **Raises:**
 
@@ -208,31 +144,20 @@ async def delete_secret(
         Raises the HTTPStatus object with a status code and detail as response.
     """
     await auth.validate(request, apikey, auth_type=auth.AuthType.api_advanced)
-    if await retrieve_secret(data.key, data.table_name):
-        LOGGER.info("Secret value for '%s' will be removed", data.key)
-    else:
-        LOGGER.warning("Secret value for '%s' NOT found", data.key)
-        raise exceptions.APIResponse(status_code=HTTPStatus.NOT_FOUND.real, detail=HTTPStatus.NOT_FOUND.phrase)
-    try:
-        database.remove_secret(key=data.key, table_name=data.table_name)
-    except sqlite3.OperationalError as error:
-        LOGGER.error(error)
-        raise exceptions.APIResponse(status_code=HTTPStatus.EXPECTATION_FAILED.real, detail=error.args[0])
+    await core.remove_secret(data.key, data.table_name)
     raise exceptions.APIResponse(status_code=HTTPStatus.OK.real, detail=HTTPStatus.OK.phrase)
 
 
 async def create_table(
     request: Request,
     table_name: str,
-    apikey: HTTPAuthorizationCredentials = Depends(security),
+    apikey: HTTPAuthorizationCredentials = Depends(auth.SECURITY),
 ):
     """**API function to create a new table in the database.**
 
     **Args:**
 
-        request: Reference to the FastAPI request object.
         table_name: Name of the table to be created.
-        apikey: API Key to authenticate the request.
 
     **Raises:**
 
@@ -240,32 +165,21 @@ async def create_table(
         Raises the HTTPStatus object with a status code and detail as response.
     """
     await auth.validate(request, apikey, auth_type=auth.AuthType.api_basic)
-    if database.table_exists(table_name):
-        raise exceptions.APIResponse(
-            status_code=HTTPStatus.CONFLICT.real, detail=f"A table with name {table_name!r} already exists"
-        )
-    try:
-        database.create_table(table_name, ["key", "value"])
-    except sqlite3.OperationalError as error:
-        LOGGER.error(error)
-        raise exceptions.APIResponse(status_code=HTTPStatus.EXPECTATION_FAILED.real, detail=error.args[0])
+    core.create_table(table_name)
     raise exceptions.APIResponse(status_code=HTTPStatus.OK.real, detail=HTTPStatus.OK.phrase)
 
 
-# TODO: Remove redundancies between API endpoints and UI endpoints
 async def rename_table(
     request: Request,
     table_name: str,
     data: payload.RenameTable,
-    apikey: HTTPAuthorizationCredentials = Depends(security),
+    apikey: HTTPAuthorizationCredentials = Depends(auth.SECURITY),
 ):
     """**API function to rename an existing table in the database.**
 
     **Args:**
 
-        request: Reference to the FastAPI request object.
         table_name: Current name of the table to rename.
-        apikey: API Key to authenticate the request.
 
     **Raises:**
 
@@ -273,42 +187,20 @@ async def rename_table(
         Raises the HTTPStatus object with a status code and detail as response.
     """
     await auth.validate(request, apikey, auth_type=auth.AuthType.api_advanced)
-    if not data.new_name:
-        raise exceptions.APIResponse(
-            status_code=HTTPStatus.BAD_REQUEST.real,
-            detail="New table name cannot be empty",
-        )
-    if not database.table_exists(table_name):
-        raise exceptions.APIResponse(
-            status_code=HTTPStatus.NOT_FOUND.real,
-            detail=f"Table {table_name!r} not found",
-        )
-    if database.table_exists(data.new_name):
-        raise exceptions.APIResponse(
-            status_code=HTTPStatus.CONFLICT.real,
-            detail=f"Table {data.new_name!r} already exists",
-        )
-    try:
-        database.rename_table(table_name, data.new_name)
-        LOGGER.info("Table renamed '%s' -> '%s' successfully", table_name, data.new_name)
-    except sqlite3.OperationalError as error:
-        LOGGER.error(error)
-        raise exceptions.APIResponse(status_code=HTTPStatus.BAD_REQUEST.real, detail=error.args[0])
+    core.rename_table(table_name, data.new_name)
     raise exceptions.APIResponse(status_code=HTTPStatus.OK.real, detail=HTTPStatus.OK.phrase)
 
 
 async def delete_table(
     request: Request,
     table_name: str,
-    apikey: HTTPAuthorizationCredentials = Depends(security),
+    apikey: HTTPAuthorizationCredentials = Depends(auth.SECURITY),
 ):
-    """**API function to delete an existing table from the database.**
+    """**API function to delete a table in the database.**
 
     **Args:**
 
-        request: Reference to the FastAPI request object.
         table_name: Name of the table to be created.
-        apikey: API Key to authenticate the request.
 
     **Raises:**
 
@@ -316,16 +208,7 @@ async def delete_table(
         Raises the HTTPStatus object with a status code and detail as response.
     """
     await auth.validate(request, apikey, auth_type=auth.AuthType.api_advanced)
-    if not database.table_exists(table_name):
-        raise exceptions.APIResponse(
-            status_code=HTTPStatus.NOT_FOUND.real,
-            detail=f"Table {table_name!r} not found!",
-        )
-    try:
-        database.drop_table(table_name)
-    except sqlite3.OperationalError as error:
-        LOGGER.error(error)
-        raise exceptions.APIResponse(status_code=HTTPStatus.EXPECTATION_FAILED.real, detail=error.args[0])
+    core.drop_table(table_name)
     raise exceptions.APIResponse(status_code=HTTPStatus.OK.real, detail=HTTPStatus.OK.phrase)
 
 
