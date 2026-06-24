@@ -155,7 +155,7 @@ class TestUiDeleteSecretRetrieveError:
         creds = _creds(token)
 
         with patch(
-            "vaultapi.api_endpoints.retrieve_secret",
+            "vaultapi.core.retrieve_secret",
             side_effect=exceptions.APIResponse(status_code=400, detail="db error"),
         ):
             with pytest.raises(exceptions.APIResponse) as exc:

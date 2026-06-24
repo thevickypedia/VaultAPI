@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from tests.conftest import api_advanced_headers, auth_headers
-from vaultapi import api_endpoints, database, exceptions, models
+from vaultapi import api_endpoints, core, database, exceptions, models
 
 
 @pytest.mark.asyncio
@@ -14,18 +14,18 @@ class TestRetrieveSecretSqliteError:
     async def test_retrieve_secret_db_error_raises_api_response(self):
         with patch.object(database, "get_secret", side_effect=sqlite3.OperationalError("disk full")):
             with pytest.raises(exceptions.APIResponse) as exc:
-                await api_endpoints.retrieve_secret("KEY", "tbl")
+                await core.retrieve_secret("KEY", "tbl")
             assert exc.value.status_code == 400
 
     async def test_retrieve_secrets_with_keys_propagates_error(self):
         with patch.object(database, "get_secret", side_effect=sqlite3.OperationalError("bad")):
             with pytest.raises(exceptions.APIResponse):
-                await api_endpoints.retrieve_secrets("tbl", keys=["KEY"])
+                await core.retrieve_secrets("tbl", keys=["KEY"])
 
     async def test_retrieve_secrets_full_table_db_error(self):
         with patch.object(database, "get_table", side_effect=sqlite3.OperationalError("oops")):
             with pytest.raises(exceptions.APIResponse) as exc:
-                await api_endpoints.retrieve_secrets("tbl")
+                await core.retrieve_secrets("tbl")
             assert exc.value.status_code == 400
 
 
@@ -58,7 +58,7 @@ class TestDeleteSecretSqliteError:
                 content=_json.dumps(payload),
                 headers={**api_advanced_headers(), "Content-Type": "application/json"},
             )
-        assert r.status_code == 417
+        assert r.status_code == 400
 
 
 @pytest.mark.asyncio
@@ -66,7 +66,7 @@ class TestCreateTableSqliteError:
     async def test_create_table_db_error(self, client):
         with patch.object(database, "create_table", side_effect=sqlite3.OperationalError("no space")):
             r = await client.post("/create-table?table_name=err_tbl", headers=auth_headers())
-        assert r.status_code == 417
+        assert r.status_code == 400
 
 
 @pytest.mark.asyncio
@@ -75,7 +75,7 @@ class TestDeleteTableSqliteError:
         database.create_table("dtbl_err", ["key", "value"])
         with patch.object(database, "drop_table", side_effect=sqlite3.OperationalError("locked")):
             r = await client.delete("/delete-table?table_name=dtbl_err", headers=api_advanced_headers())
-        assert r.status_code == 417
+        assert r.status_code == 400
 
 
 @pytest.mark.asyncio
