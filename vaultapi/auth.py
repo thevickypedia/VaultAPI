@@ -11,7 +11,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from . import database, exceptions, header, models
 
 LOGGER = logging.getLogger("uvicorn.default")
-SECURITY = HTTPBearer(description="Use [Signature Generator](/signature) to generate the authorization header")
+SECURITY = HTTPBearer(description="Use [Playground](/playground) to generate the authorization header")
 
 UI_BASIC = lambda session, auth, host: bool(  # noqa: E731
     session

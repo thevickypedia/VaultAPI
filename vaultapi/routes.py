@@ -26,8 +26,8 @@ def ui_routes() -> List[APIRoute]:
             dependencies=DEPENDENCIES,
         ),
         APIRoute(
-            path="/signature",
-            endpoint=ui_endpoints.signature_page,
+            path="/playground",
+            endpoint=ui_endpoints.playground,
             methods=["GET"],
             include_in_schema=False,
             dependencies=DEPENDENCIES,

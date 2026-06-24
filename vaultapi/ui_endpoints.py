@@ -33,11 +33,11 @@ async def index(request: Request):
     )
 
 
-async def signature_page(request: Request):
-    """Serve the signature generator page."""
+async def playground(request: Request):
+    """Serve the playground page."""
     await auth.blocked(request.client.host)
     return templates.TemplateResponse(
-        name="signature.html",
+        name="playground.html",
         request=request,
         context={"request": request, "version": version.__version__},
     )
