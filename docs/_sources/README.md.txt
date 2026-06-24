@@ -70,6 +70,7 @@ vaultapi start
 **Optional (with defaults)**
 - **TRANSIT_KEY_LENGTH** - AES key length for transit encryption. Defaults to `32`
 - **TRANSIT_TIME_BUCKET** - Interval for which the transit epoch should remain constant. Defaults to `60`
+- **AUTHORIZATION_VALIDITY** - Time in seconds for which the authorization header is valid. Defaults to `30`
 - **DATABASE** - FilePath to store the secrets' database. Defaults to `secrets.db`
 - **HOST** - Hostname for the API server. Defaults to `0.0.0.0` [OR] `localhost`
 - **PORT** - Port number for the API server. Defaults to `9010`
