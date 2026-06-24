@@ -1,6 +1,34 @@
 Release Notes
 =============
 
+v0.6.0 (06/23/2026)
+-------------------
+- `ae79420 <https://github.com/thevickypedia/VaultAPI/commit/ae79420019251f4de5715bca9133924b773a58de>`_ chore: Release ``v0.6.0``
+- `74381c8 <https://github.com/thevickypedia/VaultAPI/commit/74381c8cc05091df30ab21915088f049f98be489>`_ docs: Update README.md
+- `3c0fa1d <https://github.com/thevickypedia/VaultAPI/commit/3c0fa1d5f22c12464eb86921466da4ebbdab2805>`_ chore: Update ``decryptors`` and create a signature.md for reference
+- `8dd7ac5 <https://github.com/thevickypedia/VaultAPI/commit/8dd7ac5564ad6dc213d9ba297b70be1da760724e>`_ style: Add an exception handler for ``crypto.subtle`` during login and reset sign in button when after a toast message
+- `eede635 <https://github.com/thevickypedia/VaultAPI/commit/eede635802b4311399e5649112563735e982c449>`_ test: Update unit tests to match the new design pattern for authentication and authorization
+- `1feb357 <https://github.com/thevickypedia/VaultAPI/commit/1feb35705716b64ee10f26a7178204b97979b2bf>`_ lint: Update and run linter limiting line length at 120 characters
+- `04fa3c3 <https://github.com/thevickypedia/VaultAPI/commit/04fa3c3e8fb39f21a78c866a07e5e3fe1c5dfda6>`_ feat: Include a new endpoint to get the API version
+- `b7c005e <https://github.com/thevickypedia/VaultAPI/commit/b7c005e69acd2c8f7e3e5afca68aee48786d65d5>`_ perf: Simplify signature based auth validation
+- `d4afda3 <https://github.com/thevickypedia/VaultAPI/commit/d4afda3d2ab2c6d27dfa36d455d18523ab2c1e86>`_ perf: Fix missing TOTP code for validation and stabilize auth header params
+- `3676696 <https://github.com/thevickypedia/VaultAPI/commit/3676696999b1fd3e9805a9087b218208fbfa1ecb>`_ perf: Add a time-based auth protocol for API requests
+- `fdf88bd <https://github.com/thevickypedia/VaultAPI/commit/fdf88bd38f47f6740e0c4333f026ba11fe4d2519>`_ refactor: Add ``AuthType`` mechanism to handle authentication vs authorization completely on the server side
+- `6932082 <https://github.com/thevickypedia/VaultAPI/commit/69320827409283dc822597dd9d58d50f80459254>`_ feat: Update API endpoints with rename functionality
+- `8f49db7 <https://github.com/thevickypedia/VaultAPI/commit/8f49db7568372b9bf8dd2a034c4ca20e2d6dc443>`_ perf: Raise a conflict for table creation when a same table name exists in the DB
+- `efd7648 <https://github.com/thevickypedia/VaultAPI/commit/efd7648a6250986dc1044bcf66556b2165699130>`_ feat: Create a new feature to rename table from the UI
+- `9985a22 <https://github.com/thevickypedia/VaultAPI/commit/9985a22d39b8804041e9c7c03cce41e21171442c>`_ refactor: Restructure conditions and logging for auth operations
+- `a6e4146 <https://github.com/thevickypedia/VaultAPI/commit/a6e4146edf90fc59474db64277d806a597aded64>`_ chore: Upgrade dependencies
+- `fc44a43 <https://github.com/thevickypedia/VaultAPI/commit/fc44a43dc64857a5da1ac7a3c52133bee6950973>`_ style: Update the note CSS in the UI to look similar to `code` in markdown
+- `dda9ce8 <https://github.com/thevickypedia/VaultAPI/commit/dda9ce8a1ce38e33c0e5d03bc50d23b42f445ec9>`_ feat: Allow fernet decryption in the UI by accepting a secret value on the client side
+- `937d840 <https://github.com/thevickypedia/VaultAPI/commit/937d840cb02f940b6a6c45656bcb390cb9f19f21>`_ style: Create a persistent footer for the version and timer information in the UI
+- `908c859 <https://github.com/thevickypedia/VaultAPI/commit/908c859ddb70f7fac990ba5886b44bbcde33601b>`_ fix: Ensure restarting the API removes stored session that is still valid
+- `75b51ca <https://github.com/thevickypedia/VaultAPI/commit/75b51caf07bb1f4f85b4ce144abce4d9c4503e76>`_ refactor: Restructure auth requirements for the UI - only apikey is required and UI is responsible for decrypting it
+- `6c897ea <https://github.com/thevickypedia/VaultAPI/commit/6c897ea14de6dfad3b67966f316f0e7375e67edc>`_ perf: Require MFA code for import and add secret action in the UI and the respective API endpoints in the backend
+- `43a3eef <https://github.com/thevickypedia/VaultAPI/commit/43a3eef828276a09da2ac734ddd7ec92b8c09553>`_ feat: Add a new export button in the UI to download the entire table
+- `13bdcbe <https://github.com/thevickypedia/VaultAPI/commit/13bdcbe2ed01dce906621199e219cc2d29633627>`_ test: Update GHA step dependency and unit tests for 100% code coverage
+- `d539b3f <https://github.com/thevickypedia/VaultAPI/commit/d539b3f451eabcee1fdfb0bb54f320739278e0dd>`_ chore: Update release notes for v0.5.2
+
 v0.5.2 (06/15/2026)
 -------------------
 - `ece9ce4 <https://github.com/thevickypedia/VaultAPI/commit/ece9ce4dc0a6dcb24c3015f2ffbf0ae73fbf2669>`_ chore: Release ``v0.5.2``
