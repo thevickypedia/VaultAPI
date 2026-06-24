@@ -3,7 +3,8 @@ Lightweight API to store/retrieve secrets to/from an encrypted Database
 
 VaultAPI is designed to be extremely lightweight, secure, and easy to use.
 It provides cutting-edge security features like AES-GCM, Fernet encryption, and rate limiting all out of the box.
-It also includes transit encryption to ensure that the secrets are encrypted during transit to protect against man-in-the-middle attacks.
+It also includes transit encryption to ensure that the secrets are encrypted during transit to protect against
+man-in-the-middle attacks.
 
 ![Python][label-pyversion]
 
@@ -64,7 +65,7 @@ vaultapi start
 
 **Mandatory**
 - **APIKEY** - API Key for authentication.
-- **SECRET** - Secret access key to encode/decode the secrets in Datastore.
+- **SECRET** - Secret access key to encrypt/decrypt the secrets in the Datastore.
 
 **Optional (with defaults)**
 - **TRANSIT_KEY_LENGTH** - AES key length for transit encryption. Defaults to `32`
@@ -74,7 +75,7 @@ vaultapi start
 - **PORT** - Port number for the API server. Defaults to `9010`
 - **WORKERS** - Number of workers for the uvicorn server. Defaults to `1`
 - **RATE_LIMIT** - List of dictionaries with `max_requests` and `seconds` to apply as rate limit.
-Defaults to 5req/2s [AND] 10req/30s
+  Defaults to 5req/2s [AND] 10req/30s
 
 **Optional (without defaults)**
 - **LOG_CONFIG** - FilePath or dictionary of key-value pairs for log config.
@@ -83,7 +84,8 @@ Defaults to 5req/2s [AND] 10req/30s
 **Optional (UI integration)**
 - **ENABLE_UI** - Boolean flag to enable the UI. Defaults to `false`
 - **AUTH_DATABASE** - FilePath to store the UI authentication database. Defaults to `auth.db`
-- **TOTP_TOKEN** - Secret token for TOTP authentication in the UI. Can be generated using any TOTP generator app like `Google Authenticator` or `Authy`.
+- **TOTP_TOKEN** - Secret token for TOTP authentication in the UI. Can be generated using any TOTP generator app like
+  `Google Authenticator` or `Authy`.
 - **UI_LIFETIME** - Time in seconds for which the UI session should remain active. Defaults to `900` (15 minutes)
 
 <details>
@@ -105,16 +107,17 @@ print(Fernet.generate_key())
 
 ## API Functionality
 
-| Endpoint         | Description                                | API method |
-|------------------|--------------------------------------------|------------|
-| `/health`        | API health endpoint                        | GET        |
-| `/get-secret`    | Retrieve secrets (comma separated list)    | GET        |
-| `/get-table`     | Get ALL the secrets stored in a table      | GET        |
-| `/list-tables`   | List all available tables                  | GET        |
-| `/put-secret`    | Store or update a secret (key-value pairs) | PUT        |
-| `/delete-secret` | Delete a specific secret                   | DELETE     |
-| `/create-table`  | Create a new table                         | POST       |
-| `/delete-table`  | Deletes an existing table                  | DELETE     |
+| Endpoint         | Description                                | API method | Authorization Header                 |
+|------------------|--------------------------------------------|------------|--------------------------------------|
+| `/health`        | API health endpoint                        | GET        | N/A                                  |
+| `/get-secret`    | Retrieve secrets (comma separated list)    | GET        | HMAC-SHA512(apikey+timestamp)        |
+| `/get-table`     | Get ALL the secrets stored in a table      | GET        | HMAC-SHA512(apikey+timestamp)        |
+| `/list-tables`   | List all available tables                  | GET        | HMAC-SHA512(apikey+timestamp)        |
+| `/create-table`  | Create a new table                         | POST       | HMAC-SHA512(apikey+timestamp)        |
+| `/put-secret`    | Store or update a secret (key-value pairs) | PUT        | HMAC-SHA512(apikey+secret+timestamp) |
+| `/delete-secret` | Delete a specific secret                   | DELETE     | HMAC-SHA512(apikey+secret+timestamp) |
+| `/delete-table`  | Deletes an existing table                  | DELETE     | HMAC-SHA512(apikey+secret+timestamp) |
+| `/rename-table`  | Renames an existing table                  | PATCH      | HMAC-SHA512(apikey+secret+timestamp) |
 
 ## Clients
 Clients are available in multiple languages to interact with the API server.
