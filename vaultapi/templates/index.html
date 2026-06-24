@@ -1280,6 +1280,12 @@
             color: var(--text-3);
             font-family: var(--mono);
             letter-spacing: 0.04em;
+            text-decoration: none;
+            transition: color var(--transition);
+        }
+
+        .footer-version:hover {
+            color: var(--accent);
         }
 
         .footer-timer {
@@ -1789,7 +1795,11 @@
 <div id="toast-root"></div>
 
 <footer class="site-footer">
-    <span class="footer-version">VaultAPI-UI v{{ version }}</span>
+    <span class="footer-version">
+        <a class="footer-version" href="https://github.com/thevickypedia/VaultAPI/releases/tag/v{{ version }}" target="_blank" rel="noopener noreferrer">
+            VaultAPI-UI v{{ version }}
+        </a>
+    </span>
     <div class="footer-timer" id="session-timer">
         <div class="footer-timer-dot"></div>
         <span id="timer-display">--:--</span>
