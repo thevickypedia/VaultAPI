@@ -910,48 +910,60 @@
 </main>
 
 <!-- ── Modal: Encrypt ──────────────────────────── -->
-<div class="overlay" id="modal-enc-secret" onclick="overlayClick(event,'modal-enc-secret')">
+<div class="overlay" id="modal-enc-secret" onclick="encModalClose(event)">
     <div class="modal" role="dialog" aria-modal="true">
         <div class="modal-header">
-            <div class="modal-title">Enter Vault Secret</div>
-            <div class="modal-subtitle">Required to derive the AES encryption key. Never stored.</div>
+            <div class="modal-title">Encrypt Payload</div>
+            <div class="modal-subtitle">API key and vault secret are used to derive the AES key and are never stored.</div>
+        </div>
+        <div class="form-field">
+            <label class="form-label" for="enc-apikey-input">API Key</label>
+            <input class="form-input mono" id="enc-apikey-input" type="password"
+                   placeholder="apikey" autocomplete="off" spellcheck="false"
+                   onkeydown="if(event.key==='Enter')document.getElementById('enc-secret-input').focus()">
         </div>
         <div class="form-field" style="margin-bottom:0;">
-            <label class="form-label" for="enc-secret-input">Secret</label>
+            <label class="form-label" for="enc-secret-input">Vault Secret</label>
             <input class="form-input mono" id="enc-secret-input" type="password"
                    placeholder="secret" autocomplete="off" spellcheck="false"
                    onkeydown="if(event.key==='Enter')document.getElementById('btn-enc-ok').click()">
             <div class="modal-err" id="enc-secret-error">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                <span id="enc-secret-error-text">Please enter the vault secret.</span>
+                <span id="enc-secret-error-text">Please enter both the API key and vault secret.</span>
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-ghost" onclick="closeModal('modal-enc-secret')">Cancel</button>
+            <button class="btn btn-ghost" onclick="encModalCancel()">Cancel</button>
             <button class="btn btn-primary" id="btn-enc-ok" onclick="doEncrypt()">Encrypt</button>
         </div>
     </div>
 </div>
 
 <!-- ── Modal: Decrypt ──────────────────────────── -->
-<div class="overlay" id="modal-dec-secret" onclick="overlayClick(event,'modal-dec-secret')">
+<div class="overlay" id="modal-dec-secret" onclick="decModalClose(event)">
     <div class="modal" role="dialog" aria-modal="true">
         <div class="modal-header">
-            <div class="modal-title">Enter Vault Secret</div>
-            <div class="modal-subtitle">Required to derive the AES decryption key. Never stored.</div>
+            <div class="modal-title">Decrypt Payload</div>
+            <div class="modal-subtitle">API key and vault secret are used to derive the AES key and are never stored.</div>
+        </div>
+        <div class="form-field">
+            <label class="form-label" for="dec-apikey-input">API Key</label>
+            <input class="form-input mono" id="dec-apikey-input" type="password"
+                   placeholder="apikey" autocomplete="off" spellcheck="false"
+                   onkeydown="if(event.key==='Enter')document.getElementById('dec-secret-input').focus()">
         </div>
         <div class="form-field" style="margin-bottom:0;">
-            <label class="form-label" for="dec-secret-input">Secret</label>
+            <label class="form-label" for="dec-secret-input">Vault Secret</label>
             <input class="form-input mono" id="dec-secret-input" type="password"
                    placeholder="secret" autocomplete="off" spellcheck="false"
                    onkeydown="if(event.key==='Enter')document.getElementById('btn-dec-ok').click()">
             <div class="modal-err" id="dec-secret-error">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                <span id="dec-secret-error-text">Decryption failed — wrong secret or corrupted ciphertext.</span>
+                <span id="dec-secret-error-text">Decryption failed — invalid credentials, or corrupted ciphertext.</span>
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-ghost" onclick="closeModal('modal-dec-secret')">Cancel</button>
+            <button class="btn btn-ghost" onclick="decModalCancel()">Cancel</button>
             <button class="btn btn-primary" id="btn-dec-ok" onclick="doDecrypt()">Decrypt</button>
         </div>
     </div>
@@ -987,9 +999,25 @@
         }, 3200);
     }
 
-    window.openModal = function (id) { document.getElementById(id).classList.add('open'); };
-    window.closeModal = function (id) { document.getElementById(id).classList.remove('open'); };
-    window.overlayClick = function (e, id) { if (e.target === document.getElementById(id)) closeModal(id); };
+    function openModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    function _wipeEncModal() {
+        document.getElementById('enc-apikey-input').value = '';
+        document.getElementById('enc-secret-input').value = '';
+        document.getElementById('enc-secret-error').classList.remove('visible');
+    }
+
+    function _wipeDecModal() {
+        document.getElementById('dec-apikey-input').value = '';
+        document.getElementById('dec-secret-input').value = '';
+        document.getElementById('dec-secret-error').classList.remove('visible');
+    }
+
+    window.encModalCancel = function () { _wipeEncModal(); closeModal('modal-enc-secret'); };
+    window.decModalCancel = function () { _wipeDecModal(); closeModal('modal-dec-secret'); };
+    window.encModalClose  = function (e) { if (e.target === document.getElementById('modal-enc-secret')) { _wipeEncModal(); closeModal('modal-enc-secret'); } };
+    window.decModalClose  = function (e) { if (e.target === document.getElementById('modal-dec-secret')) { _wipeDecModal(); closeModal('modal-dec-secret'); } };
 
     window.switchTab = function (name) {
         ['sig', 'enc', 'dec'].forEach(t => {
@@ -1201,26 +1229,23 @@
             toast('Add at least one key-value pair', 'error');
             return;
         }
-        document.getElementById('enc-secret-error').classList.remove('visible');
-        document.getElementById('enc-secret-input').value = '';
+        _wipeEncModal();
         openModal('modal-enc-secret');
-        setTimeout(() => document.getElementById('enc-secret-input').focus(), 80);
+        setTimeout(() => document.getElementById('enc-apikey-input').focus(), 80);
     };
 
     window.doEncrypt = async function () {
-        const inp    = document.getElementById('enc-secret-input');
-        const secret = inp.value;
-        const errEl  = document.getElementById('enc-secret-error');
-        if (!secret) {
-            document.getElementById('enc-secret-error-text').textContent = 'Please enter the vault secret.';
+        const apikeyInp = document.getElementById('enc-apikey-input');
+        const secretInp = document.getElementById('enc-secret-input');
+        const apikey    = apikeyInp.value;
+        const secret    = secretInp.value;
+        const errEl     = document.getElementById('enc-secret-error');
+
+        if (!apikey || !secret) {
+            document.getElementById('enc-secret-error-text').textContent = 'Please enter both the API key and vault secret.';
             errEl.classList.add('visible');
-            return;
-        }
-        const apikey = document.getElementById('sig-apikey').value.trim();
-        if (!apikey) {
-            closeModal('modal-enc-secret');
-            inp.value = '';
-            toast('Enter your API key in the Signature Generator tab first', 'error');
+            apikeyInp.value = '';
+            secretInp.value = '';
             return;
         }
         errEl.classList.remove('visible');
@@ -1230,13 +1255,16 @@
             _lastEncResult  = b64Encode(encrypted);
             document.getElementById('enc-result').textContent = _lastEncResult;
             document.getElementById('enc-out').style.display = '';
-            inp.value = '';
-            closeModal('modal-enc-secret');
-            toast('Encrypted successfully', 'success');
         } catch (e) {
             document.getElementById('enc-secret-error-text').textContent = `Encryption failed: ${e.message}`;
             errEl.classList.add('visible');
-            inp.value = '';
+        } finally {
+            apikeyInp.value = '';
+            secretInp.value = '';
+        }
+        if (!errEl.classList.contains('visible')) {
+            closeModal('modal-enc-secret');
+            toast('Encrypted successfully', 'success');
         }
     };
 
@@ -1279,26 +1307,23 @@
     window.openDecryptModal = function () {
         const ct = document.getElementById('dec-ct').value.trim();
         if (!ct) { _decCtTouched = true; decValidateCt(); toast('Please provide the ciphertext first', 'error'); return; }
-        document.getElementById('dec-secret-error').classList.remove('visible');
-        document.getElementById('dec-secret-input').value = '';
+        _wipeDecModal();
         openModal('modal-dec-secret');
-        setTimeout(() => document.getElementById('dec-secret-input').focus(), 80);
+        setTimeout(() => document.getElementById('dec-apikey-input').focus(), 80);
     };
 
     window.doDecrypt = async function () {
-        const inp    = document.getElementById('dec-secret-input');
-        const secret = inp.value;
-        const errEl  = document.getElementById('dec-secret-error');
-        if (!secret) {
-            document.getElementById('dec-secret-error-text').textContent = 'Please enter the vault secret.';
+        const apikeyInp = document.getElementById('dec-apikey-input');
+        const secretInp = document.getElementById('dec-secret-input');
+        const apikey    = apikeyInp.value;
+        const secret    = secretInp.value;
+        const errEl     = document.getElementById('dec-secret-error');
+
+        if (!apikey || !secret) {
+            document.getElementById('dec-secret-error-text').textContent = 'Please enter both the API key and vault secret.';
             errEl.classList.add('visible');
-            return;
-        }
-        const apikey = document.getElementById('sig-apikey').value.trim();
-        if (!apikey) {
-            closeModal('modal-dec-secret');
-            inp.value = '';
-            toast('Enter your API key in the Signature Generator tab first', 'error');
+            apikeyInp.value = '';
+            secretInp.value = '';
             return;
         }
         errEl.classList.remove('visible');
@@ -1310,14 +1335,17 @@
             _lastDecResult  = JSON.stringify(parsed, null, 2);
             document.getElementById('dec-result').textContent = _lastDecResult;
             document.getElementById('dec-out').style.display = '';
-            inp.value = '';
-            closeModal('modal-dec-secret');
-            toast('Decrypted successfully', 'success');
         } catch (e) {
             document.getElementById('dec-secret-error-text').textContent =
-                'Decryption failed — wrong secret, or corrupted ciphertext.';
+                'Decryption failed — invalid credentials, or corrupted ciphertext.';
             errEl.classList.add('visible');
-            inp.value = '';
+        } finally {
+            apikeyInp.value = '';
+            secretInp.value = '';
+        }
+        if (!errEl.classList.contains('visible')) {
+            closeModal('modal-dec-secret');
+            toast('Decrypted successfully', 'success');
         }
     };
 
