@@ -33,6 +33,16 @@ async def index(request: Request):
     )
 
 
+async def signature_page(request: Request):
+    """Serve the signature generator page."""
+    await auth.blocked(request.client.host)
+    return templates.TemplateResponse(
+        name="signature.html",
+        request=request,
+        context={"request": request, "version": version.__version__},
+    )
+
+
 async def ui_login(request: Request, apikey: HTTPAuthorizationCredentials = Depends(auth.SECURITY)):
     """Validate the login credentials and issue a session token.
 

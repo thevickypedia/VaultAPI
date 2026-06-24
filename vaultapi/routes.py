@@ -26,6 +26,13 @@ def ui_routes() -> List[APIRoute]:
             dependencies=DEPENDENCIES,
         ),
         APIRoute(
+            path="/signature",
+            endpoint=ui_endpoints.signature_page,
+            methods=["GET"],
+            include_in_schema=False,
+            dependencies=DEPENDENCIES,
+        ),
+        APIRoute(
             path="/ui/login",
             endpoint=ui_endpoints.ui_login,
             methods=["POST"],

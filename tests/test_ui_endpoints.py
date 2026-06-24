@@ -38,6 +38,22 @@ class TestIndex:
         assert r.status_code == 403
 
 
+@pytest.mark.asyncio
+class TestSignaturePage:
+    async def test_returns_html(self, client):
+        r = await client.get("/signature")
+        assert r.status_code == 200
+        assert "text/html" in r.headers["content-type"]
+        assert b"Signature Generator" in r.content
+        assert b"VaultAPI" in r.content
+
+    async def test_blocked_host_returns_403(self, client):
+        for _ in range(database.FAILED_AUTH_LIMIT):
+            database.increment_failed_auth("127.0.0.1")
+        r = await client.get("/signature")
+        assert r.status_code == 403
+
+
 # ---------------------------------------------------------------------------
 # /ui/login
 # ---------------------------------------------------------------------------
