@@ -5,12 +5,10 @@ from http import HTTPStatus
 from typing import Dict, List, Optional
 
 import yaml
-from fastapi.security import HTTPBearer
 
 from . import database, exceptions
 
 LOGGER = logging.getLogger("uvicorn.default")
-security = HTTPBearer()
 
 
 async def retrieve_secret(key: str, table_name: str) -> Optional[bytes]:
