@@ -168,7 +168,8 @@ class EnvConfig(BaseSettings):
     transit_time_bucket: PositiveInt = Field(60, ge=30, le=300)  # 30s to 5m
     # 5s will be tight - ONLY suitable for API-to-API connections (risk of replay attacks: low to none)
     # 5m will be loose - since it allows room for requests to be replayed (risk of replay attacks: high)
-    # Choose a value that is suitable for your use case. 60s is a good balance for most scenarios.
+    # Choose a value that is suitable for your use case. 60s is a good balance for most scenarios
+    # Skew tolerance applied by a metric of 5 - so 1s tolerance for a 5s window and 60s tolerance for a 300s window
     authorization_validity: PositiveInt = Field(30, ge=5, le=300)  # 5s to 5m
     database: FilePath | NewPath | str = Field("secrets.db", pattern=".*.db$")
     auth_database: FilePath | NewPath | str = Field("auth.db", pattern=".*.db$")

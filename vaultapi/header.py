@@ -77,12 +77,12 @@ def validate(auth_header: str, token: str, validity: int) -> bool:
     # Allow a small amount of clock skew tolerance between systems
     clock_skew_tolerance = round(validity / 5)
     if ts > now + clock_skew_tolerance:
-        LOGGER.warning("Timestamp too far in future")
+        LOGGER.warning("Timestamp too far in the future - invalid")
         return False
 
-    # Reject stale requests
-    if now - ts > validity:
-        LOGGER.warning("Timestamp expired")
+    # Reject stale requests (symmetric skew tolerance: same grace applies in both directions)
+    if now - ts > validity + clock_skew_tolerance:
+        LOGGER.warning("Timestamp too far in the past - invalid")
         return False
 
     expected = hmac.new(

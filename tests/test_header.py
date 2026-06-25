@@ -43,7 +43,8 @@ class TestValidate:
 
         token = "tok"
         validity = models.env.authorization_validity
-        old_ts = str(int(time.time()) - validity - 1)
+        skew_tolerance = round(validity / 5)
+        old_ts = str(int(time.time()) - validity - skew_tolerance - 1)
         sig = _hmac.new(token.encode(), old_ts.encode(), hashlib.sha512).hexdigest()
         auth = f"Signature={sig},timestamp={old_ts}"
         assert header.validate(auth, token, validity) is False
