@@ -75,7 +75,8 @@ def validate(auth_header: str, token: str, validity: int) -> bool:
     now = int(time.time())
 
     # Allow a small amount of clock skew tolerance between systems
-    if ts > now + round(validity / 5):
+    clock_skew_tolerance = round(validity / 5)
+    if ts > now + clock_skew_tolerance:
         LOGGER.warning("Timestamp too far in future")
         return False
 

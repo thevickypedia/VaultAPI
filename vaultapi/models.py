@@ -137,16 +137,39 @@ class EnvConfig(BaseSettings):
 
     >>> EnvConfig
 
+    Parameters:
+        apikey: API key to authenticate the ``GET`` and ``POST`` requests
+        secret: Shared secret used for DB encryption (Fernet) and transit encryption (AES)
+        transit_key_length: Length of the transit key (AES) - first N bytes of SHA-256 hash.
+        transit_time_bucket: Duration in seconds for ciphertext to be keyed.
+        authorization_validity: Duration in seconds for a HMAC-signed auth header to be accepted after it was generated.
+        database: Path to the main SQLite database file.
+        auth_database: Path to the auth SQLite database file.
+        host: Host to run the API server.
+        port: Port to run the API server.
+        workers: Number of worker processes.
+        enable_ui: Boolean to indicate whether to enable UI.
+        totp_token: Authenticator token for TOTP-based authentication.
+        ui_lifetime: Lifetime of the UI ``session_token`` in seconds.
+        log_config: File path to the logging configuration file [OR] the log configuration dictionary itself.
+        allowed_origins: List of allowed origins for CORS.
+        rate_limit: Rate limit for API calls.
     """
 
     apikey: str
     secret: str
+    # AES key size (16, 24, or 32 bytes) - used for transit encryption
+    # Derived by taking the first N bytes of SHA-256 hash of epoch.apikey.secret
+    # Larger = stronger key
     transit_key_length: PositiveInt = 32
+    # Transit ciphertext is keyed to a time window: epoch = int(time.time()) // transit_time_bucket
+    # Any encrypt/decrypt calls that fall in the same bucket share the same derived AES key
+    # cross-bucket, the key changes, making old ciphertext unreadable
     transit_time_bucket: PositiveInt = Field(60, ge=30, le=300)  # 30s to 5m
     # 5s will be tight - ONLY suitable for API-to-API connections (risk of replay attacks: low to none)
-    # 2m will be loose - since it allows room for requests to be replayed (risk of replay attacks: high)
+    # 5m will be loose - since it allows room for requests to be replayed (risk of replay attacks: high)
     # Choose a value that is suitable for your use case. 60s is a good balance for most scenarios.
-    authorization_validity: PositiveInt = Field(30, ge=5, le=120)  # 5s to 2m
+    authorization_validity: PositiveInt = Field(30, ge=5, le=300)  # 5s to 5m
     database: FilePath | NewPath | str = Field("secrets.db", pattern=".*.db$")
     auth_database: FilePath | NewPath | str = Field("auth.db", pattern=".*.db$")
     host: str = socket.gethostbyname("localhost") or "0.0.0.0"

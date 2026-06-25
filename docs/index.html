@@ -530,6 +530,28 @@ decrypt and raises an exception, which <code class="docutils literal notranslate
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">EnvConfig</span>
 </pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>apikey</strong> – API key to authenticate the <code class="docutils literal notranslate"><span class="pre">GET</span></code> and <code class="docutils literal notranslate"><span class="pre">POST</span></code> requests</p></li>
+<li><p><strong>secret</strong> – Shared secret used for DB encryption (Fernet) and transit encryption (AES)</p></li>
+<li><p><strong>transit_key_length</strong> – Length of the transit key (AES) - first N bytes of SHA-256 hash.</p></li>
+<li><p><strong>transit_time_bucket</strong> – Duration in seconds for ciphertext to be keyed.</p></li>
+<li><p><strong>authorization_validity</strong> – Duration in seconds for a HMAC-signed auth header to be accepted after it was generated.</p></li>
+<li><p><strong>database</strong> – Path to the main SQLite database file.</p></li>
+<li><p><strong>auth_database</strong> – Path to the auth SQLite database file.</p></li>
+<li><p><strong>host</strong> – Host to run the API server.</p></li>
+<li><p><strong>port</strong> – Port to run the API server.</p></li>
+<li><p><strong>workers</strong> – Number of worker processes.</p></li>
+<li><p><strong>enable_ui</strong> – Boolean to indicate whether to enable UI.</p></li>
+<li><p><strong>totp_token</strong> – Authenticator token for TOTP-based authentication.</p></li>
+<li><p><strong>ui_lifetime</strong> – Lifetime of the UI <code class="docutils literal notranslate"><span class="pre">session_token</span></code> in seconds.</p></li>
+<li><p><strong>log_config</strong> – File path to the logging configuration file [OR] the log configuration dictionary itself.</p></li>
+<li><p><strong>allowed_origins</strong> – List of allowed origins for CORS.</p></li>
+<li><p><strong>rate_limit</strong> – Rate limit for API calls.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vaultapi.models.EnvConfig.apikey">
 <span class="sig-name descname"><span class="pre">apikey</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#vaultapi.models.EnvConfig.apikey" title="Permalink to this definition">¶</a></dt>
