@@ -12,62 +12,66 @@ logs_dir = pathlib.Path(__file__).parent / "logs"
 data_dir = pathlib.Path(__file__).parent / "data"
 db_path = data_dir / db_filename("database", "secrets.db")
 auth_db = data_dir / db_filename("auth_database", "auth.db")
-log_level = os.environ.get("LOG_LEVEL", "INFO")
-assert log_level in (
-    "DEBUG",
-    "INFO",
-    "WARNING",
-    "ERROR",
-    "CRITICAL",
-), "log_level must be one of DEBUG, INFO, WARNING, ERROR, CRITICAL"
 
 DEFAULT_LOG_FILENAME: str = datetime.now().strftime(str(logs_dir / "vaultapi_%d-%m-%Y.log"))
 data_dir.mkdir(parents=True, exist_ok=True)
 logs_dir.mkdir(parents=True, exist_ok=True)
 
-log_config = {
-    "version": 1,
-    "disable_existing_loggers": True,
-    "formatters": {
-        "default": {
-            "()": "uvicorn.logging.DefaultFormatter",
-            "fmt": "%(asctime)s %(levelprefix)-9s %(name)s -: %(message)s",
-            "use_colors": False,
+if log_config := os.environ.get("LOG_CONFIG"):
+    assert os.path.isfile(log_config), "log_config must be a valid file path"
+else:
+    log_level = os.environ.get("LOG_LEVEL", "INFO")
+    assert log_level in (
+        "DEBUG",
+        "INFO",
+        "WARNING",
+        "ERROR",
+        "CRITICAL",
+    ), "log_level must be one of DEBUG, INFO, WARNING, ERROR, CRITICAL"
+
+    log_config = {
+        "version": 1,
+        "disable_existing_loggers": True,
+        "formatters": {
+            "default": {
+                "()": "uvicorn.logging.DefaultFormatter",
+                "fmt": "%(asctime)s %(levelprefix)-9s %(name)s -: %(message)s",
+                "use_colors": False,
+            },
+            "access": {
+                "()": "uvicorn.logging.AccessFormatter",
+                "fmt": '%(asctime)s %(levelprefix)-9s %(name)s -: %(client_addr)s - "%(request_line)s" %(status_code)s',
+                "use_colors": False,
+            },
+            "error": {
+                "()": "uvicorn.logging.DefaultFormatter",
+                "fmt": "%(asctime)s %(levelprefix)-9s %(name)s -: %(message)s",
+                "use_colors": False,
+            },
         },
-        "access": {
-            "()": "uvicorn.logging.AccessFormatter",
-            "fmt": '%(asctime)s %(levelprefix)-9s %(name)s -: %(client_addr)s - "%(request_line)s" %(status_code)s',
-            "use_colors": False,
+        "handlers": {
+            "default": {
+                "class": "logging.FileHandler",
+                "formatter": "default",
+                "filename": DEFAULT_LOG_FILENAME,
+            },
+            "access": {
+                "class": "logging.FileHandler",
+                "formatter": "access",
+                "filename": DEFAULT_LOG_FILENAME,
+            },
+            "error": {
+                "class": "logging.FileHandler",
+                "formatter": "error",
+                "filename": DEFAULT_LOG_FILENAME,
+            },
         },
-        "error": {
-            "()": "uvicorn.logging.DefaultFormatter",
-            "fmt": "%(asctime)s %(levelprefix)-9s %(name)s -: %(message)s",
-            "use_colors": False,
+        "loggers": {
+            "uvicorn": {"propagate": True, "level": log_level, "handlers": ["default"]},
+            "uvicorn.error": {"propagate": True, "level": log_level, "handlers": ["error"]},
+            "uvicorn.access": {"propagate": True, "level": log_level, "handlers": ["access"]},
         },
-    },
-    "handlers": {
-        "default": {
-            "class": "logging.FileHandler",
-            "formatter": "default",
-            "filename": DEFAULT_LOG_FILENAME,
-        },
-        "access": {
-            "class": "logging.FileHandler",
-            "formatter": "access",
-            "filename": DEFAULT_LOG_FILENAME,
-        },
-        "error": {
-            "class": "logging.FileHandler",
-            "formatter": "error",
-            "filename": DEFAULT_LOG_FILENAME,
-        },
-    },
-    "loggers": {
-        "uvicorn": {"propagate": True, "level": log_level, "handlers": ["default"]},
-        "uvicorn.error": {"propagate": True, "level": log_level, "handlers": ["error"]},
-        "uvicorn.access": {"propagate": True, "level": log_level, "handlers": ["access"]},
-    },
-}
+    }
 
 os.environ["log_config"] = json.dumps(log_config)
 os.environ["database"] = str(db_path)
