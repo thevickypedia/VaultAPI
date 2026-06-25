@@ -1,6 +1,23 @@
 Release Notes
 =============
 
+v0.6.1 (06/24/2026)
+-------------------
+- `3adf7fb <https://github.com/thevickypedia/VaultAPI/commit/3adf7fb368b39d2d1e9f318e665bf64e4db18e8a>`_ chore: Release ``v0.6.1``
+- `413f8c6 <https://github.com/thevickypedia/VaultAPI/commit/413f8c67f9a2aea5c62092d92751f4d49ce7f334>`_ perf: Adjust skew tolerance to apply for both past and future
+- `e247962 <https://github.com/thevickypedia/VaultAPI/commit/e2479626b948b5698853e408c84d45213f61472b>`_ refactor: Update docstrings and comment code
+- `e9d7d02 <https://github.com/thevickypedia/VaultAPI/commit/e9d7d0255cb00ec20ce213e0169429b0258f6a17>`_ feat: Update encryption and decryption modals in ``/playground`` for stateless handling of credentials
+- `75f378a <https://github.com/thevickypedia/VaultAPI/commit/75f378a34cafba9a48e1ff6e347ba0308eeded2a>`_ feat: Add a feature to encrypt and decrypt secrets via ``/playground``
+- `cfecf93 <https://github.com/thevickypedia/VaultAPI/commit/cfecf938b7a7612e68c249ab6d2e74c9725e4bd4>`_ docs: Update runbook
+- `df92cbe <https://github.com/thevickypedia/VaultAPI/commit/df92cbe4b06909bd26676148fda1cfdf1c330583>`_ test: Update unit tests
+- `dd1885c <https://github.com/thevickypedia/VaultAPI/commit/dd1885cb027dffa72d56d6dd1127780ed84d3529>`_ perf: Allow custom auth header validity duration
+- `3dae37a <https://github.com/thevickypedia/VaultAPI/commit/3dae37a3cd37ac54ec579bc3273b475197e131f3>`_ feat: Include a hyperlink in the authorization section of the ``/docs`` page to ``/signature`` endpoint
+- `acee8dd <https://github.com/thevickypedia/VaultAPI/commit/acee8ddd38ec336f9425e024a44c9795f25053d9>`_ style: Hyperlink to release version from the UI footer
+- `9a053fa <https://github.com/thevickypedia/VaultAPI/commit/9a053fa9289477d23d87899383ec9fdbe1fc199d>`_ feat: Add a new UI endpoint to generate signature from custom inputs
+- `06fccaa <https://github.com/thevickypedia/VaultAPI/commit/06fccaa649afbcf7b7f4387f11a1667635a30e99>`_ test: Update unit tests
+- `21839af <https://github.com/thevickypedia/VaultAPI/commit/21839af9c17dc6969bd51396534ed7758c05f81a>`_ refactor: Reduce redundancies across API and UI wrappers using a common layer
+- `8c35268 <https://github.com/thevickypedia/VaultAPI/commit/8c3526839b39951d7d3274a1997d9ef0b889f28d>`_ chore: Update release notes for v0.6.0
+
 v0.6.0 (06/23/2026)
 -------------------
 - `ae79420 <https://github.com/thevickypedia/VaultAPI/commit/ae79420019251f4de5715bca9133924b773a58de>`_ chore: Release ``v0.6.0``
