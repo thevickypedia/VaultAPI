@@ -12,6 +12,14 @@ logs_dir = pathlib.Path(__file__).parent / "logs"
 data_dir = pathlib.Path(__file__).parent / "data"
 db_path = data_dir / db_filename("database", "secrets.db")
 auth_db = data_dir / db_filename("auth_database", "auth.db")
+log_level = os.environ.get("LOG_LEVEL", "INFO")
+assert log_level in (
+    "DEBUG",
+    "INFO",
+    "WARNING",
+    "ERROR",
+    "CRITICAL",
+), "log_level must be one of DEBUG, INFO, WARNING, ERROR, CRITICAL"
 
 DEFAULT_LOG_FILENAME: str = datetime.now().strftime(str(logs_dir / "vaultapi_%d-%m-%Y.log"))
 data_dir.mkdir(parents=True, exist_ok=True)
@@ -55,9 +63,9 @@ log_config = {
         },
     },
     "loggers": {
-        "uvicorn": {"propagate": True, "level": "INFO", "handlers": ["default"]},
-        "uvicorn.error": {"propagate": True, "level": "INFO", "handlers": ["error"]},
-        "uvicorn.access": {"propagate": True, "level": "INFO", "handlers": ["access"]},
+        "uvicorn": {"propagate": True, "level": log_level, "handlers": ["default"]},
+        "uvicorn.error": {"propagate": True, "level": log_level, "handlers": ["error"]},
+        "uvicorn.access": {"propagate": True, "level": log_level, "handlers": ["access"]},
     },
 }
 
