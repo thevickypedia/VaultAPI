@@ -11,7 +11,7 @@ from fastapi.routing import APIRoute
 from . import enums, models
 
 LOGGER = logging.getLogger("uvicorn.default")
-SWAGGER_JS = "<script>\n" + (pathlib.Path(__file__).parent / "templates" / "swagger.js").read_text() + "\n</script>"
+SWAGGER_JS = "<script>\n" + (pathlib.Path(__file__).parent / "templates" / "swagger_ui.js").read_text() + "\n</script>"
 
 
 async def get_swagger_html(app: FastAPI) -> HTMLResponse:
