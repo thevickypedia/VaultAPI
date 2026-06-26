@@ -55,7 +55,9 @@
  | <a href="#K"><strong>K</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
+ | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
+ | <a href="#Q"><strong>Q</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
@@ -81,11 +83,11 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="index.html#vaultapi.models.EnvConfig.allowed_origins">allowed_origins (vaultapi.models.EnvConfig attribute)</a>
 </li>
-      <li><a href="index.html#vaultapi.auth.AuthType.api_advanced">api_advanced (vaultapi.auth.AuthType attribute)</a>
+      <li><a href="index.html#vaultapi.enums.AuthType.api_advanced">api_advanced (vaultapi.enums.AuthType attribute)</a>
 </li>
       <li><a href="index.html#vaultapi.auth.API_ADVANCED">API_ADVANCED() (in module vaultapi.auth)</a>
 </li>
-      <li><a href="index.html#vaultapi.auth.AuthType.api_basic">api_basic (vaultapi.auth.AuthType attribute)</a>
+      <li><a href="index.html#vaultapi.enums.AuthType.api_basic">api_basic (vaultapi.enums.AuthType attribute)</a>
 </li>
       <li><a href="index.html#vaultapi.auth.API_BASIC">API_BASIC() (in module vaultapi.auth)</a>
 </li>
@@ -93,9 +95,11 @@
 </li>
       <li><a href="index.html#vaultapi.models.EnvConfig.apikey">apikey (vaultapi.models.EnvConfig attribute)</a>
 </li>
+      <li><a href="index.html#vaultapi.exceptions.APIResponse">APIResponse</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#vaultapi.exceptions.APIResponse">APIResponse</a>
+      <li><a href="index.html#vaultapi.enums.APIRoutes">APIRoutes (class in vaultapi.enums)</a>
 </li>
       <li><a href="index.html#vaultapi.models.EnvConfig.Config.arbitrary_types_allowed">arbitrary_types_allowed (vaultapi.models.EnvConfig.Config attribute)</a>
 
@@ -107,9 +111,13 @@
 </li>
       <li><a href="index.html#vaultapi.models.AuthCounter">AuthCounter (class in vaultapi.models)</a>
 </li>
+      <li><a href="index.html#vaultapi.otp.OTPConfig.authenticator_app">authenticator_app (vaultapi.otp.OTPConfig attribute)</a>
+</li>
+      <li><a href="index.html#vaultapi.otp.OTPConfig.authenticator_user">authenticator_user (vaultapi.otp.OTPConfig attribute)</a>
+</li>
       <li><a href="index.html#vaultapi.models.EnvConfig.authorization_validity">authorization_validity (vaultapi.models.EnvConfig attribute)</a>
 </li>
-      <li><a href="index.html#vaultapi.auth.AuthType">AuthType (class in vaultapi.auth)</a>
+      <li><a href="index.html#vaultapi.enums.AuthType">AuthType (class in vaultapi.enums)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -133,12 +141,20 @@
 </li>
       <li><a href="index.html#vaultapi.models.AuthCounter.count">count (vaultapi.models.AuthCounter attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="index.html#vaultapi.database.create_auth_tables">create_auth_tables() (in module vaultapi.database)</a>
 </li>
-      <li><a href="index.html#vaultapi.database.create_table">create_table() (in module vaultapi.database)</a>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#vaultapi.enums.APIRoutes.create_table">create_table (vaultapi.enums.APIRoutes attribute)</a>
 </li>
+      <li><a href="index.html#vaultapi.api_endpoints.create_table">create_table() (in module vaultapi.api_endpoints)</a>
+
+      <ul>
+        <li><a href="index.html#vaultapi.core.create_table">(in module vaultapi.core)</a>
+</li>
+        <li><a href="index.html#vaultapi.database.create_table">(in module vaultapi.database)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -151,6 +167,14 @@
 </li>
       <li><a href="index.html#vaultapi.transit.decrypt">decrypt() (in module vaultapi.transit)</a>
 </li>
+      <li><a href="index.html#vaultapi.enums.APIRoutes.delete_secret">delete_secret (vaultapi.enums.APIRoutes attribute)</a>
+</li>
+      <li><a href="index.html#vaultapi.api_endpoints.delete_secret">delete_secret() (in module vaultapi.api_endpoints)</a>
+</li>
+      <li><a href="index.html#vaultapi.enums.APIRoutes.delete_table">delete_table (vaultapi.enums.APIRoutes attribute)</a>
+</li>
+      <li><a href="index.html#vaultapi.api_endpoints.delete_table">delete_table() (in module vaultapi.api_endpoints)</a>
+</li>
       <li><a href="index.html#vaultapi.api.delete_ui_session">delete_ui_session() (in module vaultapi.api)</a>
 
       <ul>
@@ -161,10 +185,24 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="index.html#vaultapi.payload.DeleteSecret">DeleteSecret (class in vaultapi.payload)</a>
 </li>
+      <li><a href="index.html#vaultapi.otp.display_secret">display_secret() (in module vaultapi.otp)</a>
+</li>
+      <li><a href="index.html#vaultapi.enums.APIRoutes.docs">docs (vaultapi.enums.APIRoutes attribute)</a>
+</li>
+      <li><a href="index.html#vaultapi.api.docs">docs() (in module vaultapi.api)</a>
+</li>
+      <li><a href="index.html#vaultapi.swagger_ui.docs_handler">docs_handler() (in module vaultapi.swagger_ui)</a>
+</li>
+      <li><a href="index.html#vaultapi.swagger_ui.docs_redirect">docs_redirect() (in module vaultapi.swagger_ui)</a>
+</li>
       <li><a href="index.html#vaultapi.util.dotenv_to_table">dotenv_to_table() (in module vaultapi.util)</a>
 </li>
-      <li><a href="index.html#vaultapi.database.drop_table">drop_table() (in module vaultapi.database)</a>
+      <li><a href="index.html#vaultapi.core.drop_table">drop_table() (in module vaultapi.core)</a>
+
+      <ul>
+        <li><a href="index.html#vaultapi.database.drop_table">(in module vaultapi.database)</a>
 </li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -203,15 +241,39 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#vaultapi.header.generate">generate() (in module vaultapi.header)</a>
+</li>
+      <li><a href="index.html#vaultapi.swagger_ui.generate_hyperlink">generate_hyperlink() (in module vaultapi.swagger_ui)</a>
+</li>
+      <li><a href="index.html#vaultapi.otp.generate_qr">generate_qr() (in module vaultapi.otp)</a>
+</li>
       <li><a href="index.html#vaultapi.database.get_blocked_until">get_blocked_until() (in module vaultapi.database)</a>
 </li>
-      <li><a href="index.html#vaultapi.database.get_secret">get_secret() (in module vaultapi.database)</a>
+      <li><a href="index.html#vaultapi.swagger_ui.get_desc">get_desc() (in module vaultapi.swagger_ui)</a>
 </li>
+      <li><a href="index.html#vaultapi.enums.APIRoutes.get_secret">get_secret (vaultapi.enums.APIRoutes attribute)</a>
+</li>
+      <li><a href="index.html#vaultapi.api_endpoints.get_secret">get_secret() (in module vaultapi.api_endpoints)</a>
+
+      <ul>
+        <li><a href="index.html#vaultapi.database.get_secret">(in module vaultapi.database)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#vaultapi.database.get_table">get_table() (in module vaultapi.database)</a>
+      <li><a href="index.html#vaultapi.swagger_ui.get_swagger_html">get_swagger_html() (in module vaultapi.swagger_ui)</a>
 </li>
+      <li><a href="index.html#vaultapi.enums.APIRoutes.get_table">get_table (vaultapi.enums.APIRoutes attribute)</a>
+</li>
+      <li><a href="index.html#vaultapi.api_endpoints.get_table">get_table() (in module vaultapi.api_endpoints)</a>
+
+      <ul>
+        <li><a href="index.html#vaultapi.database.get_table">(in module vaultapi.database)</a>
+</li>
+      </ul></li>
       <li><a href="index.html#vaultapi.database.get_ui_session">get_ui_session() (in module vaultapi.database)</a>
+</li>
+      <li><a href="index.html#vaultapi.api_endpoints.get_version">get_version() (in module vaultapi.api_endpoints)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -219,10 +281,14 @@
 <h2 id="H">H</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#vaultapi.models.EnvConfig.Config.hide_input_in_errors">hide_input_in_errors (vaultapi.models.EnvConfig.Config attribute)</a>
+      <li><a href="index.html#vaultapi.enums.APIRoutes.health">health (vaultapi.enums.APIRoutes attribute)</a>
+</li>
+      <li><a href="index.html#vaultapi.api_endpoints.health">health() (in module vaultapi.api_endpoints)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#vaultapi.models.EnvConfig.Config.hide_input_in_errors">hide_input_in_errors (vaultapi.models.EnvConfig.Config attribute)</a>
+</li>
       <li><a href="index.html#vaultapi.models.EnvConfig.host">host (vaultapi.models.EnvConfig attribute)</a>
 </li>
   </ul></td>
@@ -233,10 +299,12 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="index.html#vaultapi.database.increment_failed_auth">increment_failed_auth() (in module vaultapi.database)</a>
 </li>
-      <li><a href="index.html#vaultapi.models.Session.info">info (vaultapi.models.Session attribute)</a>
+      <li><a href="index.html#vaultapi.ui_endpoints.index">index() (in module vaultapi.ui_endpoints)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#vaultapi.models.Session.info">info (vaultapi.models.Session attribute)</a>
+</li>
       <li><a href="index.html#vaultapi.rate_limit.RateLimiter.init">init() (vaultapi.rate_limit.RateLimiter method)</a>
 </li>
       <li><a href="index.html#vaultapi.database.is_host_blocked">is_host_blocked() (in module vaultapi.database)</a>
@@ -257,8 +325,14 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="index.html#vaultapi.api.lifespan">lifespan() (in module vaultapi.api)</a>
 </li>
-      <li><a href="index.html#vaultapi.database.list_tables">list_tables() (in module vaultapi.database)</a>
+      <li><a href="index.html#vaultapi.enums.APIRoutes.list_tables">list_tables (vaultapi.enums.APIRoutes attribute)</a>
 </li>
+      <li><a href="index.html#vaultapi.api_endpoints.list_tables">list_tables() (in module vaultapi.api_endpoints)</a>
+
+      <ul>
+        <li><a href="index.html#vaultapi.database.list_tables">(in module vaultapi.database)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="index.html#vaultapi.models.load_env">load_env() (in module vaultapi.models)</a>
@@ -281,13 +355,23 @@
       <ul>
         <li><a href="index.html#module-vaultapi.api">vaultapi.api</a>
 </li>
+        <li><a href="index.html#module-vaultapi.api_endpoints">vaultapi.api_endpoints</a>
+</li>
         <li><a href="index.html#module-vaultapi.auth">vaultapi.auth</a>
+</li>
+        <li><a href="index.html#module-vaultapi.core">vaultapi.core</a>
 </li>
         <li><a href="index.html#module-vaultapi.database">vaultapi.database</a>
 </li>
+        <li><a href="index.html#module-vaultapi.enums">vaultapi.enums</a>
+</li>
         <li><a href="index.html#module-vaultapi.exceptions">vaultapi.exceptions</a>
 </li>
+        <li><a href="index.html#module-vaultapi.header">vaultapi.header</a>
+</li>
         <li><a href="index.html#module-vaultapi.models">vaultapi.models</a>
+</li>
+        <li><a href="index.html#module-vaultapi.otp">vaultapi.otp</a>
 </li>
         <li><a href="index.html#module-vaultapi.rate_limit">vaultapi.rate_limit</a>
 </li>
@@ -295,7 +379,11 @@
 </li>
         <li><a href="index.html#module-vaultapi.server">vaultapi.server</a>
 </li>
+        <li><a href="index.html#module-vaultapi.swagger_ui">vaultapi.swagger_ui</a>
+</li>
         <li><a href="index.html#module-vaultapi.transit">vaultapi.transit</a>
+</li>
+        <li><a href="index.html#module-vaultapi.ui_endpoints">vaultapi.ui_endpoints</a>
 </li>
         <li><a href="index.html#module-vaultapi.util">vaultapi.util</a>
 </li>
@@ -303,16 +391,44 @@
   </ul></td>
 </tr></table>
 
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#vaultapi.otp.OTPConfig">OTPConfig (class in vaultapi.otp)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#vaultapi.core.parse_import_payload">parse_import_payload() (in module vaultapi.core)</a>
+</li>
+      <li><a href="index.html#vaultapi.enums.UIRoutes.playground">playground (vaultapi.enums.UIRoutes attribute)</a>
+</li>
+      <li><a href="index.html#vaultapi.ui_endpoints.playground">playground() (in module vaultapi.ui_endpoints)</a>
+</li>
       <li><a href="index.html#vaultapi.models.EnvConfig.port">port (vaultapi.models.EnvConfig attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#vaultapi.database.put_secret">put_secret() (in module vaultapi.database)</a>
+      <li><a href="index.html#vaultapi.enums.APIRoutes.put_secret">put_secret (vaultapi.enums.APIRoutes attribute)</a>
 </li>
+      <li><a href="index.html#vaultapi.api_endpoints.put_secret">put_secret() (in module vaultapi.api_endpoints)</a>
+
+      <ul>
+        <li><a href="index.html#vaultapi.database.put_secret">(in module vaultapi.database)</a>
+</li>
+      </ul></li>
       <li><a href="index.html#vaultapi.payload.PutSecret">PutSecret (class in vaultapi.payload)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="Q">Q</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#vaultapi.otp.OTPConfig.qr_filename">qr_filename (vaultapi.otp.OTPConfig attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -326,16 +442,40 @@
 </li>
       <li><a href="index.html#vaultapi.rate_limit.RateLimiter">RateLimiter (class in vaultapi.rate_limit)</a>
 </li>
+      <li><a href="index.html#vaultapi.enums.APIRoutes.redoc">redoc (vaultapi.enums.APIRoutes attribute)</a>
+</li>
       <li><a href="index.html#vaultapi.database.remove_blocked_host">remove_blocked_host() (in module vaultapi.database)</a>
+</li>
+      <li><a href="index.html#vaultapi.core.remove_secret">remove_secret() (in module vaultapi.core)</a>
+
+      <ul>
+        <li><a href="index.html#vaultapi.database.remove_secret">(in module vaultapi.database)</a>
+</li>
+      </ul></li>
+      <li><a href="index.html#vaultapi.enums.APIRoutes.rename_table">rename_table (vaultapi.enums.APIRoutes attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#vaultapi.database.remove_secret">remove_secret() (in module vaultapi.database)</a>
+      <li><a href="index.html#vaultapi.api_endpoints.rename_table">rename_table() (in module vaultapi.api_endpoints)</a>
+
+      <ul>
+        <li><a href="index.html#vaultapi.core.rename_table">(in module vaultapi.core)</a>
 </li>
-      <li><a href="index.html#vaultapi.database.rename_table">rename_table() (in module vaultapi.database)</a>
+        <li><a href="index.html#vaultapi.database.rename_table">(in module vaultapi.database)</a>
 </li>
+      </ul></li>
       <li><a href="index.html#vaultapi.database.reset_failed_auth">reset_failed_auth() (in module vaultapi.database)</a>
 </li>
+      <li><a href="index.html#vaultapi.core.retrieve_secret">retrieve_secret() (in module vaultapi.core)</a>
+</li>
+      <li><a href="index.html#vaultapi.core.retrieve_secrets">retrieve_secrets() (in module vaultapi.core)</a>
+</li>
+      <li><a href="index.html#vaultapi.enums.APIRoutes.root">root (vaultapi.enums.APIRoutes attribute)</a>
+
+      <ul>
+        <li><a href="index.html#vaultapi.enums.UIRoutes.root">(vaultapi.enums.UIRoutes attribute)</a>
+</li>
+      </ul></li>
       <li><a href="index.html#vaultapi.models.Session.rps">rps (vaultapi.models.Session attribute)</a>
 </li>
   </ul></td>
@@ -347,7 +487,11 @@
       <li><a href="index.html#vaultapi.models.RateLimit.seconds">seconds (vaultapi.models.RateLimit attribute)</a>
 </li>
       <li><a href="index.html#vaultapi.models.EnvConfig.secret">secret (vaultapi.models.EnvConfig attribute)</a>
+
+      <ul>
+        <li><a href="index.html#vaultapi.otp.OTPConfig.secret">(vaultapi.otp.OTPConfig attribute)</a>
 </li>
+      </ul></li>
       <li><a href="index.html#vaultapi.payload.PutSecret.secrets">secrets (vaultapi.payload.PutSecret attribute)</a>
 </li>
       <li><a href="index.html#vaultapi.models.Session">Session (class in vaultapi.models)</a>
@@ -394,19 +538,55 @@
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#vaultapi.auth.AuthType.ui_advanced">ui_advanced (vaultapi.auth.AuthType attribute)</a>
+      <li><a href="index.html#vaultapi.enums.AuthType.ui_advanced">ui_advanced (vaultapi.enums.AuthType attribute)</a>
 </li>
-      <li><a href="index.html#vaultapi.auth.AuthType.ui_basic">ui_basic (vaultapi.auth.AuthType attribute)</a>
+      <li><a href="index.html#vaultapi.enums.AuthType.ui_basic">ui_basic (vaultapi.enums.AuthType attribute)</a>
 </li>
       <li><a href="index.html#vaultapi.auth.UI_BASIC">UI_BASIC() (in module vaultapi.auth)</a>
 </li>
+      <li><a href="index.html#vaultapi.ui_endpoints.ui_create_table">ui_create_table() (in module vaultapi.ui_endpoints)</a>
+</li>
+      <li><a href="index.html#vaultapi.ui_endpoints.ui_delete_secret">ui_delete_secret() (in module vaultapi.ui_endpoints)</a>
+</li>
+      <li><a href="index.html#vaultapi.ui_endpoints.ui_delete_table">ui_delete_table() (in module vaultapi.ui_endpoints)</a>
+</li>
+      <li><a href="index.html#vaultapi.ui_endpoints.ui_get_table">ui_get_table() (in module vaultapi.ui_endpoints)</a>
+</li>
+      <li><a href="index.html#vaultapi.enums.UIRoutes.ui_import">ui_import (vaultapi.enums.UIRoutes attribute)</a>
+</li>
+      <li><a href="index.html#vaultapi.ui_endpoints.ui_import_secrets">ui_import_secrets() (in module vaultapi.ui_endpoints)</a>
+</li>
       <li><a href="index.html#vaultapi.models.EnvConfig.ui_lifetime">ui_lifetime (vaultapi.models.EnvConfig attribute)</a>
 </li>
+      <li><a href="index.html#vaultapi.ui_endpoints.ui_list_tables">ui_list_tables() (in module vaultapi.ui_endpoints)</a>
+</li>
+      <li><a href="index.html#vaultapi.enums.AuthType.ui_login">ui_login (vaultapi.enums.AuthType attribute)</a>
+
+      <ul>
+        <li><a href="index.html#vaultapi.enums.UIRoutes.ui_login">(vaultapi.enums.UIRoutes attribute)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#vaultapi.auth.AuthType.ui_login">ui_login (vaultapi.auth.AuthType attribute)</a>
+      <li><a href="index.html#vaultapi.ui_endpoints.ui_login">ui_login() (in module vaultapi.ui_endpoints)</a>
+</li>
+      <li><a href="index.html#vaultapi.enums.UIRoutes.ui_logout">ui_logout (vaultapi.enums.UIRoutes attribute)</a>
+</li>
+      <li><a href="index.html#vaultapi.ui_endpoints.ui_logout">ui_logout() (in module vaultapi.ui_endpoints)</a>
+</li>
+      <li><a href="index.html#vaultapi.ui_endpoints.ui_put_secret">ui_put_secret() (in module vaultapi.ui_endpoints)</a>
+</li>
+      <li><a href="index.html#vaultapi.ui_endpoints.ui_rename_table">ui_rename_table() (in module vaultapi.ui_endpoints)</a>
 </li>
       <li><a href="index.html#vaultapi.routes.ui_routes">ui_routes() (in module vaultapi.routes)</a>
+</li>
+      <li><a href="index.html#vaultapi.enums.UIRoutes.ui_secret">ui_secret (vaultapi.enums.UIRoutes attribute)</a>
+</li>
+      <li><a href="index.html#vaultapi.enums.UIRoutes.ui_table">ui_table (vaultapi.enums.UIRoutes attribute)</a>
+</li>
+      <li><a href="index.html#vaultapi.enums.UIRoutes.ui_tables">ui_tables (vaultapi.enums.UIRoutes attribute)</a>
+</li>
+      <li><a href="index.html#vaultapi.enums.UIRoutes">UIRoutes (class in vaultapi.enums)</a>
 </li>
       <li><a href="index.html#vaultapi.auth.unauthorized">unauthorized() (in module vaultapi.auth)</a>
 </li>
@@ -419,7 +599,11 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="index.html#vaultapi.auth.validate">validate() (in module vaultapi.auth)</a>
+
+      <ul>
+        <li><a href="index.html#vaultapi.header.validate">(in module vaultapi.header)</a>
 </li>
+      </ul></li>
       <li><a href="index.html#vaultapi.models.EnvConfig.validate_api_secret">validate_api_secret() (vaultapi.models.EnvConfig class method)</a>
 </li>
       <li><a href="index.html#vaultapi.models.EnvConfig.validate_apikey">validate_apikey() (vaultapi.models.EnvConfig class method)</a>
@@ -438,6 +622,13 @@
 </li>
       </ul></li>
       <li>
+    vaultapi.api_endpoints
+
+      <ul>
+        <li><a href="index.html#module-vaultapi.api_endpoints">module</a>
+</li>
+      </ul></li>
+      <li>
     vaultapi.auth
 
       <ul>
@@ -445,10 +636,24 @@
 </li>
       </ul></li>
       <li>
+    vaultapi.core
+
+      <ul>
+        <li><a href="index.html#module-vaultapi.core">module</a>
+</li>
+      </ul></li>
+      <li>
     vaultapi.database
 
       <ul>
         <li><a href="index.html#module-vaultapi.database">module</a>
+</li>
+      </ul></li>
+      <li>
+    vaultapi.enums
+
+      <ul>
+        <li><a href="index.html#module-vaultapi.enums">module</a>
 </li>
       </ul></li>
       <li>
@@ -461,10 +666,24 @@
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li>
+    vaultapi.header
+
+      <ul>
+        <li><a href="index.html#module-vaultapi.header">module</a>
+</li>
+      </ul></li>
+      <li>
     vaultapi.models
 
       <ul>
         <li><a href="index.html#module-vaultapi.models">module</a>
+</li>
+      </ul></li>
+      <li>
+    vaultapi.otp
+
+      <ul>
+        <li><a href="index.html#module-vaultapi.otp">module</a>
 </li>
       </ul></li>
       <li>
@@ -489,10 +708,24 @@
 </li>
       </ul></li>
       <li>
+    vaultapi.swagger_ui
+
+      <ul>
+        <li><a href="index.html#module-vaultapi.swagger_ui">module</a>
+</li>
+      </ul></li>
+      <li>
     vaultapi.transit
 
       <ul>
         <li><a href="index.html#module-vaultapi.transit">module</a>
+</li>
+      </ul></li>
+      <li>
+    vaultapi.ui_endpoints
+
+      <ul>
+        <li><a href="index.html#module-vaultapi.ui_endpoints">module</a>
 </li>
       </ul></li>
       <li>
@@ -502,6 +735,8 @@
         <li><a href="index.html#module-vaultapi.util">module</a>
 </li>
       </ul></li>
+      <li><a href="index.html#vaultapi.enums.APIRoutes.version">version (vaultapi.enums.APIRoutes attribute)</a>
+</li>
   </ul></td>
 </tr></table>
 

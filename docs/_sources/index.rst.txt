@@ -25,17 +25,36 @@ Authenticator
 =============
 .. automodule:: vaultapi.auth
 
+Core
+====
+.. automodule:: vaultapi.core
+
 Database
 ========
 .. automodule:: vaultapi.database
+
+Endpoints
+=========
+.. automodule:: vaultapi.api_endpoints
+
+====
+
+.. automodule:: vaultapi.ui_endpoints
+
+Enums
+=====
+.. automodule:: vaultapi.enums
 
 Exceptions
 ==========
 .. automodule:: vaultapi.exceptions
 
+Header
+======
+.. automodule:: vaultapi.header
+
 Models
 ======
-
 .. autoclass:: vaultapi.models.RateLimit(BaseModel)
    :exclude-members: _abc_impl, model_config, model_fields, model_computed_fields
 
@@ -54,9 +73,12 @@ Models
 .. automodule:: vaultapi.models
    :exclude-members: RateLimit, Session, EnvConfig
 
+OTP
+===
+.. automodule:: vaultapi.otp
+
 Payload
 =======
-
 .. autoclass:: vaultapi.payload.DeleteSecret(BaseModel)
    :exclude-members: _abc_impl, model_config, model_fields, model_computed_fields
 
@@ -67,17 +89,18 @@ Payload
 
 RateLimit
 =========
-
 .. automodule:: vaultapi.rate_limit
 
-API Routes
-==========
-
+Routes
+======
 .. automodule:: vaultapi.routes
+
+SwaggerUI
+=========
+.. automodule:: vaultapi.swagger_ui
 
 Transit
 =======
-
 .. automodule:: vaultapi.transit
 
 Util
