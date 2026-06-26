@@ -3,7 +3,7 @@ from typing import List
 from fastapi import Depends
 from fastapi.routing import APIRoute
 
-from . import api_endpoints, models, rate_limit, ui_endpoints
+from . import api_endpoints, models, rate_limit, ui_endpoints, enums
 
 DEPENDENCIES = [
     Depends(dependency=rate_limit.RateLimiter(each_rate_limit).init) for each_rate_limit in models.env.rate_limit
@@ -19,84 +19,84 @@ def ui_routes() -> List[APIRoute]:
     """
     return [
         APIRoute(
-            path="/",
+            path=enums.UIRoutes.root,
             endpoint=ui_endpoints.index,
             methods=["GET"],
             include_in_schema=False,
             dependencies=DEPENDENCIES,
         ),
         APIRoute(
-            path="/playground",
+            path=enums.UIRoutes.playground,
             endpoint=ui_endpoints.playground,
             methods=["GET"],
             include_in_schema=False,
             dependencies=DEPENDENCIES,
         ),
         APIRoute(
-            path="/ui/login",
+            path=enums.UIRoutes.ui_login,
             endpoint=ui_endpoints.ui_login,
             methods=["POST"],
             include_in_schema=False,
             dependencies=DEPENDENCIES,
         ),
         APIRoute(
-            path="/ui/logout",
+            path=enums.UIRoutes.ui_logout,
             endpoint=ui_endpoints.ui_logout,
             methods=["POST"],
             include_in_schema=False,
             dependencies=DEPENDENCIES,
         ),
         APIRoute(
-            path="/ui/tables",
+            path=enums.UIRoutes.ui_tables,
             endpoint=ui_endpoints.ui_list_tables,
             methods=["GET"],
             include_in_schema=False,
             dependencies=DEPENDENCIES,
         ),
         APIRoute(
-            path="/ui/table/{table_name}",
+            path=enums.UIRoutes.ui_table,
             endpoint=ui_endpoints.ui_get_table,
             methods=["GET"],
             include_in_schema=False,
             dependencies=DEPENDENCIES,
         ),
         APIRoute(
-            path="/ui/table/{table_name}",
+            path=enums.UIRoutes.ui_table,
             endpoint=ui_endpoints.ui_create_table,
             methods=["POST"],
             include_in_schema=False,
             dependencies=DEPENDENCIES,
         ),
         APIRoute(
-            path="/ui/table/{table_name}",
+            path=enums.UIRoutes.ui_table,
             endpoint=ui_endpoints.ui_rename_table,
             methods=["PATCH"],
             include_in_schema=False,
             dependencies=DEPENDENCIES,
         ),
         APIRoute(
-            path="/ui/table/{table_name}",
+            path=enums.UIRoutes.ui_table,
             endpoint=ui_endpoints.ui_delete_table,
             methods=["DELETE"],
             include_in_schema=False,
             dependencies=DEPENDENCIES,
         ),
         APIRoute(
-            path="/ui/secret",
+            path=enums.UIRoutes.ui_secret,
             endpoint=ui_endpoints.ui_put_secret,
             methods=["PUT"],
             include_in_schema=False,
             dependencies=DEPENDENCIES,
         ),
         APIRoute(
-            path="/ui/secret",
+            path=enums.UIRoutes.ui_secret,
             endpoint=ui_endpoints.ui_delete_secret,
             methods=["DELETE"],
             include_in_schema=False,
             dependencies=DEPENDENCIES,
         ),
         APIRoute(
-            path="/ui/import",
+            path=enums.UIRoutes.ui_import,
             endpoint=ui_endpoints.ui_import_secrets,
             methods=["POST"],
             include_in_schema=False,
@@ -113,62 +113,65 @@ def api_routes() -> List[APIRoute]:
         Returns the routes as a list of APIRoute objects.
     """
     return [
+        # Base routes (no auth)
         APIRoute(
-            path="/health",
+            path=enums.APIRoutes.health,
             endpoint=api_endpoints.health,
             methods=["GET"],
             include_in_schema=False,
         ),
         APIRoute(
-            path="/version",
+            path=enums.APIRoutes.version,
             endpoint=api_endpoints.get_version,
             methods=["GET"],
             dependencies=DEPENDENCIES,
         ),
+        # Basic authentication (GET [OR] POST)
         APIRoute(
-            path="/get-secret",
+            path=enums.APIRoutes.get_secret,
             endpoint=api_endpoints.get_secret,
             methods=["GET"],
             dependencies=DEPENDENCIES,
         ),
         APIRoute(
-            path="/get-table",
+            path=enums.APIRoutes.get_table,
             endpoint=api_endpoints.get_table,
             methods=["GET"],
             dependencies=DEPENDENCIES,
         ),
         APIRoute(
-            path="/list-tables",
+            path=enums.APIRoutes.list_tables,
             endpoint=api_endpoints.list_tables,
             methods=["GET"],
             dependencies=DEPENDENCIES,
         ),
         APIRoute(
-            path="/put-secret",
+            path=enums.APIRoutes.create_table,
+            endpoint=api_endpoints.create_table,
+            methods=["POST"],
+            dependencies=DEPENDENCIES,
+        ),
+        # Advanced routes (PUT [OR] PATCH [OR] DELETE)
+        APIRoute(
+            path=enums.APIRoutes.put_secret,
             endpoint=api_endpoints.put_secret,
             methods=["PUT"],
             dependencies=DEPENDENCIES,
         ),
         APIRoute(
-            path="/delete-secret",
+            path=enums.APIRoutes.delete_secret,
             endpoint=api_endpoints.delete_secret,
             methods=["DELETE"],
             dependencies=DEPENDENCIES,
         ),
         APIRoute(
-            path="/create-table",
-            endpoint=api_endpoints.create_table,
-            methods=["POST"],
-            dependencies=DEPENDENCIES,
-        ),
-        APIRoute(
-            path="/rename-table",
+            path=enums.APIRoutes.rename_table,
             endpoint=api_endpoints.rename_table,
             methods=["PATCH"],
             dependencies=DEPENDENCIES,
         ),
         APIRoute(
-            path="/delete-table",
+            path=enums.APIRoutes.delete_table,
             endpoint=api_endpoints.delete_table,
             methods=["DELETE"],
             dependencies=DEPENDENCIES,
