@@ -3,7 +3,6 @@ from http import HTTPStatus
 from typing import Dict
 
 from fastapi import Depends, Request
-from fastapi.responses import RedirectResponse
 from fastapi.security import HTTPAuthorizationCredentials
 
 from . import auth, core, exceptions, models, payload, transit, version
@@ -230,13 +229,3 @@ async def get_version() -> str:
         Returns the version string of the Vault API.
     """
     return version.__version__
-
-
-async def docs() -> RedirectResponse:
-    """Redirect to docs page.
-
-    Returns:
-        RedirectResponse:
-        Redirects the user to ``/docs`` page.
-    """
-    return RedirectResponse("/docs")

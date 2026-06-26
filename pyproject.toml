@@ -20,7 +20,7 @@ requires-python = ">=3.10"
 [tool.setuptools]
 packages = ["vaultapi", "vaultapi.templates"]
 [tool.setuptools.package-data]
-"vaultapi.templates" = ["*.html"]
+"vaultapi.templates" = ["*.html", "*.js"]
 
 [tool.setuptools.dynamic]
 version = { attr = "vaultapi.version.__version__" }

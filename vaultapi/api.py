@@ -4,9 +4,10 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from fastapi.routing import APIRoute
 
-from . import api_endpoints, database, models, routes, version
+from . import database, enums, models, routes, swagger_ui, version
 
 
 async def delete_ui_session(event: str) -> None:
@@ -28,11 +29,16 @@ async def lifespan(_: FastAPI):
 
 VaultAPI = FastAPI(
     title="VaultAPI",
-    description="Lightweight service to serve secrets and environment variables",
     version=version.__version__,
     lifespan=lifespan,
 )
+VaultAPI.__name__ = ("VaultAPI",)
 LOGGER = logging.getLogger("uvicorn.default")
+
+
+async def docs() -> HTMLResponse:
+    """Returns the docs page as an HTMLResponse object."""
+    return await swagger_ui.get_swagger_html(VaultAPI)
 
 
 def startup() -> None:
@@ -50,15 +56,32 @@ def startup() -> None:
         ],
     )
 
-    VaultAPI.routes.extend(routes.api_routes())
+    # Register docs endpoint to handle SwaggerUI
+    swagger_ui.docs_handler(api=VaultAPI, func=docs)
+    VaultAPI.routes.append(
+        APIRoute(
+            path=enums.APIRoutes.docs,
+            endpoint=docs,
+            methods=["GET"],
+            include_in_schema=False,
+        )
+    )
+
+    api_routes = routes.api_routes()
+    description = swagger_ui.get_desc(api_routes)
+    VaultAPI.description = description
+
+    VaultAPI.routes.extend(api_routes)
     if models.env.enable_ui:
         database.create_auth_tables()
-        VaultAPI.routes.extend(routes.ui_routes())
+        ui_routes = routes.ui_routes()
+        VaultAPI.routes.extend(ui_routes)
     else:  # pragma: no cover
+        # Redirect root page to `/docs` if the UI is disabled
         VaultAPI.routes.append(
             APIRoute(
                 path="/",
-                endpoint=api_endpoints.docs,
+                endpoint=swagger_ui.docs_redirect,
                 methods=["GET"],
                 include_in_schema=False,
             )
