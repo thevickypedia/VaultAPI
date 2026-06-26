@@ -1,14 +1,13 @@
 import logging
 import secrets
 import time
-from enum import Enum
 from http import HTTPStatus
 from typing import NoReturn
 
 from fastapi import Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from . import database, exceptions, header, models
+from . import database, enums, exceptions, header, models
 
 LOGGER = logging.getLogger("uvicorn.default")
 SECURITY = HTTPBearer(description="Use [Playground](/playground) to generate the authorization header")
@@ -23,21 +22,6 @@ API_BASIC = lambda auth: header.validate(auth, models.env.apikey, models.env.aut
 API_ADVANCED = lambda auth: header.validate(  # noqa: E731
     auth, f"{models.env.apikey}.{models.env.secret}", models.env.authorization_validity
 )
-
-
-class AuthType(Enum):
-    """Model for the authentication type.
-
-    >>> AuthType
-
-    """
-
-    ui_basic = "UI_BASIC"
-    ui_login = "UI_LOGIN"
-    ui_advanced = "UI_ADVANCED"
-
-    api_basic = "API_BASIC"
-    api_advanced = "API_ADVANCED"
 
 
 def unauthorized(host: str) -> NoReturn:
@@ -95,7 +79,7 @@ async def validate_totp(totp_code: str) -> bool | NoReturn:
 
 
 async def validate(
-    request: Request, authorization: HTTPAuthorizationCredentials, auth_type: AuthType
+    request: Request, authorization: HTTPAuthorizationCredentials, auth_type: enums.AuthType
 ) -> None | NoReturn:
     """Validates the auth request using HTTPBearer.
 
@@ -112,23 +96,23 @@ async def validate(
     host = request.client.host
     await blocked(host)
     match auth_type:
-        case AuthType.ui_login:
+        case enums.AuthType.ui_login:
             # UI login page requires an API key and MFA code
             totp_code = request.headers.get("mfa-code", "")
             authenticated = API_BASIC(authorization.credentials) and await validate_totp(totp_code)
-        case AuthType.ui_basic:
+        case enums.AuthType.ui_basic:
             # UI requests with read-only operations require a session token for validation
             session = database.get_ui_session(models.session.fernet)
             authenticated = UI_BASIC(session, authorization.credentials, host)
-        case AuthType.ui_advanced:
+        case enums.AuthType.ui_advanced:
             # UI requests with write/modify operations require a session token and MFA code for validation
             session = database.get_ui_session(models.session.fernet)
             totp_code = request.headers.get("mfa-code", "")
             authenticated = UI_BASIC(session, authorization.credentials, host) and await validate_totp(totp_code)
-        case AuthType.api_basic:
+        case enums.AuthType.api_basic:
             # API requests with read-only operations requires apikey + time based signature authentication
             authenticated = API_BASIC(authorization.credentials)
-        case AuthType.api_advanced:
+        case enums.AuthType.api_advanced:
             # API requests with write/modify operations require apikey + secret + time based signature authentication
             authenticated = API_ADVANCED(authorization.credentials)
     if authenticated:

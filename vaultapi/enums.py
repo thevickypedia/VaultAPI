@@ -52,3 +52,18 @@ class UIRoutes(StrEnum):
     ui_table = "/ui/table/{table_name}"
     ui_secret = "/ui/secret"
     ui_import = "/ui/import"
+
+
+class AuthType(StrEnum):
+    """Model for the authentication type.
+
+    >>> AuthType
+
+    """
+
+    ui_basic = "UI_BASIC"
+    ui_login = "UI_LOGIN"
+    ui_advanced = "UI_ADVANCED"
+
+    api_basic = "API_BASIC"
+    api_advanced = "API_ADVANCED"
