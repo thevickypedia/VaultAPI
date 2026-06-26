@@ -8,7 +8,7 @@ import pytest
 from fastapi.security import HTTPAuthorizationCredentials
 
 from tests.conftest import _IN_MEMORY_AUTH_CONN, API_KEY, FERNET_KEY
-from vaultapi import auth, database, header, models
+from vaultapi import auth, database, enums, header, models
 from vaultapi.exceptions import APIResponse
 
 
@@ -40,24 +40,24 @@ class TestAuthValidate:
             database.increment_failed_auth("10.99.99.99")
         req = _make_request(host="10.99.99.99")
         with pytest.raises(APIResponse) as exc_info:
-            await auth.validate(req, _make_creds("anything"), auth_type=auth.AuthType.api_basic)
+            await auth.validate(req, _make_creds("anything"), auth_type=enums.AuthType.api_basic)
         assert exc_info.value.status_code == 403
         assert "Blocked until" in exc_info.value.detail
 
     async def test_valid_api_key_accepted(self):
         req = _make_request()
-        await auth.validate(req, _hmac_creds(API_KEY), auth_type=auth.AuthType.api_basic)
+        await auth.validate(req, _hmac_creds(API_KEY), auth_type=enums.AuthType.api_basic)
 
     async def test_invalid_api_key_rejected(self):
         req = _make_request()
         with pytest.raises(APIResponse) as exc_info:
-            await auth.validate(req, _make_creds("wrong-key"), auth_type=auth.AuthType.api_basic)
+            await auth.validate(req, _make_creds("wrong-key"), auth_type=enums.AuthType.api_basic)
         assert exc_info.value.status_code == 401
 
     async def test_api_key_with_backslash_escape(self):
         req = _make_request()
         with pytest.raises(APIResponse) as exc_info:
-            await auth.validate(req, _make_creds("\\wrong"), auth_type=auth.AuthType.api_basic)
+            await auth.validate(req, _make_creds("\\wrong"), auth_type=enums.AuthType.api_basic)
         assert exc_info.value.status_code == 401
 
     async def test_valid_api_advanced_accepted(self):
@@ -65,13 +65,13 @@ class TestAuthValidate:
         await auth.validate(
             req,
             _hmac_creds(f"{API_KEY}.{FERNET_KEY}"),
-            auth_type=auth.AuthType.api_advanced,
+            auth_type=enums.AuthType.api_advanced,
         )
 
     async def test_invalid_api_advanced_rejected(self):
         req = _make_request()
         with pytest.raises(APIResponse) as exc_info:
-            await auth.validate(req, _make_creds("wrong-key"), auth_type=auth.AuthType.api_advanced)
+            await auth.validate(req, _make_creds("wrong-key"), auth_type=enums.AuthType.api_advanced)
         assert exc_info.value.status_code == 401
 
     async def test_valid_ui_login_accepted(self):
@@ -81,18 +81,18 @@ class TestAuthValidate:
 
         totp = pyotp.TOTP(TOTP_SECRET).now()
         req = _make_request(headers={"mfa-code": totp})
-        await auth.validate(req, _hmac_creds(API_KEY), auth_type=auth.AuthType.ui_login)
+        await auth.validate(req, _hmac_creds(API_KEY), auth_type=enums.AuthType.ui_login)
 
     async def test_ui_login_wrong_totp_rejected(self):
         req = _make_request(headers={"mfa-code": "000000"})
         with pytest.raises(APIResponse) as exc_info:
-            await auth.validate(req, _hmac_creds(API_KEY), auth_type=auth.AuthType.ui_login)
+            await auth.validate(req, _hmac_creds(API_KEY), auth_type=enums.AuthType.ui_login)
         assert exc_info.value.status_code == 401
 
     async def test_ui_login_wrong_apikey_rejected(self):
         req = _make_request(headers={"mfa-code": "000000"})
         with pytest.raises(APIResponse) as exc_info:
-            await auth.validate(req, _make_creds("bad"), auth_type=auth.AuthType.ui_login)
+            await auth.validate(req, _make_creds("bad"), auth_type=enums.AuthType.ui_login)
         assert exc_info.value.status_code == 401
 
     async def test_valid_ui_session_accepted(self):
@@ -100,7 +100,7 @@ class TestAuthValidate:
 
         token = _set_valid_ui_session()
         req = _make_request()
-        await auth.validate(req, _make_creds(token), auth_type=auth.AuthType.ui_basic)
+        await auth.validate(req, _make_creds(token), auth_type=enums.AuthType.ui_basic)
 
     async def test_invalid_ui_session_token_rejected(self):
         from tests.conftest import _set_valid_ui_session
@@ -108,7 +108,7 @@ class TestAuthValidate:
         _set_valid_ui_session()
         req = _make_request()
         with pytest.raises(APIResponse) as exc_info:
-            await auth.validate(req, _make_creds("wrong-token"), auth_type=auth.AuthType.ui_basic)
+            await auth.validate(req, _make_creds("wrong-token"), auth_type=enums.AuthType.ui_basic)
         assert exc_info.value.status_code == 401
 
     async def test_expired_ui_session_rejected(self):
@@ -116,7 +116,7 @@ class TestAuthValidate:
         database.upsert_ui_session(token, "127.0.0.1", int(time.time()) - 1, models.session.fernet)
         req = _make_request()
         with pytest.raises(APIResponse) as exc_info:
-            await auth.validate(req, _make_creds(token), auth_type=auth.AuthType.ui_basic)
+            await auth.validate(req, _make_creds(token), auth_type=enums.AuthType.ui_basic)
         assert exc_info.value.status_code == 401
 
     async def test_wrong_host_rejected(self):
@@ -124,13 +124,13 @@ class TestAuthValidate:
         database.upsert_ui_session(token, "192.168.1.100", int(time.time()) + 900, models.session.fernet)
         req = _make_request(host="127.0.0.1")
         with pytest.raises(APIResponse) as exc_info:
-            await auth.validate(req, _make_creds(token), auth_type=auth.AuthType.ui_basic)
+            await auth.validate(req, _make_creds(token), auth_type=enums.AuthType.ui_basic)
         assert exc_info.value.status_code == 401
 
     async def test_empty_ui_session_rejected(self):
         req = _make_request()
         with pytest.raises(APIResponse) as exc_info:
-            await auth.validate(req, _make_creds(""), auth_type=auth.AuthType.ui_basic)
+            await auth.validate(req, _make_creds(""), auth_type=enums.AuthType.ui_basic)
         assert exc_info.value.status_code == 401
 
     async def test_valid_ui_advanced_accepted(self):
@@ -141,7 +141,7 @@ class TestAuthValidate:
         token = _set_valid_ui_session()
         totp = pyotp.TOTP(TOTP_SECRET).now()
         req = _make_request(headers={"mfa-code": totp})
-        await auth.validate(req, _make_creds(token), auth_type=auth.AuthType.ui_advanced)
+        await auth.validate(req, _make_creds(token), auth_type=enums.AuthType.ui_advanced)
 
     async def test_ui_advanced_wrong_totp_rejected(self):
         from tests.conftest import _set_valid_ui_session
@@ -149,18 +149,18 @@ class TestAuthValidate:
         token = _set_valid_ui_session()
         req = _make_request(headers={"mfa-code": "000000"})
         with pytest.raises(APIResponse) as exc_info:
-            await auth.validate(req, _make_creds(token), auth_type=auth.AuthType.ui_advanced)
+            await auth.validate(req, _make_creds(token), auth_type=enums.AuthType.ui_advanced)
         assert exc_info.value.status_code == 401
 
     async def test_user_agent_logged(self, caplog):
         req = _make_request(headers={"user-agent": "pytest/1.0"})
         with caplog.at_level(logging.DEBUG, logger="uvicorn.default"):
-            await auth.validate(req, _hmac_creds(API_KEY), auth_type=auth.AuthType.api_basic)
+            await auth.validate(req, _hmac_creds(API_KEY), auth_type=enums.AuthType.api_basic)
 
     async def test_failed_auth_increments_counter(self):
         req = _make_request(host="1.2.3.4")
         with pytest.raises(APIResponse):
-            await auth.validate(req, _make_creds("wrong"), auth_type=auth.AuthType.api_basic)
+            await auth.validate(req, _make_creds("wrong"), auth_type=enums.AuthType.api_basic)
         row = _IN_MEMORY_AUTH_CONN.execute(
             f'SELECT failed_auth, blocked_until FROM "{database.BLOCKED_HOSTS_TABLE}" WHERE host = ?',
             ("1.2.3.4",),
@@ -171,7 +171,7 @@ class TestAuthValidate:
     async def test_successful_auth_resets_counter(self):
         database.increment_failed_auth("127.0.0.1")
         req = _make_request(host="127.0.0.1")
-        await auth.validate(req, _hmac_creds(API_KEY), auth_type=auth.AuthType.api_basic)
+        await auth.validate(req, _hmac_creds(API_KEY), auth_type=enums.AuthType.api_basic)
         row = _IN_MEMORY_AUTH_CONN.execute(
             f'SELECT failed_auth FROM "{database.BLOCKED_HOSTS_TABLE}" WHERE host = ?',
             ("127.0.0.1",),
@@ -183,10 +183,10 @@ class TestAuthValidate:
         req = _make_request(host=host)
         for _ in range(database.FAILED_AUTH_LIMIT):
             with pytest.raises(APIResponse) as exc_info:
-                await auth.validate(req, _make_creds("wrong"), auth_type=auth.AuthType.api_basic)
+                await auth.validate(req, _make_creds("wrong"), auth_type=enums.AuthType.api_basic)
             assert exc_info.value.status_code == 401
         with pytest.raises(APIResponse) as exc_info:
-            await auth.validate(req, _make_creds("wrong"), auth_type=auth.AuthType.api_basic)
+            await auth.validate(req, _make_creds("wrong"), auth_type=enums.AuthType.api_basic)
         assert exc_info.value.status_code == 403
         assert "Blocked until" in exc_info.value.detail
 

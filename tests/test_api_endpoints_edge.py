@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from tests.conftest import api_advanced_headers, auth_headers
-from vaultapi import api_endpoints, core, database, exceptions, models
+from vaultapi import core, database, exceptions, models, swagger_ui
 
 
 @pytest.mark.asyncio
@@ -96,6 +96,15 @@ class TestDocsRedirect:
     async def test_docs_endpoint_returns_redirect(self):
         from fastapi.responses import RedirectResponse
 
-        resp = await api_endpoints.docs()
+        resp = await swagger_ui.docs_redirect()
         assert isinstance(resp, RedirectResponse)
         assert resp.headers["location"] == "/docs"
+
+    async def test_docs_page_returns_html(self, client):
+        from fastapi.responses import HTMLResponse
+
+        from vaultapi import api
+
+        resp = await api.docs()
+        assert isinstance(resp, HTMLResponse)
+        assert b"swagger" in resp.body.lower()
