@@ -5,7 +5,7 @@ from typing import Dict
 from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials
 
-from . import auth, core, exceptions, models, payload, transit, version
+from . import auth, core, enums, exceptions, models, payload, transit, version
 
 LOGGER = logging.getLogger("uvicorn.default")
 
@@ -28,7 +28,7 @@ async def get_secret(
         APIResponse:
         Raises the HTTPStatus object with a status code and detail as response.
     """
-    await auth.validate(request, apikey, auth_type=auth.AuthType.api_basic)
+    await auth.validate(request, apikey, auth_type=enums.AuthType.api_basic)
     keys = list(filter(None, map(str.strip, key.split(","))))
     keys_ct = len(keys)
     try:
@@ -69,7 +69,7 @@ async def list_tables(
         APIResponse:
         Raises the HTTPStatus object with a status code and detail as response.
     """
-    await auth.validate(request, apikey, auth_type=auth.AuthType.api_basic)
+    await auth.validate(request, apikey, auth_type=enums.AuthType.api_basic)
     raise exceptions.APIResponse(status_code=HTTPStatus.OK.real, detail=core.database.list_tables())
 
 
@@ -89,7 +89,7 @@ async def get_table(
         APIResponse:
         Raises the HTTPStatus object with a status code and detail as response.
     """
-    await auth.validate(request, apikey, auth_type=auth.AuthType.api_basic)
+    await auth.validate(request, apikey, auth_type=enums.AuthType.api_basic)
     table_content = await core.retrieve_secrets(table_name)
     decrypted = {
         key: models.session.fernet.decrypt(value).decode(encoding="UTF-8") for key, value in table_content.items()
@@ -113,7 +113,7 @@ async def put_secret(
         APIResponse:
         Raises the HTTPStatus object with a status code and detail as response.
     """
-    await auth.validate(request, apikey, auth_type=auth.AuthType.api_advanced)
+    await auth.validate(request, apikey, auth_type=enums.AuthType.api_advanced)
     if not core.database.table_exists(data.table_name):
         raise exceptions.APIResponse(
             status_code=HTTPStatus.NOT_FOUND.real,
@@ -142,7 +142,7 @@ async def delete_secret(
         APIResponse:
         Raises the HTTPStatus object with a status code and detail as response.
     """
-    await auth.validate(request, apikey, auth_type=auth.AuthType.api_advanced)
+    await auth.validate(request, apikey, auth_type=enums.AuthType.api_advanced)
     await core.remove_secret(data.key, data.table_name)
     raise exceptions.APIResponse(status_code=HTTPStatus.OK.real, detail=HTTPStatus.OK.phrase)
 
@@ -163,7 +163,7 @@ async def create_table(
         APIResponse:
         Raises the HTTPStatus object with a status code and detail as response.
     """
-    await auth.validate(request, apikey, auth_type=auth.AuthType.api_basic)
+    await auth.validate(request, apikey, auth_type=enums.AuthType.api_basic)
     core.create_table(table_name)
     raise exceptions.APIResponse(status_code=HTTPStatus.OK.real, detail=HTTPStatus.OK.phrase)
 
@@ -185,7 +185,7 @@ async def rename_table(
         APIResponse:
         Raises the HTTPStatus object with a status code and detail as response.
     """
-    await auth.validate(request, apikey, auth_type=auth.AuthType.api_advanced)
+    await auth.validate(request, apikey, auth_type=enums.AuthType.api_advanced)
     core.rename_table(table_name, data.new_name)
     raise exceptions.APIResponse(status_code=HTTPStatus.OK.real, detail=HTTPStatus.OK.phrase)
 
@@ -206,7 +206,7 @@ async def delete_table(
         APIResponse:
         Raises the HTTPStatus object with a status code and detail as response.
     """
-    await auth.validate(request, apikey, auth_type=auth.AuthType.api_advanced)
+    await auth.validate(request, apikey, auth_type=enums.AuthType.api_advanced)
     core.drop_table(table_name)
     raise exceptions.APIResponse(status_code=HTTPStatus.OK.real, detail=HTTPStatus.OK.phrase)
 

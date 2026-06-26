@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials
 from fastapi.templating import Jinja2Templates
 
-from . import auth, core, database, exceptions, models, version
+from . import auth, core, database, enums, exceptions, models, version
 
 templates = Jinja2Templates(directory=pathlib.Path(__file__).parent / "templates")
 LOGGER = logging.getLogger("uvicorn.default")
@@ -39,7 +39,7 @@ async def playground(request: Request):
     return templates.TemplateResponse(
         name="playground.html",
         request=request,
-        context={"request": request, "version": version.__version__},
+        context={"request": request, "version": version.__version__, "enable_ui": models.env.enable_ui},
     )
 
 
@@ -54,7 +54,7 @@ async def ui_login(request: Request, apikey: HTTPAuthorizationCredentials = Depe
         JSONResponse:
         Returns 200 on success, 401/403 on failure.
     """
-    await auth.validate(request, apikey, auth_type=auth.AuthType.ui_login)
+    await auth.validate(request, apikey, auth_type=enums.AuthType.ui_login)
 
     token = base64.urlsafe_b64encode(os.urandom(32)).decode("utf-8")
     expires = int(time.time()) + models.env.ui_lifetime
@@ -83,7 +83,7 @@ async def ui_logout(
         JSONResponse:
         Returns 200 on success, 401/403 if the token is already invalid.
     """
-    await auth.validate(request, session_token, auth_type=auth.AuthType.ui_basic)
+    await auth.validate(request, session_token, auth_type=enums.AuthType.ui_basic)
     database.delete_ui_session()
     LOGGER.info("UI session invalidated by logout request")
     return JSONResponse(content={"detail": "OK"})
@@ -103,7 +103,7 @@ async def ui_list_tables(
         JSONResponse:
         Returns a JSON response with the list of tables.
     """
-    await auth.validate(request, session_token, auth_type=auth.AuthType.ui_basic)
+    await auth.validate(request, session_token, auth_type=enums.AuthType.ui_basic)
     return JSONResponse(content={"tables": database.list_tables()})
 
 
@@ -123,7 +123,7 @@ async def ui_get_table(
         JSONResponse:
         Returns a JSON response with the decoded (NOT decrypted) key-value pairs.
     """
-    await auth.validate(request, session_token, auth_type=auth.AuthType.ui_basic)
+    await auth.validate(request, session_token, auth_type=enums.AuthType.ui_basic)
     if not database.table_exists(table_name):
         raise exceptions.APIResponse(
             status_code=HTTPStatus.NOT_FOUND.real,
@@ -150,7 +150,7 @@ async def ui_rename_table(
         JSONResponse:
         Returns a JSON response indicating success or failure.
     """
-    await auth.validate(request, session_token, auth_type=auth.AuthType.ui_advanced)
+    await auth.validate(request, session_token, auth_type=enums.AuthType.ui_advanced)
     body = await request.json()
     new_name = body.get("new_name", "").strip()
     core.rename_table(table_name, new_name)
@@ -169,7 +169,7 @@ async def ui_create_table(request: Request, table_name: str, session_token=Depen
         JSONResponse:
         Returns a JSON response indicating success or failure.
     """
-    await auth.validate(request, session_token, auth_type=auth.AuthType.ui_basic)
+    await auth.validate(request, session_token, auth_type=enums.AuthType.ui_basic)
     core.create_table(table_name)
     return JSONResponse(content={"detail": "OK"})
 
@@ -190,7 +190,7 @@ async def ui_delete_table(
         JSONResponse:
         Returns a JSON response indicating success or failure.
     """
-    await auth.validate(request, session_token, auth_type=auth.AuthType.ui_advanced)
+    await auth.validate(request, session_token, auth_type=enums.AuthType.ui_advanced)
     core.drop_table(table_name)
     return JSONResponse(content={"detail": "OK"})
 
@@ -209,7 +209,7 @@ async def ui_put_secret(
         JSONResponse:
         Returns a JSON response indicating success or failure.
     """
-    await auth.validate(request, session_token, auth_type=auth.AuthType.ui_advanced)
+    await auth.validate(request, session_token, auth_type=enums.AuthType.ui_advanced)
     body = await request.json()
     table_name = body.get("table_name", "default")
     key = body.get("key", "").strip()
@@ -243,7 +243,7 @@ async def ui_import_secrets(
         JSONResponse:
         Returns a JSON response with counts of imported and skipped secrets.
     """
-    await auth.validate(request, session_token, auth_type=auth.AuthType.ui_advanced)
+    await auth.validate(request, session_token, auth_type=enums.AuthType.ui_advanced)
     body = await request.json()
     table_name = body.get("table_name", "default")
     payload_str = body.get("payload", "")
@@ -284,7 +284,7 @@ async def ui_delete_secret(
         JSONResponse:
         Returns a JSON response indicating success or failure.
     """
-    await auth.validate(request, session_token, auth_type=auth.AuthType.ui_advanced)
+    await auth.validate(request, session_token, auth_type=enums.AuthType.ui_advanced)
     body = await request.json()
     table_name = body.get("table_name", "default")
     key = body.get("key", "").strip()
