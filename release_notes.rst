@@ -1,6 +1,24 @@
 Release Notes
 =============
 
+v0.6.2 (06/27/2026)
+-------------------
+- `978d15f <https://github.com/thevickypedia/VaultAPI/commit/978d15fb17b1b1c0906003eb77574bdc43d14cce>`_ chore: Release ``v0.6.2``
+- `0c272b9 <https://github.com/thevickypedia/VaultAPI/commit/0c272b9e88c04c52b2a3f6e1ef9be4a67efa50ef>`_ fix: Make ``/playground`` route available even when ``enable_ui`` is set to ``False``
+- `88f03f6 <https://github.com/thevickypedia/VaultAPI/commit/88f03f607e094df302c690b1115ef5c3fe2d4d4c>`_ docs: Update docstrings and populate runbook
+- `a0a9307 <https://github.com/thevickypedia/VaultAPI/commit/a0a93078c9f0940981aa869980fc56dc39973cec>`_ test: Update unit tests
+- `5b6d41c <https://github.com/thevickypedia/VaultAPI/commit/5b6d41c279d12342853c6cccb5233341fe7f5981>`_ fix: Invalid references to ``AuthType`` enum in endpoints
+- `098f28b <https://github.com/thevickypedia/VaultAPI/commit/098f28b03646c57feeff5c07d0a0950003798ffa>`_ docs: Update runbook
+- `8a1d18d <https://github.com/thevickypedia/VaultAPI/commit/8a1d18d643df86cc36a02ef2343ae1a267a71adf>`_ refactor: Rename JS file for Swagger UI
+- `fc2af97 <https://github.com/thevickypedia/VaultAPI/commit/fc2af97500428565de1555b775dc2dec4134ff3d>`_ chore: Update deps
+- `13e1717 <https://github.com/thevickypedia/VaultAPI/commit/13e1717f9a2cb9dd75177118b2cc4394b5240003>`_ feat: Include extensive description and navigation updates to the Swagger UI
+- `ad4bfc9 <https://github.com/thevickypedia/VaultAPI/commit/ad4bfc9b727c544bde2d031a9200c985622122f5>`_ refactor: Update enums to include ``AuthType``
+- `45f36fc <https://github.com/thevickypedia/VaultAPI/commit/45f36fcd9463a7e1d3febad700215e043751e2dd>`_ refactor: Update all API and UI routes to be handled with enums.py
+- `7ddf8f2 <https://github.com/thevickypedia/VaultAPI/commit/7ddf8f20195420b9dd8f7e1ae9780a82fd3b3733>`_ style: Include ``Home · Playground · Docs · ReDoc`` navigation buttons in the UI pages
+- `80cd0e1 <https://github.com/thevickypedia/VaultAPI/commit/80cd0e160428b23b2b8d9ca54c8b6d887f096d2d>`_ feat: Allow custom log config in docker context
+- `cb4f0f9 <https://github.com/thevickypedia/VaultAPI/commit/cb4f0f95a83029180384d2f3ccf2b9b7fa68a934>`_ feat: Allow log level to be updated in docker context
+- `51968ed <https://github.com/thevickypedia/VaultAPI/commit/51968ed1391dbab806cf4afd3a802064973a9321>`_ chore: Update release notes for v0.6.1
+
 v0.6.1 (06/24/2026)
 -------------------
 - `3adf7fb <https://github.com/thevickypedia/VaultAPI/commit/3adf7fb368b39d2d1e9f318e665bf64e4db18e8a>`_ chore: Release ``v0.6.1``
