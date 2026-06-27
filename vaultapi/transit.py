@@ -1,6 +1,7 @@
 """Module that performs transit encryption/decryption.
 
-This allows the server to securely transmit the retrieved secret to be decrypted at the client side using the API key.
+This allows the server to securely transmit retrieved secrets to be decrypted
+at the client side using the API key.
 """
 
 import base64
@@ -16,11 +17,7 @@ from . import models
 
 
 def string_to_aes_key(input_string: str, key_length: int) -> ByteString:
-    """Hashes the string.
-
-    Args:
-        input_string: String for which an AES hash has to be generated.
-        key_length: AES key size used during encryption.
+    """Derive an AES key from a string by SHA-256 hashing and truncating.
 
     See Also:
         AES supports three key lengths:
@@ -28,24 +25,30 @@ def string_to_aes_key(input_string: str, key_length: int) -> ByteString:
             - 192 bits (24 bytes)
             - 256 bits (32 bytes)
 
+    Args:
+        input_string: Input string to hash.
+        key_length: Number of bytes to take from the SHA-256 digest.
+
     Returns:
-        str:
-        Return the first 16 bytes for the AES key
+        ByteString:
+        First ``key_length`` bytes of the SHA-256 digest of ``input_string``.
     """
     hash_object = hashlib.sha256(input_string.encode())
     return hash_object.digest()[:key_length]
 
 
 def encrypt(payload: Dict[str, Any], url_safe: bool = True) -> ByteString | str:
-    """Encrypt a message using GCM mode with 12 fresh bytes.
+    """Encrypt a payload dict using AES-GCM with a time-bucketed derived key.
 
     Args:
-        payload: Payload to be encrypted.
-        url_safe: Boolean flag to perform base64 encoding to perform JSON serialization.
+        payload: Dictionary to encrypt.
+        url_safe: When ``True``, returns a Base64-encoded string; otherwise returns
+            raw bytes.
 
     Returns:
         ByteString | str:
-        Returns the ciphertext as a string or bytes based on the ``url_safe`` flag.
+        Ciphertext as a URL-safe Base64 string when ``url_safe`` is ``True``,
+        or raw bytes otherwise.
     """
     nonce = secrets.token_bytes(12)
     encoded = json.dumps(payload).encode()
@@ -61,14 +64,17 @@ def encrypt(payload: Dict[str, Any], url_safe: bool = True) -> ByteString | str:
 
 
 def decrypt(ciphertext: ByteString | str) -> Dict[str, Any]:
-    """Decrypt the ciphertext.
+    """Decrypt AES-GCM ciphertext produced by ``encrypt``.
 
-    Raises:
-        Raises ``InvalidTag`` if using wrong key or corrupted ciphertext.
+    Args:
+        ciphertext: Base64-encoded string or raw bytes produced by ``encrypt``.
 
     Returns:
         Dict[str, Any]:
-        Returns the JSON serialized decrypted payload.
+        Deserialized JSON payload.
+
+    Raises:
+        InvalidTag: If the ciphertext was produced with a different key or is corrupted.
     """
     if isinstance(ciphertext, str):
         ciphertext = base64.b64decode(ciphertext)

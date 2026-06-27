@@ -1,3 +1,10 @@
+"""Database module that provides all SQLite read/write operations for secrets, sessions, and auth tracking.
+
+1. Manages the UI session table (single active session stored as a Fernet-encrypted blob).
+2. Manages the blocked-hosts table for failed authentication rate-limiting.
+3. Provides CRUD helpers for user-defined secret tables.
+"""
+
 import json
 import logging
 import time
@@ -17,7 +24,7 @@ COOLOFF_THRESHOLDS: OrderedDict[int, int] = OrderedDict([(10, 86400), (5, 900), 
 
 
 def create_auth_tables() -> None:
-    """Create auth-specific tables in auth.db if they do not already exist."""
+    """Create the UI session and blocked-hosts tables if they do not already exist."""
     with models.auth_database.connection as conn:
         conn.execute(f'CREATE TABLE IF NOT EXISTS "{UI_SESSION_TABLE}" (payload BLOB)')
         conn.execute(
@@ -36,9 +43,9 @@ def upsert_ui_session(token: str, hostname: str, expires: int, fernet: Fernet) -
     decrypt and raises an exception, which ``get_ui_session`` treats as "no valid session".
 
     Args:
-        token: The opaque session token returned to the browser.
+        token: Opaque session token returned to the browser.
         hostname: ``request.client.host`` captured at login time.
-        expires: Unix timestamp after which the session is invalid.
+        expires: Unix timestamp after which the session is considered invalid.
         fernet: Fernet instance from ``models.session.fernet``.
     """
     payload = fernet.encrypt(json.dumps({"token": token, "host": hostname, "exp": expires}).encode())
@@ -70,23 +77,24 @@ def get_ui_session(fernet: Fernet) -> dict | None:
 
 
 def delete_ui_session() -> None:
-    """Remove all rows from the ui_session table, invalidating any active session."""
+    """Remove all rows from the UI session table, invalidating any active session."""
     with models.auth_database.connection as conn:
         conn.execute(f'DELETE FROM "{UI_SESSION_TABLE}"')
         conn.commit()
 
 
 def get_blocked_until(host: str) -> models.AuthCounter | None:
-    """Return the ``blocked_until`` Unix timestamp for a host, or ``None`` if not blocked.
+    """Return the auth counter for a blocked host, or ``None`` if the host is not blocked.
 
-    If the entry exists but its cooloff has expired, it is removed and ``None`` is returned.
+    If a cooloff entry exists but has already expired it is cleared and ``None`` is returned.
 
     Args:
         host: Client IP address to check.
 
     Returns:
         models.AuthCounter | None:
-        Returns a reference to the AuthCounter model if a host has been blocked.
+        ``AuthCounter`` with ``count`` and ``blocked_until`` if the host is currently
+        blocked, ``None`` otherwise.
     """
     with models.auth_database.connection as conn:
         row = (
@@ -119,16 +127,20 @@ def get_blocked_until(host: str) -> models.AuthCounter | None:
 
 
 def is_host_blocked(host: str) -> bool:
-    """Return True if the host is currently within a cooloff window.
+    """Return ``True`` if the host is currently within an active cooloff window.
 
     Args:
         host: Client IP address to check.
+
+    Returns:
+        bool:
+        ``True`` if blocked, ``False`` otherwise.
     """
     return get_blocked_until(host) is not None
 
 
 def remove_blocked_host(host: str) -> None:
-    """Delete a host's entry from the blocked_hosts table entirely.
+    """Delete a host's entry from the blocked-hosts table entirely.
 
     Args:
         host: Client IP address to remove.
@@ -139,10 +151,11 @@ def remove_blocked_host(host: str) -> None:
 
 
 def increment_failed_auth(host: str) -> None:
-    """Increment the failed authentication counter for a host and set cooloff if a threshold is crossed.
+    """Increment the failed-authentication counter for a host and apply a cooloff if a threshold is crossed.
 
-    Inserts the host with count 1 if it does not exist yet. Sets ``blocked_until`` to
-    ``int(time.time()) + duration`` when the cumulative count reaches 3, 5, or 10.
+    Inserts the host with ``failed_auth = 1`` if it does not yet exist. Sets
+    ``blocked_until`` when the cumulative count reaches a threshold defined in
+    ``COOLOFF_THRESHOLDS``.
 
     Args:
         host: Client IP address that failed authentication.
@@ -177,7 +190,7 @@ def increment_failed_auth(host: str) -> None:
 
 
 def reset_failed_auth(host: str) -> None:
-    """Reset the failed authentication counter for a host after a successful login.
+    """Reset the failed-authentication counter to zero after a successful login.
 
     Args:
         host: Client IP address to reset.
@@ -191,10 +204,14 @@ def reset_failed_auth(host: str) -> None:
 
 
 def table_exists(table_name: str) -> bool:
-    """Function to check if a table exists in the database.
+    """Check whether a user-defined table exists in the secrets database.
 
     Args:
         table_name: Name of the table to check.
+
+    Returns:
+        bool:
+        ``True`` if the table exists, ``False`` otherwise.
     """
     with models.database.connection as conn:
         result = conn.execute(
@@ -207,18 +224,23 @@ def table_exists(table_name: str) -> bool:
 
 
 def list_tables() -> List[str]:
-    """Function to list all available tables in the database."""
+    """Return the names of all user-defined tables in the secrets database.
+
+    Returns:
+        List[str]:
+        List of table names.
+    """
     with models.database.connection as conn:
         tables = conn.execute("SELECT name FROM sqlite_master WHERE type='table';").fetchall()
     return [table[0] for table in tables]
 
 
 def create_table(table_name: str, columns: List[str] | Tuple[str]) -> None:
-    """Creates the table with the required columns.
+    """Create a table with the specified columns (no-op if it already exists).
 
     Args:
-        table_name: Name of the table that has to be created.
-        columns: List of columns that has to be created.
+        table_name: Name of the table to create.
+        columns: Column definitions (e.g. ``["key", "value"]``).
     """
     with models.database.connection as conn:
         # Use f-string or %s as table names cannot be parametrized
@@ -226,7 +248,7 @@ def create_table(table_name: str, columns: List[str] | Tuple[str]) -> None:
 
 
 def get_secret(key: str, table_name: str) -> str | None:
-    """Function to retrieve secret from database.
+    """Retrieve a single encrypted secret value by key.
 
     Args:
         key: Name of the secret to retrieve.
@@ -234,7 +256,7 @@ def get_secret(key: str, table_name: str) -> str | None:
 
     Returns:
         str:
-        Returns the secret value.
+        Encrypted secret value, or ``None`` if the key does not exist.
     """
     with models.database.connection as conn:
         state = conn.execute(f'SELECT value FROM "{table_name}" WHERE key=(?)', (key,)).fetchone()
@@ -243,15 +265,15 @@ def get_secret(key: str, table_name: str) -> str | None:
     return None
 
 
-def get_table(table_name: str) -> List[Tuple[str, bytes]]:
-    """Function to retrieve all key-value pairs from a particular table in the database.
+def get_table(table_name: str) -> List[Tuple[str, str]]:
+    """Retrieve all key-value pairs from a table.
 
     Args:
-        table_name: Name of the table where the secrets are stored.
+        table_name: Name of the table to read.
 
     Returns:
-        str:
-        Returns the secret value.
+        List[Tuple[str, str]]:
+        List of ``(key, encrypted_value)`` tuples.
     """
     with models.database.connection as conn:
         state = conn.execute(f'SELECT * FROM "{table_name}"').fetchall()
@@ -259,11 +281,11 @@ def get_table(table_name: str) -> List[Tuple[str, bytes]]:
 
 
 def put_secret(key: str, value: str, table_name: str) -> None:
-    """Function to add secret to the database.
+    """Insert or overwrite a secret in the database.
 
     Args:
-        key: Name of the secret to be stored.
-        value: Value of the secret to be stored
+        key: Name of the secret.
+        value: Encrypted value to store.
         table_name: Name of the table where the secret is stored.
     """
     with models.database.connection as conn:
@@ -275,10 +297,10 @@ def put_secret(key: str, value: str, table_name: str) -> None:
 
 
 def remove_secret(key: str, table_name: str) -> None:
-    """Function to remove a secret from the database.
+    """Delete a secret from a table.
 
     Args:
-        key: Name of the secret to be removed.
+        key: Name of the secret to remove.
         table_name: Name of the table where the secret is stored.
     """
     with models.database.connection as conn:
@@ -287,10 +309,10 @@ def remove_secret(key: str, table_name: str) -> None:
 
 
 def drop_table(table_name: str) -> None:
-    """Function to drop a table from the database.
+    """Drop a table from the database.
 
     Args:
-        table_name: Name of the table to be dropped.
+        table_name: Name of the table to drop.
     """
     with models.database.connection as conn:
         conn.execute(f'DROP TABLE IF EXISTS "{table_name}"')
@@ -298,7 +320,7 @@ def drop_table(table_name: str) -> None:
 
 
 def rename_table(old_name: str, new_name: str) -> None:
-    """Function to rename a table in the database.
+    """Rename a table in the database.
 
     Args:
         old_name: Current name of the table.

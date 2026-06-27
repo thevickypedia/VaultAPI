@@ -1,3 +1,5 @@
+"""Rate limiter module that enforces per-client request limits using a sliding-window algorithm."""
+
 import collections
 import math
 import time
@@ -10,7 +12,15 @@ from . import models
 
 
 def _get_identifier(request: Request) -> str:
-    """Generate a unique identifier for the request."""
+    """Build a unique string key for a request based on the client IP and path.
+
+    Args:
+        request: Incoming FastAPI request object.
+
+    Returns:
+        str:
+        ``"<ip>:<path>"`` string, using the first IP from ``X-Forwarded-For`` when present.
+    """
     if forwarded := request.headers.get("x-forwarded-for"):
         return f"{forwarded.split(',')[0]}:{request.url.path}"
     return f"{request.client.host}:{request.url.path}"
@@ -25,7 +35,7 @@ class RateLimiter:
 
     def __init__(self, rps: models.RateLimit):
         # noinspection PyUnresolvedReferences
-        """Instantiates the object with the necessary args.
+        """Instantiate the rate limiter with the given rate limit configuration.
 
         Args:
             rps: RateLimit object with ``max_requests`` and ``seconds``.
@@ -40,13 +50,14 @@ class RateLimiter:
         self.requests = collections.defaultdict(list)
 
     def init(self, request: Request) -> None:
-        """Checks if the number of calls exceeds the rate limit for the given identifier.
+        """Check whether the request exceeds the rate limit for its identifier.
 
         Args:
-            request: The incoming request object.
+            request: Incoming FastAPI request object.
 
         Raises:
-            429: Too many requests.
+            HTTPException:
+            - 429: Too many requests within the configured window.
         """
         identifier = _get_identifier(request)
         current_time = time.time()

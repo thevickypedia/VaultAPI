@@ -1,3 +1,5 @@
+"""Authenticator module contains functions that handle authentication requests from individual API/UI endpoints."""
+
 import logging
 import secrets
 import time
@@ -25,13 +27,21 @@ API_ADVANCED = lambda auth: header.validate(  # noqa: E731
 
 
 def unauthorized(host: str) -> NoReturn:
-    """Raise a 403 APIResponse if the host is unauthorized."""
+    """Increment the failed auth counter for a host and raise a 401 response.
+
+    Args:
+        host: Hostname or IP address of the client.
+
+    Raises:
+        APIResponse:
+        - 401: Always raised after incrementing the failure counter.
+    """
     database.increment_failed_auth(host)
     raise exceptions.APIResponse(status_code=HTTPStatus.UNAUTHORIZED.real, detail=HTTPStatus.UNAUTHORIZED.phrase)
 
 
 async def blocked(host: str) -> None | NoReturn:
-    """Raise a 403 APIResponse if the host is within an active cool-off window.
+    """Raise a 403 response if the host is within an active cool-off window.
 
     Args:
         host: Hostname or IP address of the client.
@@ -53,14 +63,14 @@ async def blocked(host: str) -> None | NoReturn:
 
 
 async def validate_totp(totp_code: str) -> bool | NoReturn:
-    """Validate the login credentials from the request body.
+    """Verify a TOTP code against the configured authenticator token.
 
     Args:
         totp_code: TOTP code received from the client.
 
     Returns:
         bool:
-        ``True`` if totp code is valid, ``False`` otherwise.
+        ``True`` if the code is valid, ``False`` otherwise.
     """
     try:
         import pyotp
@@ -81,17 +91,25 @@ async def validate_totp(totp_code: str) -> bool | NoReturn:
 async def validate(
     request: Request, authorization: HTTPAuthorizationCredentials, auth_type: enums.AuthType
 ) -> None | NoReturn:
-    """Validates the auth request using HTTPBearer.
+    """Validate an incoming request's credentials against the requested auth type.
+
+    See Also:
+        Auth type dispatch:
+        - ``ui_login``: API key (HMAC) + TOTP code.
+        - ``ui_basic``: Active session token bound to the client host.
+        - ``ui_advanced``: Active session token + TOTP code.
+        - ``api_basic``: HMAC-signed API key.
+        - ``api_advanced``: HMAC-signed combined API key and secret.
 
     Args:
-        request: Takes the authorization header token as an argument.
-        authorization: Basic APIKey required for API routes [OR] session token required for UI routes.
-        auth_type: The type of authentication to use.
+        request: Incoming FastAPI request object.
+        authorization: Credential extracted from the ``Authorization: Bearer`` header.
+        auth_type: Determines which validation path to follow.
 
     Raises:
         APIResponse:
-        - 401: If authorization is invalid.
-        - 403: If host address is forbidden (blocked after repeated failures).
+        - 401: If the provided credentials are invalid.
+        - 403: If the host is blocked after repeated failed attempts.
     """
     host = request.client.host
     await blocked(host)

@@ -1,3 +1,11 @@
+"""Models module that defines configuration, session, and database connection objects for the Vault API.
+
+1. Provides ``EnvConfig`` for loading and validating all environment variables.
+2. Provides ``Database`` for managing SQLite connections.
+3. Provides ``Session`` for holding runtime state (Fernet instance, etc.).
+4. Bootstraps the global ``env``, ``database``, ``auth_database``, and ``session`` singletons.
+"""
+
 import json
 import logging
 import os
@@ -27,10 +35,10 @@ LOGGER = logging.getLogger("uvicorn.default")
 
 
 def complexity_checker(secret: str, max_len: int = 32) -> None:
-    """Verifies the strength of a secret.
+    """Verify that a secret meets minimum complexity requirements.
 
     See Also:
-        A secret is considered strong if it at least has:
+        A secret is considered strong if it has at least:
 
         - 32 characters
         - 1 digit
@@ -38,8 +46,12 @@ def complexity_checker(secret: str, max_len: int = 32) -> None:
         - 1 uppercase letter
         - 1 lowercase letter
 
+    Args:
+        secret: The secret string to validate.
+        max_len: Minimum required character length. Defaults to ``32``.
+
     Raises:
-        AssertionError: When at least 1 of the above conditions fail to match.
+        AssertionError: When any complexity condition fails.
     """
     # calculates the length
     assert len(secret) >= max_len, f"secret length must be at least {max_len}, received {len(secret)}"
@@ -60,7 +72,14 @@ def complexity_checker(secret: str, max_len: int = 32) -> None:
 
 
 def validate_totp_secret(token) -> None | NoReturn:
-    """Validate the provided TOTP secret token."""
+    """Validate the provided TOTP secret by generating and verifying a sample code.
+
+    Args:
+        token: Base32-encoded TOTP secret to validate.
+
+    Raises:
+        AssertionError: If the TOTP secret fails self-verification.
+    """
     totp = pyotp.TOTP(token)
     # Sampler can also be generated with totp.now()
     now = datetime.now()
@@ -79,7 +98,7 @@ class Database:
     """
 
     def __init__(self, filepath: FilePath | str, timeout: int = 10):
-        """Instantiates the class ``Database`` to create a connection and a cursor."""
+        """Instantiate the class ``Database`` to create a connection and a cursor."""
         db_path = pathlib.Path(filepath)
         if db_path.suffix != ".db":
             db_path = db_path.with_suffix(".db")
@@ -199,14 +218,36 @@ class EnvConfig(BaseSettings):
 
     @field_validator("transit_key_length", mode="after", check_fields=True)
     def validate_transit_key_length(cls, value: PositiveInt) -> PositiveInt | NoReturn:
-        """Validate transit key length."""
+        """Validate that the transit key length is an AES-compatible size.
+
+        Args:
+            value: Proposed key length in bytes.
+
+        Returns:
+            PositiveInt:
+            The validated key length if it is 16, 24, or 32.
+
+        Raises:
+            ValueError: If the value is not one of the accepted AES key sizes.
+        """
         if value in (16, 24, 32):
             return value
         raise ValueError("Transit key length (AES) must be one of 16, 24, or 32 bytes.")
 
     @field_validator("apikey", mode="after")
     def validate_apikey(cls, value: str) -> str | None:
-        """Validate API key for complexity."""
+        """Validate the API key against minimum complexity requirements.
+
+        Args:
+            value: Proposed API key string.
+
+        Returns:
+            str:
+            The validated API key.
+
+        Raises:
+            ValueError: If the key does not meet complexity requirements.
+        """
         try:
             complexity_checker(value)
         except AssertionError as error:
@@ -215,7 +256,18 @@ class EnvConfig(BaseSettings):
 
     @field_validator("secret", mode="after")
     def validate_api_secret(cls, value: str) -> str:
-        """Validate API secret to Fernet compatible."""
+        """Validate that the secret is a valid Fernet key.
+
+        Args:
+            value: Proposed secret string.
+
+        Returns:
+            str:
+            The validated secret.
+
+        Raises:
+            ValueError: If the value cannot be used to construct a Fernet instance.
+        """
         try:
             Fernet(value)
         except ValueError as error:
@@ -225,14 +277,14 @@ class EnvConfig(BaseSettings):
 
     @classmethod
     def from_env_file(cls, env_file: pathlib.Path) -> "EnvConfig":
-        """Create Settings instance from environment file.
+        """Create an ``EnvConfig`` instance from an environment file.
 
         Args:
-            env_file: Name of the env file.
+            env_file: Path to the env file.
 
         Returns:
             EnvConfig:
-            Loads the ``EnvConfig`` model.
+            Loaded ``EnvConfig`` instance.
         """
         # noinspection PyArgumentList
         return cls(_env_file=env_file)
@@ -246,14 +298,17 @@ class EnvConfig(BaseSettings):
 
 
 def envfile_loader(filename: str | os.PathLike) -> EnvConfig:
-    """Loads environment variables based on filetypes.
+    """Load environment variables from a file, dispatching by extension.
 
     Args:
-        filename: Filename from where env vars have to be loaded.
+        filename: Path to the environment file (``.json``, ``.yaml``/``.yml``, or ``.env``/``.txt``).
 
     Returns:
         EnvConfig:
-        Returns a reference to the ``EnvConfig`` object.
+        Populated ``EnvConfig`` instance.
+
+    Raises:
+        ValueError: If the file extension is not supported.
     """
     env_file = pathlib.Path(filename)
     if env_file.suffix.lower() == ".json":
@@ -278,14 +333,16 @@ def envfile_loader(filename: str | os.PathLike) -> EnvConfig:
 
 
 def load_env() -> EnvConfig:
-    """Loads te env vars based on the env_file provided.
+    """Load environment configuration from a file if present, otherwise from environment variables.
 
     See Also:
-        This function allows env vars to be loaded partially from .env files and partially through kwargs.
+        Checks ``env_file`` / ``ENV_FILE`` environment variable first; falls back to
+        ``.env`` in the working directory; finally falls back to reading variables
+        directly from the environment.
 
     Returns:
         EnvConfig:
-        Returns a reference to the ``EnvConfig`` object.
+        Populated ``EnvConfig`` instance.
     """
     env_file = os.getenv("env_file") or os.getenv("ENV_FILE") or ".env"
     if os.path.isfile(env_file):

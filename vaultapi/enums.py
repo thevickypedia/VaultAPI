@@ -1,9 +1,11 @@
+"""Enumerations module that defines string enums for API routes, UI routes, and authentication types."""
+
 try:
     from enum import StrEnum
-except ImportError:
+except ImportError:  # pragma: no cover
     from enum import Enum
 
-    class StrEnum(str, Enum):
+    class StrEnum(str, Enum):  # pragma: no cover
         """Custom StrEnum object for python3.10."""
 
 

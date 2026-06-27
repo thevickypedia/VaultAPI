@@ -1,3 +1,10 @@
+"""Application module that wires together the FastAPI instance, CORS policy, and all routes.
+
+1. Defines the FastAPI application instance and the lifespan context manager.
+2. Registers the custom Swagger UI docs endpoint.
+3. Attaches API routes and, when the UI is enabled, UI routes.
+"""
+
 import asyncio
 import logging
 from contextlib import asynccontextmanager
@@ -11,7 +18,12 @@ from . import database, enums, models, routes, swagger_ui, version
 
 
 async def delete_ui_session(event: str) -> None:
-    """Clear any existing UI sessions, so the tokens can't be re-used when the server is restarted."""
+    """Delete the active UI session during application startup or shutdown.
+
+    Args:
+        event: Lifecycle event name (e.g. ``"startup"`` or ``"shutdown"``),
+            used only for log messages.
+    """
     if database.get_ui_session(models.session.fernet):
         LOGGER.info("Existing UI session found during %s, removing it.", event)
         database.delete_ui_session()
@@ -21,7 +33,7 @@ async def delete_ui_session(event: str) -> None:
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    """Lifespan context manager."""
+    """Lifespan context manager that handles startup and shutdown events."""
     asyncio.create_task(delete_ui_session("startup"))
     yield
     asyncio.create_task(delete_ui_session("shutdown"))
@@ -37,12 +49,22 @@ LOGGER = logging.getLogger("uvicorn.default")
 
 
 async def docs() -> HTMLResponse:
-    """Returns the docs page as an HTMLResponse object."""
+    """Render the custom Swagger UI docs page.
+
+    Returns:
+        HTMLResponse:
+        HTML page with the customized Swagger UI.
+    """
     return await swagger_ui.get_swagger_html(VaultAPI)
 
 
 def startup() -> None:
-    """Enables CORS policy and API and UI routes."""
+    """Configure CORS middleware and register all API and UI routes on the application.
+
+    See Also:
+        When ``enable_ui`` is ``True``, auth tables are created and UI routes are
+        registered. When disabled, the root path redirects to ``/docs`` instead.
+    """
     # Log the IP info
     LOGGER.info("Setting CORS policy")
     VaultAPI.add_middleware(

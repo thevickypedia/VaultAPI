@@ -1,3 +1,5 @@
+"""Swagger UI module that customizes the docs endpoint and generates the API description."""
+
 import logging
 import pathlib
 import sys
@@ -15,14 +17,19 @@ SWAGGER_JS = "<script>\n" + (pathlib.Path(__file__).parent / "templates" / "swag
 
 
 async def get_swagger_html(app: FastAPI) -> HTMLResponse:
-    """Custom docs endpoint for the Swagger UI.
+    """Render the customized Swagger UI HTML page.
 
     See Also:
-        The Swagger UI is customized to scroll to the operation when a hyperlink from the description block is selected.
+        Injects a custom JavaScript snippet (``swagger_ui.js``) before ``</body>``
+        to enable smooth scrolling to an operation when a hyperlink from the
+        description block is clicked.
+
+    Args:
+        app: FastAPI application instance used to extract the title and OpenAPI URL.
 
     Returns:
         HTMLResponse:
-        Returns an HTMLResponse object with the customized UI.
+        HTML page with the customized Swagger UI and injected JavaScript.
     """
     html_content = get_swagger_ui_html(
         title=app.__dict__.get("title", app.__name__),
@@ -39,24 +46,21 @@ async def get_swagger_html(app: FastAPI) -> HTMLResponse:
 
 
 async def docs_redirect() -> RedirectResponse:
-    """Redirect to docs page.
+    """Redirect the root path to the ``/docs`` page.
 
     Returns:
         RedirectResponse:
-        Redirects the user to ``/docs`` page.
+        302 redirect to ``/docs``.
     """
     return RedirectResponse(enums.APIRoutes.docs)
 
 
 def docs_handler(api: FastAPI, func: Callable) -> None:
-    """Removes the default Swagger UI endpoint and adds a custom ``docs`` endpoint.
+    """Replace the default Swagger UI route with the custom docs endpoint.
 
     Args:
-        api: FastAPI object to modify the routes.
-        func: Callable function to be used as the endpoint for the custom docs.
-
-    References:
-        https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
+        api: FastAPI application instance whose route list is modified in-place.
+        func: Callable to register as the new ``/docs`` endpoint handler.
     """
     for __route in api.routes:
         if __route.__dict__.get("name", "") == "swagger_ui_html":
@@ -72,14 +76,14 @@ def docs_handler(api: FastAPI, func: Callable) -> None:
 
 
 def generate_hyperlink(route: APIRoute) -> str:
-    """Generates hyperlink for a particular API route to be included in the description.
+    """Generate a Swagger UI deep-link anchor tag for an API route.
 
     Args:
-        route: APIRoute or APIWebSocketRoute object.
+        route: The ``APIRoute`` object to generate the hyperlink for.
 
     Returns:
         str:
-        Returns the hyperlink as a string.
+        HTML anchor tag string pointing to the route's Swagger UI operation.
     """
     method = list(route.methods)[0].lower()
     route_path = route.path.lstrip("/").replace("-", "_")
@@ -87,11 +91,14 @@ def generate_hyperlink(route: APIRoute) -> str:
 
 
 def get_desc(api_routes: List[APIRoute]) -> str:
-    """Construct a detailed description for the API docs.
+    """Build the full API description string for the Swagger UI overview.
+
+    Args:
+        api_routes: List of registered API routes used to generate the feature links.
 
     Returns:
         str:
-        Returns the description as a string.
+        Markdown/HTML description string assigned to the FastAPI application.
     """
     description = "**Lightweight API to store/retrieve secrets to/from an encrypted Database 🔐**"
     description += (

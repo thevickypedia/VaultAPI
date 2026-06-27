@@ -1,3 +1,5 @@
+"""Routes module that constructs and returns the FastAPI ``APIRoute`` lists for API and UI endpoints."""
+
 from typing import List
 
 from fastapi import Depends
@@ -11,11 +13,11 @@ DEPENDENCIES = [
 
 
 def ui_routes() -> List[APIRoute]:
-    """Get the UI routes to be added for the API server.
+    """Build the list of UI routes for the FastAPI application.
 
     Returns:
         List[APIRoute]:
-        Returns the UI routes as a list of APIRoute objects.
+        All UI ``APIRoute`` objects to be registered on the application.
     """
     return [
         APIRoute(
@@ -106,11 +108,11 @@ def ui_routes() -> List[APIRoute]:
 
 
 def api_routes() -> List[APIRoute]:
-    """Get the API routes to be added for the server.
+    """Build the list of API routes for the FastAPI application.
 
     Returns:
         List[APIRoute]:
-        Returns the routes as a list of APIRoute objects.
+        All API ``APIRoute`` objects to be registered on the application.
     """
     return [
         # Base routes (no auth)

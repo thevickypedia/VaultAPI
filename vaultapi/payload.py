@@ -1,3 +1,5 @@
+"""Payload module that defines Pydantic request body models for API endpoints."""
+
 from typing import Dict
 
 from pydantic import BaseModel

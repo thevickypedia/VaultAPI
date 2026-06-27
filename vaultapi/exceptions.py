@@ -1,3 +1,5 @@
+"""Exceptions module that defines custom exception classes used across the Vault API."""
+
 from fastapi.exceptions import HTTPException
 
 

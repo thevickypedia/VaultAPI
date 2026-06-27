@@ -1,3 +1,10 @@
+"""UI endpoints module that implements the browser-facing routes for the VaultAPI web interface.
+
+1. Serves the index and playground HTML pages.
+2. Handles UI authentication (login/logout) and session management.
+3. Provides session-authenticated CRUD operations for tables and secrets.
+"""
+
 import base64
 import logging
 import os
@@ -18,11 +25,14 @@ LOGGER = logging.getLogger("uvicorn.default")
 
 
 async def index(request: Request):
-    """Endpoint to serve the UI landing page.
+    """Serve the UI landing page.
+
+    Args:
+        request: Incoming FastAPI request object.
 
     Returns:
         HTMLResponse:
-        Returns the HTML content for the UI.
+        Rendered ``index.html`` template.
     """
     # Manually check for blocked since no auth is required for this endpoint
     await auth.blocked(request.client.host)
@@ -34,7 +44,15 @@ async def index(request: Request):
 
 
 async def playground(request: Request):
-    """Serve the playground page."""
+    """Serve the playground page.
+
+    Args:
+        request: Incoming FastAPI request object.
+
+    Returns:
+        HTMLResponse:
+        Rendered ``playground.html`` template with ``enable_ui`` context variable.
+    """
     await auth.blocked(request.client.host)
     return templates.TemplateResponse(
         name="playground.html",
@@ -44,15 +62,20 @@ async def playground(request: Request):
 
 
 async def ui_login(request: Request, apikey: HTTPAuthorizationCredentials = Depends(auth.SECURITY)):
-    """Validate the login credentials and issue a session token.
+    """Validate login credentials and issue a session token.
 
     Args:
-        request: Reference to the FastAPI request object.
-        apikey: API key to authenticate the login request.
+        request: Incoming FastAPI request object.
+        apikey: HMAC-signed API key credential.
 
     Returns:
         JSONResponse:
-        Returns 200 on success, 401/403 on failure.
+        ``{"token": str, "expires": int}`` on success.
+
+    Raises:
+        APIResponse:
+        - 401: Invalid API key or TOTP code.
+        - 403: Host is blocked after repeated failures.
     """
     await auth.validate(request, apikey, auth_type=enums.AuthType.ui_login)
 
@@ -76,12 +99,17 @@ async def ui_logout(
     """Invalidate the active UI session.
 
     Args:
-        request: Reference to the FastAPI request object.
-        session_token: Session token required to authenticate the logout request.
+        request: Incoming FastAPI request object.
+        session_token: Active session token.
 
     Returns:
         JSONResponse:
-        Returns 200 on success, 401/403 if the token is already invalid.
+        ``{"detail": "OK"}`` on success.
+
+    Raises:
+        APIResponse:
+        - 401: Token is invalid or already expired.
+        - 403: Host is blocked.
     """
     await auth.validate(request, session_token, auth_type=enums.AuthType.ui_basic)
     database.delete_ui_session()
@@ -93,15 +121,20 @@ async def ui_list_tables(
     request: Request,
     session_token: HTTPAuthorizationCredentials = Depends(auth.SECURITY),
 ):
-    """List all tables for the UI.
+    """Return a list of all table names for the UI.
 
     Args:
-        request: Reference to the FastAPI request object.
-        session_token: Session token generated after a successful login.
+        request: Incoming FastAPI request object.
+        session_token: Active session token.
 
     Returns:
         JSONResponse:
-        Returns a JSON response with the list of tables.
+        ``{"tables": List[str]}`` on success.
+
+    Raises:
+        APIResponse:
+        - 401: Invalid or expired session token.
+        - 403: Host is blocked.
     """
     await auth.validate(request, session_token, auth_type=enums.AuthType.ui_basic)
     return JSONResponse(content={"tables": database.list_tables()})
@@ -112,16 +145,22 @@ async def ui_get_table(
     table_name: str,
     session_token: HTTPAuthorizationCredentials = Depends(auth.SECURITY),
 ):
-    """Get all secrets (no transit encryption) in a table, for the UI.
+    """Return all Fernet-encrypted key-value pairs from a table (no transit encryption).
 
     Args:
-        request: Reference to the FastAPI request object.
-        table_name: Name of the table to retrieve secrets from.
-        session_token: Session token generated after a successful login.
+        request: Incoming FastAPI request object.
+        table_name: Name of the table to retrieve.
+        session_token: Active session token.
 
     Returns:
         JSONResponse:
-        Returns a JSON response with the decoded (NOT decrypted) key-value pairs.
+        ``{"encrypted_secrets": Dict[str, str]}`` mapping keys to Fernet-encoded values.
+
+    Raises:
+        APIResponse:
+        - 401: Invalid or expired session token.
+        - 403: Host is blocked.
+        - 404: Table not found.
     """
     await auth.validate(request, session_token, auth_type=enums.AuthType.ui_basic)
     if not database.table_exists(table_name):
@@ -139,16 +178,24 @@ async def ui_rename_table(
     table_name: str,
     session_token: HTTPAuthorizationCredentials = Depends(auth.SECURITY),
 ):
-    """Rename a table for the UI.
+    """Rename a table.
 
     Args:
-        request: Reference to the FastAPI request object.
+        request: Incoming FastAPI request object.
         table_name: Current name of the table to rename.
-        session_token: Session token generated after a successful login.
+        session_token: Active session token.
 
     Returns:
         JSONResponse:
-        Returns a JSON response indicating success or failure.
+        ``{"detail": "OK"}`` on success.
+
+    Raises:
+        APIResponse:
+        - 400: New name is empty.
+        - 401: Invalid session token or TOTP.
+        - 403: Host is blocked.
+        - 404: Table not found.
+        - 409: Target name already exists.
     """
     await auth.validate(request, session_token, auth_type=enums.AuthType.ui_advanced)
     body = await request.json()
@@ -158,16 +205,22 @@ async def ui_rename_table(
 
 
 async def ui_create_table(request: Request, table_name: str, session_token=Depends(auth.SECURITY)):
-    """Create a new table for the UI.
+    """Create a new table.
 
     Args:
-        request: Reference to the FastAPI request object.
+        request: Incoming FastAPI request object.
         table_name: Name of the table to create.
-        session_token: Session token generated after a successful login.
+        session_token: Active session token.
 
     Returns:
         JSONResponse:
-        Returns a JSON response indicating success or failure.
+        ``{"detail": "OK"}`` on success.
+
+    Raises:
+        APIResponse:
+        - 401: Invalid or expired session token.
+        - 403: Host is blocked.
+        - 409: Table already exists.
     """
     await auth.validate(request, session_token, auth_type=enums.AuthType.ui_basic)
     core.create_table(table_name)
@@ -179,16 +232,22 @@ async def ui_delete_table(
     table_name: str,
     session_token: HTTPAuthorizationCredentials = Depends(auth.SECURITY),
 ):
-    """Delete a table for the UI.
+    """Delete a table and all its secrets.
 
     Args:
-        request: Reference to the FastAPI request object.
+        request: Incoming FastAPI request object.
         table_name: Name of the table to delete.
-        session_token: Session token generated after a successful login.
+        session_token: Active session token.
 
     Returns:
         JSONResponse:
-        Returns a JSON response indicating success or failure.
+        ``{"detail": "OK"}`` on success.
+
+    Raises:
+        APIResponse:
+        - 401: Invalid session token or TOTP.
+        - 403: Host is blocked.
+        - 404: Table not found.
     """
     await auth.validate(request, session_token, auth_type=enums.AuthType.ui_advanced)
     core.drop_table(table_name)
@@ -199,15 +258,23 @@ async def ui_put_secret(
     request: Request,
     session_token: HTTPAuthorizationCredentials = Depends(auth.SECURITY),
 ):
-    """Add or update a secret for the UI.
+    """Add or update a single secret in a table.
 
     Args:
-        request: Reference to the FastAPI request object.
-        session_token: Session token generated after a successful login.
+        request: Incoming FastAPI request object. Body must contain ``table_name``,
+            ``key``, and ``value``.
+        session_token: Active session token.
 
     Returns:
         JSONResponse:
-        Returns a JSON response indicating success or failure.
+        ``{"detail": "OK"}`` on success.
+
+    Raises:
+        APIResponse:
+        - 400: Key is empty.
+        - 401: Invalid session token or TOTP.
+        - 403: Host is blocked.
+        - 404: Table not found.
     """
     await auth.validate(request, session_token, auth_type=enums.AuthType.ui_advanced)
     body = await request.json()
@@ -233,15 +300,23 @@ async def ui_import_secrets(
     request: Request,
     session_token: HTTPAuthorizationCredentials = Depends(auth.SECURITY),
 ):
-    """Import multiple secrets into a table from a JSON, YAML, or .env payload.
+    """Import multiple secrets into a table from a JSON, YAML, or ``.env`` payload.
 
     Args:
-        request: Reference to the FastAPI request object.
-        session_token: Session token generated after a successful login.
+        request: Incoming FastAPI request object. Body must contain ``table_name``,
+            ``payload``, and ``payload_type``.
+        session_token: Active session token.
 
     Returns:
         JSONResponse:
-        Returns a JSON response with counts of imported and skipped secrets.
+        ``{"imported": int, "skipped": int}`` with counts of processed entries.
+
+    Raises:
+        APIResponse:
+        - 400: Invalid or empty payload.
+        - 401: Invalid session token or TOTP.
+        - 403: Host is blocked.
+        - 404: Table not found.
     """
     await auth.validate(request, session_token, auth_type=enums.AuthType.ui_advanced)
     body = await request.json()
@@ -274,15 +349,23 @@ async def ui_delete_secret(
     request: Request,
     session_token: HTTPAuthorizationCredentials = Depends(auth.SECURITY),
 ):
-    """Delete a secret for the UI.
+    """Delete a single secret from a table.
 
     Args:
-        request: Reference to the FastAPI request object.
-        session_token: Session token generated after a successful login.
+        request: Incoming FastAPI request object. Body must contain ``table_name``
+            and ``key``.
+        session_token: Active session token.
 
     Returns:
         JSONResponse:
-        Returns a JSON response indicating success or failure.
+        ``{"detail": "OK"}`` on success.
+
+    Raises:
+        APIResponse:
+        - 400: Key is empty.
+        - 401: Invalid session token or TOTP.
+        - 403: Host is blocked.
+        - 404: Secret not found.
     """
     await auth.validate(request, session_token, auth_type=enums.AuthType.ui_advanced)
     body = await request.json()

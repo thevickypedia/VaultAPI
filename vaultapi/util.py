@@ -1,3 +1,5 @@
+"""Utility module that provides helper functions for bulk secret import and transit decryption."""
+
 import base64
 import hashlib
 import importlib
@@ -25,12 +27,15 @@ LOGGER.addHandler(HANDLER)
 
 
 def dotenv_to_table(table_name: str, dotenv_file: str, drop_existing: bool = False) -> None:
-    """Store all the env vars from a .env file into the database.
+    """Load all key-value pairs from a ``.env`` file into a database table.
+
+    When ``drop_existing`` is ``True`` the table is dropped and recreated before
+    loading. Otherwise, existing secrets in the table are overwritten in-place.
 
     Args:
-        table_name: Name of the table to store secrets.
-        dotenv_file: Dot env filename.
-        drop_existing: Boolean flag to drop existing table.
+        table_name: Name of the destination table.
+        dotenv_file: Path to the ``.env`` file to load.
+        drop_existing: If ``True``, drop and recreate the table before importing.
     """
     if drop_existing and database.table_exists(table_name):
         LOGGER.info("Dropping table '%s' from '%s'", table_name, models.env.database)
@@ -64,14 +69,14 @@ def dotenv_to_table(table_name: str, dotenv_file: str, drop_existing: bool = Fal
 
 
 def transit_decrypt(ciphertext: str | ByteString) -> Dict[str, Any]:
-    """Decrypts the ciphertext into an appropriate payload.
+    """Decrypt an AES-GCM transit-encrypted ciphertext using the API key and current time bucket.
 
     Args:
-        ciphertext: Encrypted ciphertext.
+        ciphertext: Base64-encoded string or raw bytes to decrypt.
 
     Returns:
         Dict[str, Any]:
-        Returns the decrypted payload.
+        Deserialized JSON payload from the decrypted ciphertext.
     """
     epoch = int(time.time()) // models.env.transit_time_bucket
     hash_object = hashlib.sha256(f"{epoch}.{models.env.apikey}".encode())

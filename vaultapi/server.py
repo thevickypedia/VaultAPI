@@ -1,3 +1,10 @@
+"""Server module includes the starter function for the Vault API.
+
+1. It creates the default table in the database.
+2. Instantiates the database and uvicorn config with customizations to host, port, workers, and log_config.
+3. Initializes the uvicorn server with the custom configurations.
+"""
+
 import pathlib
 
 import uvicorn

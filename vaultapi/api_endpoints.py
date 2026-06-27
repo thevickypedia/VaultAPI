@@ -1,3 +1,10 @@
+"""API endpoints module that implements all authenticated REST operations for the Vault API.
+
+1. Read-only endpoints (apikey based bearer token): get-secret, get-table, list-tables, create-table.
+2. Write/Modify endpoints (apikey+secret based bearer token): put-secret, delete-secret, rename-table, delete-table.
+3. Provides unauthenticated utility endpoints: health, version.
+"""
+
 import logging
 from http import HTTPStatus
 from typing import Dict
@@ -20,13 +27,16 @@ async def get_secret(
 
     **Args:**
 
-        key: Single key or a comma separated list of secrets to be retrieved.
+        key: Single key or comma-separated list of keys to retrieve.
         table_name: Name of the table where the secrets are stored.
 
     **Raises:**
 
         APIResponse:
-        Raises the HTTPStatus object with a status code and detail as response.
+        - 200: Secrets found and returned (transit-encrypted).
+        - 206: Partial content — some keys were not found.
+        - 400: No valid keys provided.
+        - 404: None of the requested keys were found.
     """
     await auth.validate(request, apikey, auth_type=enums.AuthType.api_basic)
     keys = list(filter(None, map(str.strip, key.split(","))))
@@ -67,7 +77,7 @@ async def list_tables(
     **Raises:**
 
         APIResponse:
-        Raises the HTTPStatus object with a status code and detail as response.
+        - 200: Table list returned successfully.
     """
     await auth.validate(request, apikey, auth_type=enums.AuthType.api_basic)
     raise exceptions.APIResponse(status_code=HTTPStatus.OK.real, detail=core.database.list_tables())
@@ -87,7 +97,7 @@ async def get_table(
     **Raises:**
 
         APIResponse:
-        Raises the HTTPStatus object with a status code and detail as response.
+        - 200: All secrets returned (transit-encrypted).
     """
     await auth.validate(request, apikey, auth_type=enums.AuthType.api_basic)
     table_content = await core.retrieve_secrets(table_name)
@@ -102,16 +112,17 @@ async def put_secret(
     data: payload.PutSecret,
     apikey: HTTPAuthorizationCredentials = Depends(auth.SECURITY),
 ):
-    """**API function to add or update secret(s) in a table in the database.**
+    """**API function to add or update secrets in a table, accepting plain or transit-encrypted payloads.**
 
     **Args:**
 
-        data: Payload with ``key``, ``value``, and ``table_name`` as body.
+        data: Request body containing ``secrets`` (plain dict or transit-encrypted string) and ``table_name``.
 
     **Raises:**
 
         APIResponse:
-        Raises the HTTPStatus object with a status code and detail as response.
+        - 200: Secrets stored successfully.
+        - 404: Table not found.
     """
     await auth.validate(request, apikey, auth_type=enums.AuthType.api_advanced)
     if not core.database.table_exists(data.table_name):
@@ -131,16 +142,17 @@ async def delete_secret(
     data: payload.DeleteSecret,
     apikey: HTTPAuthorizationCredentials = Depends(auth.SECURITY),
 ):
-    """**API function to delete a secret from a table in the database.**
+    """**API function to delete a secret key from a table in the database.**
 
     **Args:**
 
-        data: Payload with ``key`` and ``table_name`` as body.
+        data: Request body containing ``key`` and ``table_name``.
 
     **Raises:**
 
         APIResponse:
-        Raises the HTTPStatus object with a status code and detail as response.
+        - 200: Secret deleted successfully.
+        - 404: Secret or table not found.
     """
     await auth.validate(request, apikey, auth_type=enums.AuthType.api_advanced)
     await core.remove_secret(data.key, data.table_name)
@@ -161,7 +173,8 @@ async def create_table(
     **Raises:**
 
         APIResponse:
-        Raises the HTTPStatus object with a status code and detail as response.
+        - 200: Table created successfully.
+        - 409: Table already exists.
     """
     await auth.validate(request, apikey, auth_type=enums.AuthType.api_basic)
     core.create_table(table_name)
@@ -179,11 +192,15 @@ async def rename_table(
     **Args:**
 
         table_name: Current name of the table to rename.
+        data: Request body containing ``new_name``.
 
     **Raises:**
 
         APIResponse:
-        Raises the HTTPStatus object with a status code and detail as response.
+        - 200: Table renamed successfully.
+        - 400: New name is empty.
+        - 404: Table not found.
+        - 409: A table with the new name already exists.
     """
     await auth.validate(request, apikey, auth_type=enums.AuthType.api_advanced)
     core.rename_table(table_name, data.new_name)
@@ -199,12 +216,13 @@ async def delete_table(
 
     **Args:**
 
-        table_name: Name of the table to be created.
+        table_name: Name of the table to delete.
 
     **Raises:**
 
         APIResponse:
-        Raises the HTTPStatus object with a status code and detail as response.
+        - 200: Table deleted successfully.
+        - 404: Table not found.
     """
     await auth.validate(request, apikey, auth_type=enums.AuthType.api_advanced)
     core.drop_table(table_name)
@@ -212,20 +230,20 @@ async def delete_table(
 
 
 async def health() -> Dict[str, str]:
-    """Health check endpoint.
+    """Return a simple health check response.
 
     Returns:
         Dict[str, str]:
-        Returns the health response.
+        Always returns ``{"STATUS": "OK"}``.
     """
     return {"STATUS": "OK"}
 
 
 async def get_version() -> str:
-    """Endpoint to get the current version of the Vault API.
+    """Return the current version of the Vault API.
 
     Returns:
         str:
-        Returns the version string of the Vault API.
+        Version string of the Vault API.
     """
     return version.__version__
