@@ -28,13 +28,6 @@ def ui_routes() -> List[APIRoute]:
             dependencies=DEPENDENCIES,
         ),
         APIRoute(
-            path=enums.UIRoutes.playground,
-            endpoint=ui_endpoints.playground,
-            methods=["GET"],
-            include_in_schema=False,
-            dependencies=DEPENDENCIES,
-        ),
-        APIRoute(
             path=enums.UIRoutes.ui_login,
             endpoint=ui_endpoints.ui_login,
             methods=["POST"],
@@ -126,6 +119,13 @@ def api_routes() -> List[APIRoute]:
             path=enums.APIRoutes.version,
             endpoint=api_endpoints.get_version,
             methods=["GET"],
+            dependencies=DEPENDENCIES,
+        ),
+        APIRoute(
+            path=enums.UIRoutes.playground,
+            endpoint=ui_endpoints.playground,
+            methods=["GET"],
+            include_in_schema=False,
             dependencies=DEPENDENCIES,
         ),
         # Basic authentication (GET [OR] POST)

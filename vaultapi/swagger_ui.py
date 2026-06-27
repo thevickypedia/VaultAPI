@@ -111,7 +111,7 @@ def get_desc(api_routes: List[APIRoute]) -> str:
     for route in api_routes:
         if route.include_in_schema:
             description += generate_hyperlink(route)
-    description += f"\n\n**UI Features:** {'Enabled' if models.env.enable_ui else 'Disabled'}"
+    description += f"\n\n**UI Features:** {'✅' if models.env.enable_ui else '❌'}"
     description += "\n\n#### Links"
     description += "\n- <a href='/playground'>Playground</a><br>"
     description += "\n- <a href='https://pypi.org/project/VaultAPI/'>PyPi</a><br>"

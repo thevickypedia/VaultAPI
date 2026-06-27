@@ -865,11 +865,17 @@ data: Request body containing <code class="docutils literal notranslate"><span c
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>request</strong> – Incoming FastAPI request object.</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Rendered <code class="docutils literal notranslate"><span class="pre">playground.html</span></code> template with <code class="docutils literal notranslate"><span class="pre">enable_ui</span></code> context variable.</p>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>This endpoint is registered as part of API routes and available even when <code class="docutils literal notranslate"><span class="pre">enable_ui</span></code> is set to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Rendered <code class="docutils literal notranslate"><span class="pre">playground.html</span></code> template with <code class="docutils literal notranslate"><span class="pre">enable_ui</span></code> context variable.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>HTMLResponse</p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>HTMLResponse</p>
 </dd>
 </dl>
 </dd></dl>

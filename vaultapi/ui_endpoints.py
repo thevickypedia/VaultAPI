@@ -49,6 +49,9 @@ async def playground(request: Request):
     Args:
         request: Incoming FastAPI request object.
 
+    See Also:
+        This endpoint is registered as part of API routes and available even when ``enable_ui`` is set to ``False``.
+
     Returns:
         HTMLResponse:
         Rendered ``playground.html`` template with ``enable_ui`` context variable.
