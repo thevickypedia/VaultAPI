@@ -523,6 +523,108 @@
             stroke-linejoin: round;
         }
 
+        /* ── TOTP tokens ─────────────────────────────── */
+        .totp-empty {
+            padding: 32px 20px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-3);
+            border: 1px dashed var(--border);
+            border-radius: var(--radius-lg);
+        }
+
+        .totp-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+            gap: 14px;
+        }
+
+        .totp-card {
+            background: var(--bg-1);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px;
+            transition: border-color var(--transition);
+            animation: fadeIn 180ms ease;
+        }
+
+        .totp-card:hover { border-color: rgba(255,255,255,0.14); }
+
+        .totp-card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .totp-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-2);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .totp-card-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+        .totp-icon-btn {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            color: var(--text-3);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition);
+        }
+
+        .totp-icon-btn:hover { background: var(--bg-2); color: var(--text); }
+        .totp-icon-btn.copied { background: rgba(16,185,129,0.1); color: var(--success); }
+        .totp-icon-btn.danger:hover { background: var(--danger-dim); color: var(--danger); }
+
+        .totp-icon-btn svg {
+            width: 12px;
+            height: 12px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .totp-code {
+            font-family: var(--mono);
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+
+        .totp-code.stale { color: var(--text-3); }
+
+        .totp-bar-track {
+            width: 100%;
+            height: 3px;
+            border-radius: 2px;
+            background: var(--bg-2);
+            overflow: hidden;
+        }
+
+        .totp-bar-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 2px;
+            transition: width 1s linear;
+        }
+
+        .totp-bar-fill.warn { background: var(--danger); }
+
         /* ── Modals ──────────────────────────────────── */
         .overlay {
             position: fixed;
@@ -789,6 +891,7 @@
         <button class="tab-btn active" id="tab-sig" onclick="switchTab('sig')">Signature Generator</button>
         <button class="tab-btn"        id="tab-enc" onclick="switchTab('enc')">Transit Encryptor</button>
         <button class="tab-btn"        id="tab-dec" onclick="switchTab('dec')">Transit Decryptor</button>
+        <button class="tab-btn"        id="tab-totp" onclick="switchTab('totp')">TOTP Generator</button>
     </div>
 
     <!-- ══════════════════════════════════════════════
@@ -953,6 +1056,58 @@
             </div>
         </div>
     </div>
+
+    <!-- ══════════════════════════════════════════════
+         TAB: TOTP Generator
+    ══════════════════════════════════════════════ -->
+    <div class="tab-panel" id="panel-totp">
+        <div class="section-title">TOTP Generator</div>
+        <p class="section-desc">
+            Generate live time-based one-time passcodes from authenticator secrets. Add as many as you like —
+            each is computed entirely in-browser and refreshes automatically every 30 seconds. Nothing is stored or transmitted.
+        </p>
+
+        <div class="fl-row">
+            <div class="fl-wrap" style="margin-bottom:0;">
+                <div class="fl-inner" id="totp-add-inner-label">
+                    <input class="fl-input" type="text" id="totp-add-label" placeholder=" "
+                           autocomplete="off" spellcheck="false">
+                    <label class="fl-label" for="totp-add-label">Label <span style="color:var(--text-3);font-size:11px;font-family:var(--sans);font-weight:400;">(optional)</span></label>
+                    <button class="fl-clear" id="totp-add-clr-label" tabindex="-1"
+                            onclick="totpClearField('label')" aria-label="Clear label">
+                        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="fl-wrap" style="margin-bottom:0;">
+                <div class="fl-inner" id="totp-add-inner-secret">
+                    <input class="fl-input" type="text" id="totp-add-secret" placeholder=" "
+                           autocomplete="off" spellcheck="false">
+                    <label class="fl-label" for="totp-add-secret">Secret key (base32)</label>
+                    <button class="fl-clear" id="totp-add-clr-secret" tabindex="-1"
+                            onclick="totpClearField('secret')" aria-label="Clear secret">
+                        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="fl-error" id="totp-add-error" style="margin-bottom:16px;">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span id="totp-add-error-text">Please provide the authenticator secret key.</span>
+        </div>
+
+        <button class="btn btn-primary" onclick="totpAddToken()" style="margin-bottom:28px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Add token
+        </button>
+
+        <div class="totp-empty" id="totp-empty">
+            No tokens yet — add an authenticator secret above to generate live codes.
+        </div>
+        <div class="totp-grid" id="totp-grid" style="display:none;"></div>
+    </div>
 </main>
 
 <!-- ── Modal: Encrypt ──────────────────────────── -->
@@ -1103,7 +1258,7 @@
     window.decModalClose  = function (e) { if (e.target === document.getElementById('modal-dec-secret')) { _wipeDecModal(); closeModal('modal-dec-secret'); } };
 
     window.switchTab = function (name) {
-        ['sig', 'enc', 'dec'].forEach(t => {
+        ['sig', 'enc', 'dec', 'totp'].forEach(t => {
             document.getElementById(`tab-${t}`).classList.toggle('active', t === name);
             document.getElementById(`panel-${t}`).classList.toggle('active', t === name);
         });
@@ -1441,6 +1596,206 @@
             toast('Copied to clipboard', 'success');
         }).catch(() => toast('Copy failed', 'error'));
     };
+
+    // ══════════════════════════════════════════════
+    // TOTP GENERATOR
+    // ══════════════════════════════════════════════
+    const TOTP_PERIOD = 30;
+    const TOTP_DIGITS = 6;
+
+    let _totpId = 0;
+    const _totpTokens = new Map(); // id -> { label, key: Uint8Array }
+    let _totpTimer = null;
+
+    function base32Decode(str) {
+        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+        const clean = str.replace(/\s+/g, '').replace(/=+$/, '').toUpperCase();
+        if (!clean || /[^A-Z2-7]/.test(clean)) throw new Error('badformat');
+        let bits = '';
+        for (const c of clean) bits += alphabet.indexOf(c).toString(2).padStart(5, '0');
+        const bytes = [];
+        for (let i = 0; i + 8 <= bits.length; i += 8) bytes.push(parseInt(bits.substr(i, 8), 2));
+        if (bytes.length === 0) throw new Error('badformat');
+        return new Uint8Array(bytes);
+    }
+
+    async function totpCompute(keyBytes) {
+        const counter = Math.floor(Math.floor(Date.now() / 1000) / TOTP_PERIOD);
+        const counterBuf = new ArrayBuffer(8);
+        const view = new DataView(counterBuf);
+        view.setUint32(0, 0);
+        view.setUint32(4, counter); // safe: counter fits in 32 bits until year 2106
+        const key = await crypto.subtle.importKey('raw', keyBytes, {name: 'HMAC', hash: 'SHA-1'}, false, ['sign']);
+        const sig = new Uint8Array(await crypto.subtle.sign('HMAC', key, counterBuf));
+        const offset = sig[sig.length - 1] & 0x0f;
+        const bin = ((sig[offset] & 0x7f) << 24) | ((sig[offset + 1] & 0xff) << 16) |
+                    ((sig[offset + 2] & 0xff) << 8) | (sig[offset + 3] & 0xff);
+        return (bin % (10 ** TOTP_DIGITS)).toString().padStart(TOTP_DIGITS, '0');
+    }
+
+    function totpSecondsRemaining() {
+        const now = Math.floor(Date.now() / 1000);
+        return TOTP_PERIOD - (now % TOTP_PERIOD);
+    }
+
+    function totpFormatCode(code) {
+        const mid = Math.ceil(code.length / 2);
+        return `${code.slice(0, mid)} ${code.slice(mid)}`;
+    }
+
+    function totpEmptyToggle() {
+        const has = _totpTokens.size > 0;
+        document.getElementById('totp-empty').style.display = has ? 'none' : '';
+        document.getElementById('totp-grid').style.display = has ? '' : 'none';
+    }
+
+    function totpMakeCard(id, label) {
+        const div = document.createElement('div');
+        div.className = 'totp-card';
+        div.id = `totp-card-${id}`;
+        div.innerHTML = `
+            <div class="totp-card-head">
+                <span class="totp-label" title="${label}">${label}</span>
+                <div class="totp-card-actions">
+                    <button class="totp-icon-btn" id="totp-copy-${id}" onclick="totpCopy(${id})" title="Copy code">
+                        <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    </button>
+                    <button class="totp-icon-btn danger" onclick="totpRemove(${id})" title="Remove token">
+                        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="totp-code stale" id="totp-code-${id}">•• ••••</div>
+            <div class="totp-bar-track"><div class="totp-bar-fill" id="totp-bar-${id}"></div></div>`;
+        return div;
+    }
+
+    function totpUpdateClear(id) {
+        const btn = document.getElementById(`totp-add-clr-${id}`);
+        if (btn) btn.style.display = document.getElementById(`totp-add-${id}`).value ? 'flex' : 'none';
+    }
+
+    window.totpClearField = function (id) {
+        document.getElementById(`totp-add-${id}`).value = '';
+        totpUpdateClear(id);
+        document.getElementById(`totp-add-${id}`).focus();
+    };
+
+    async function totpRefreshOne(id) {
+        const t = _totpTokens.get(id);
+        if (!t) return;
+        const el = document.getElementById(`totp-code-${id}`);
+        if (!el) return;
+        try {
+            const code = await totpCompute(t.key);
+            el.textContent = totpFormatCode(code);
+            el.classList.remove('stale');
+        } catch (e) {
+            el.textContent = 'ERROR';
+            el.classList.add('stale');
+        }
+    }
+
+    function totpTick() {
+        const remaining = totpSecondsRemaining();
+        const pct = (remaining / TOTP_PERIOD) * 100;
+        const boundary = remaining === TOTP_PERIOD;
+        _totpTokens.forEach((_t, id) => {
+            const bar = document.getElementById(`totp-bar-${id}`);
+            if (bar) {
+                bar.style.width = `${pct}%`;
+                bar.classList.toggle('warn', remaining <= 5);
+            }
+            if (boundary) totpRefreshOne(id);
+        });
+    }
+
+    function totpStartTimer() {
+        if (_totpTimer) return;
+        totpTick();
+        _totpTimer = setInterval(totpTick, 1000);
+    }
+
+    function totpStopTimerIfEmpty() {
+        if (_totpTokens.size === 0 && _totpTimer) {
+            clearInterval(_totpTimer);
+            _totpTimer = null;
+        }
+    }
+
+    window.totpAddToken = function () {
+        const labelInp = document.getElementById('totp-add-label');
+        const secretInp = document.getElementById('totp-add-secret');
+        const errEl = document.getElementById('totp-add-error');
+        const errText = document.getElementById('totp-add-error-text');
+        const secretRaw = secretInp.value.trim();
+
+        let keyBytes;
+        try {
+            keyBytes = base32Decode(secretRaw);
+        } catch (e) {
+            errText.textContent = secretRaw
+                ? 'Invalid secret — must be base32 (A-Z, 2-7).'
+                : 'Please provide the authenticator secret key.';
+            errEl.classList.add('visible');
+            document.getElementById('totp-add-inner-secret').classList.add('error');
+            secretInp.focus();
+            return;
+        }
+        errEl.classList.remove('visible');
+        document.getElementById('totp-add-inner-secret').classList.remove('error');
+
+        const id = ++_totpId;
+        const label = labelInp.value.trim() || `Token ${id}`;
+        _totpTokens.set(id, {label, key: keyBytes});
+
+        document.getElementById('totp-grid').appendChild(totpMakeCard(id, label));
+        totpEmptyToggle();
+        totpRefreshOne(id);
+        totpStartTimer();
+
+        labelInp.value = '';
+        secretInp.value = '';
+        totpUpdateClear('label');
+        totpUpdateClear('secret');
+        toast('Token added', 'success');
+        labelInp.focus();
+    };
+
+    window.totpRemove = function (id) {
+        _totpTokens.delete(id);
+        const card = document.getElementById(`totp-card-${id}`);
+        if (card) card.remove();
+        totpEmptyToggle();
+        totpStopTimerIfEmpty();
+    };
+
+    window.totpCopy = function (id) {
+        const codeEl = document.getElementById(`totp-code-${id}`);
+        if (!codeEl || codeEl.classList.contains('stale')) return;
+        const code = codeEl.textContent.replace(/\s+/g, '');
+        const btn = document.getElementById(`totp-copy-${id}`);
+        navigator.clipboard.writeText(code).then(() => {
+            if (btn) {
+                btn.classList.add('copied');
+                setTimeout(() => btn.classList.remove('copied'), 1800);
+            }
+            toast('Code copied to clipboard', 'success');
+        }).catch(() => toast('Copy failed', 'error'));
+    };
+
+    document.getElementById('totp-add-label').addEventListener('input', () => totpUpdateClear('label'));
+    document.getElementById('totp-add-label').addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('totp-add-secret').focus();
+    });
+    document.getElementById('totp-add-secret').addEventListener('input', () => {
+        totpUpdateClear('secret');
+        document.getElementById('totp-add-error').classList.remove('visible');
+        document.getElementById('totp-add-inner-secret').classList.remove('error');
+    });
+    document.getElementById('totp-add-secret').addEventListener('keydown', e => {
+        if (e.key === 'Enter') totpAddToken();
+    });
 
     // Init
     encAddRow();
