@@ -1898,6 +1898,15 @@
             vaultSecret: null,
         };
 
+        function getCrypto() {
+            const sub = window.crypto && window.crypto.subtle;
+            if (sub) return sub;
+            // Simple IPv4 check
+            const isIP = /^\d{1,3}(\.\d{1,3}){3}$/.test(window.location.hostname);
+            if (isIP) console.log(`Try adding '${window.location.origin}' to 'chrome://flags/#unsafely-treat-insecure-origin-as-secure'`)
+            throw new Error('Web Crypto API unavailable — use HTTPS or localhost');
+        }
+
         // ── Session timer ──────────────────────────────
         let timerInterval = null;
 
@@ -2035,8 +2044,7 @@
             // So the browser's Math.round could also cause off-by-one edge cases
             // Using Math.floor (matching Python's int(time.time())) is safer
             const timestamp = String(Math.floor(new Date().getTime() / 1000));
-            const sub = window.crypto && window.crypto.subtle;
-            if (!sub) throw new Error('Web Crypto API unavailable — use HTTPS or localhost');
+            const sub = getCrypto();
             const keyMaterial = await sub.importKey(
                 'raw',
                 new TextEncoder().encode(value),  // token as HMAC key
@@ -2289,8 +2297,7 @@
         }
 
         async function fernetDecrypt(tokenStr, keyStr) {
-            const sub = window.crypto && window.crypto.subtle;
-            if (!sub) throw new Error('Web Crypto API unavailable — use HTTPS or localhost');
+            const sub = getCrypto();
 
             const keyBytes = b64urlToBytes(keyStr);
             if (keyBytes.length !== 32) throw new Error(`Expected 32-byte key, got ${keyBytes.length}`);
